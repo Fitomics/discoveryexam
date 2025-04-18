@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fitomics Nutrition Calculator</title>
+  <!-- Include Bootstrap CSS for modern styling -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Include Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Expletus+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* Global Box Sizing */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    
+    /* Color Variables */
+    :root {
+      --primary-bg: #003b59;       /* Dark blue background for page */
+      --secondary-bg: #fff8e1;     /* Light gold for table headers */
+      --accent-color: #ffcc80;     /* Warm accent (gold-ish) */
+      --text-color: #333;
+      --border-color: #ccc;
+    }
+
+    /* Global Resets and Fonts */
+    body {
+      margin: 0;
+      font-family: 'Expletus Sans', sans-serif;
+      background-color: var(--primary-bg);
+      color: var(--text-color);
+      padding: 1rem;
+    }
+
+    /* Center content and add spacing */
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: var(--accent-color);
+    }
+
+    /* Form “card” style */
+    form {
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      transition: box-shadow 0.3s ease;
+    }
+    form:hover {
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    /* Grid Layout for Form Fields */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+    }
+
+    /* Label and input group styling */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      padding: 0.5rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    input[type="number"]:focus,
+    input[type="text"]:focus,
+    select:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 5px rgba(255, 204, 128, 0.5);
+      outline: none;
+    }
+
+    /* Modern Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 0.5rem;
+    }
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 0.75rem;
+      text-align: left;
+    }
+    th {
+      background-color: var(--secondary-bg);
+    }
+
+    h2 {
+      margin-top: 1.5rem;
+      color: var(--accent-color);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 0.5rem;
+    }
+
+    /* Input Field States */
+    .input-empty {
+      background-color: #e0f7ff;  /* Slight blue for empty numeric inputs */
+    }
+    .calc-unavailable {
+      background-color: #ffcccc;  /* Light red for computed fields when unavailable */
+    }
+    .calc-available {
+      background-color: #ffffff;  /* White (or default) for computed fields when available */
+    }
+  </style>
+  <!-- Include SQLite library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Fitomics Nutrition Calculator</h1>
+    <form>
+      <div class="form-grid">
+        <!-- Personal Information -->
+        <div class="form-group">
+          <label for="age">Enter Age (Years):</label>
+          <input type="number" id="age" name="age">
+        </div>
+        <div class="form-group">
+          <label for="gender">Select Gender:</label>
+          <select id="gender" name="gender">
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="height">Enter Height (Inches):</label>
+          <input type="number" id="height" name="height">
+        </div>
+        <div class="form-group">
+          <label for="weight">Enter Weight (Pounds):</label>
+          <input type="number" id="weight" name="weight">
+        </div>
+        <div class="form-group">
+          <label for="bodyfat">
+            Enter Body Fat %: 
+            <a href="#" data-bs-toggle="modal" data-bs-target="#bodyFatExamplesModal">examples</a>
+          </label>
+          <input type="number" id="bodyfat" name="bodyfat">
+        </div>
+
+        <!-- Calculated Body Composition -->
+        <div class="form-group">
+          <label for="fat_mass">Fat Mass (lbs):</label>
+          <input type="number" id="fat_mass" name="fat_mass" readonly>
+        </div>
+        <div class="form-group">
+          <label for="fat_free_mass">Fat-Free Mass (lbs):</label>
+          <input type="number" id="fat_free_mass" name="fat_free_mass" readonly>
+        </div>
+        <div class="form-group">
+          <label for="fat_mass_index">Fat Mass Index (kg/m²):</label>
+          <input type="number" id="fat_mass_index" name="fat_mass_index" readonly>
+        </div>
+        <div class="form-group">
+          <label for="fat_free_mass_index">Fat-Free Mass Index (kg/m²):</label>
+          <input type="number" id="fat_free_mass_index" name="fat_free_mass_index" readonly>
+        </div>
+        <div class="form-group">
+          <label for="bmi">Body Mass Index (kg/m²):</label>
+          <input type="number" id="bmi" name="bmi" readonly>
+        </div>
+        <div class="form-group">
+          <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
+          <input type="text" id="rmr" readonly>
+        </div>
+
+        <!-- Activity and Workout -->
+        <div class="form-group">
+          <label for="activity">Activity Level (table below):</label>
+          <select id="activity" name="activity">
+            <option value="1.1">Little Activity</option>
+            <option value="1.2">Lightly Active</option>
+            <option value="1.4">Active</option>
+            <option value="1.6">Very Active</option>
+          </select>
+        </div>
+        <!-- Activity Explanation Table -->
+        <div class="form-group full-width">
+          <table>
+            <tr>
+              <th>Activity Status</th>
+              <th>Average Daily Steps</th>
+            </tr>
+            <tr>
+              <td>Little Activity</td>
+              <td>0-5000</td>
+            </tr>
+            <tr>
+              <td>Lightly Active</td>
+              <td>5,000-10,000</td>
+            </tr>
+            <tr>
+              <td>Active</td>
+              <td>10,000-15,000</td>
+            </tr>
+            <tr>
+              <td>Very Active</td>
+              <td>>15,000</td>
+            </tr>
+          </table>
+        </div>
+        <div class="form-group">
+          <label for="workout_calories">Enter Average Calories Expended During a Workout:</label>
+          <input type="number" id="workout_calories" name="workout_calories">
+        </div>
+        <div class="form-group">
+          <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
+          <input type="number" id="workouts_per_week" name="workouts_per_week">
+        </div>
+        <div class="form-group">
+          <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
+          <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" readonly>
+        </div>
+        <div class="form-group">
+          <label for="goal">Fat Loss, Muscle Gain, or Maintenance:</label>
+          <select id="goal" name="goal">
+            <option value="0.8">Aggressive Fat Loss</option>
+            <option value="0.9">Moderate Fat Loss</option>
+            <option value="1" selected>Maintenance</option>
+            <option value="1.1">Moderate Muscle Gain</option>
+            <option value="1.2">Aggressive Muscle Gain</option>
+          </select>
+        </div>
+
+        <!-- Nutrient Selection and Results -->
+        <div class="form-group full-width">
+          <h2>Results:</h2>
+        </div>
+        <div class="form-group">
+          <label for="protein">Protein (grams/kilogram of FFM):</label>
+          <select id="protein" name="protein">
+            <option value="0.8">0.8</option>
+            <option value="1.0">1.0</option>
+            <option value="1.2" selected>1.2</option>
+            <option value="1.4">1.4</option>
+            <option value="1.6">1.6</option>
+            <option value="1.8">1.8</option>
+            <option value="2.0">2.0</option>
+            <option value="2.2">2.2</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fat">Fat (Percent of Calories):</label>
+          <select id="fat" name="fat">
+            <option value="0.2">20%</option>
+            <option value="0.25">25%</option>
+            <option value="0.3" selected>30%</option>
+            <option value="0.35">35%</option>
+            <option value="0.4">40%</option>
+          </select>
+        </div>
+        <!-- Results Table -->
+        <div class="form-group full-width">
+          <table id="resultsTable">
+            <tr>
+              <th>Nutrient</th>
+              <th>Value</th>
+              <th>Calculated Amount</th>
+              <th>Calculated Calories</th>
+            </tr>
+            <tr>
+              <td>Target Energy Range (kcal)</td>
+              <td colspan="3" id="target_energy"></td>
+            </tr>
+            <tr>
+              <td>Protein</td>
+              <td id="protein_value"></td>
+              <td id="protein_grams"></td>
+              <td id="protein_calories"></td>
+            </tr>
+            <tr>
+              <td>Fat</td>
+              <td id="fat_percentage"></td>
+              <td id="fat_grams"></td>
+              <td id="fat_calories"></td>
+            </tr>
+            <tr>
+              <td>Carbs</td>
+              <td id="carb_percentage"></td>
+              <td id="carb_grams"></td>
+              <td id="carb_calories"></td>
+            </tr>
+            <tr>
+              <td>Fiber</td>
+              <td id="fiber_value"></td>
+              <td id="fiber_grams"></td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>Fluid Intake</td>
+              <td id="fluid_ml_per_kg"></td>
+              <td id="fluid_total"></td>
+              <td></td>
+            </tr>
+          </table>
+          <div class="text-center mt-3">
+            <button type="button" onclick="downloadPDF()" class="btn btn-primary">
+              Download Results as PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Modal for Body Fat Examples -->
+  <div class="modal fade" id="bodyFatExamplesModal" tabindex="-1" aria-labelledby="bodyFatExamplesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="bodyFatExamplesModalLabel">Body Fat Percentage Examples</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <img src="https://miro.medium.com/v2/resize:fit:688/1*WrEPOwKEPmpwfS5zMdbKmQ.jpeg" alt="Body Fat Percentage Examples" class="img-fluid">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Include Bootstrap JS and dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let db;
+  
+    async function initDatabase() {
+      const SQL = await initSqlJs({ locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}` });
+      const savedDb = localStorage.getItem('nutritionDb');
+      if (savedDb) {
+        const uInt8Array = new Uint8Array(JSON.parse(savedDb));
+        db = new SQL.Database(uInt8Array);
+      } else {
+        db = new SQL.Database();
+        db.run(`CREATE TABLE IF NOT EXISTS nutrition (key TEXT PRIMARY KEY, value TEXT)`);
+      }
+    }
+  
+    function saveToDatabase(key, value) {
+      db.run(`INSERT OR REPLACE INTO nutrition (key, value) VALUES (?, ?)`, [key, value]);
+      const data = db.export();
+      localStorage.setItem('nutritionDb', JSON.stringify(Array.from(data)));
+      localStorage.setItem(key, value);
+    }
+  
+    function loadFromDatabase(key) {
+      const stmt = db.prepare(`SELECT value FROM nutrition WHERE key = ?`);
+      stmt.bind([key]);
+      if (stmt.step()) {
+        return stmt.getAsObject().value;
+      }
+      return localStorage.getItem(key);
+    }
+  
+    /**
+     * Updates the appearance of user input fields.
+     * Numeric inputs that are empty or invalid receive the .input-empty class.
+     */
+    function updateInputStyles() {
+      const numericInputs = ['age', 'weight', 'bodyfat', 'height', 'workout_calories', 'workouts_per_week'];
+      numericInputs.forEach(id => {
+        const elem = document.getElementById(id);
+        if (elem) {
+          if (elem.value.trim() === "" || isNaN(parseFloat(elem.value))) {
+            elem.classList.add('input-empty');
+          } else {
+            elem.classList.remove('input-empty');
+          }
+        }
+      });
+    }
+  
+    /**
+     * Calculates body composition values.
+     */
+    function calculateBodyComposition() {
+      const weight = parseFloat(document.getElementById('weight').value);
+      const bodyFat = parseFloat(document.getElementById('bodyfat').value);
+      const height = parseFloat(document.getElementById('height').value);
+      const age = parseFloat(document.getElementById('age').value);
+      const gender = document.getElementById('gender').value;
+      const computedFields = ['fat_mass', 'fat_free_mass', 'fat_mass_index', 'fat_free_mass_index', 'bmi', 'rmr'];
+  
+      if (!isNaN(weight) && !isNaN(bodyFat) && !isNaN(height) && !isNaN(age)) {
+        // Fat mass and fat-free mass (in lbs)
+        const fatMass = (bodyFat / 100) * weight;
+        const fatFreeMass = weight - fatMass;
+        document.getElementById('fat_mass').value = fatMass.toFixed(2);
+        document.getElementById('fat_free_mass').value = fatFreeMass.toFixed(2);
+        ['fat_mass', 'fat_free_mass'].forEach(id => {
+          const elem = document.getElementById(id);
+          elem.classList.remove('calc-unavailable');
+          elem.classList.add('calc-available');
+        });
+  
+        // Convert weight to kg and height to cm (and then to m)
+        const weightkg = weight / 2.204;
+        const heightcm = height * 2.53;
+        const heightm = heightcm / 100;
+  
+        // Calculate indexes and BMI (kg/m²)
+        const fatMassIndex = (weightkg * (bodyFat / 100)) / (heightm * heightm);
+        const fatFreeMassIndex = (weightkg * (1 - bodyFat / 100)) / (heightm * heightm);
+        const bmi = weightkg / (heightm * heightm);
+        document.getElementById('fat_mass_index').value = fatMassIndex.toFixed(2);
+        document.getElementById('fat_free_mass_index').value = fatFreeMassIndex.toFixed(2);
+        document.getElementById('bmi').value = bmi.toFixed(2);
+        ['fat_mass_index', 'fat_free_mass_index', 'bmi'].forEach(id => {
+          const elem = document.getElementById(id);
+          elem.classList.remove('calc-unavailable');
+          elem.classList.add('calc-available');
+        });
+  
+        // Calculate RMR using the Mifflin-St Jeor equation
+        let rmr;
+        if (gender === 'male') {
+          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age + 5;
+        } else {
+          rmr = 10 * weightkg + 6.25 * heightcm - 5 * age - 161;
+        }
+        document.getElementById('rmr').value = rmr.toFixed(0);
+        const rmrElem = document.getElementById('rmr');
+        rmrElem.classList.remove('calc-unavailable');
+        rmrElem.classList.add('calc-available');
+      } else {
+        // Clear computed fields and mark as unavailable
+        computedFields.forEach(id => {
+          const elem = document.getElementById(id);
+          if (elem) {
+            elem.value = "";
+            elem.classList.remove('calc-available');
+            elem.classList.add('calc-unavailable');
+          }
+        });
+      }
+    }
+  
+    /**
+     * Performs calculations that depend on workout, activity, and nutrient data.
+     */
+    function calculateOtherValues() {
+      const workoutCalories = parseFloat(document.getElementById('workout_calories').value);
+      const workoutsPerWeek = parseFloat(document.getElementById('workouts_per_week').value);
+      const activity = parseFloat(document.getElementById('activity').value);
+      const goalMultiplier = parseFloat(document.getElementById('goal').value);
+  
+      if (!isNaN(workoutCalories) && !isNaN(workoutsPerWeek)) {
+        const rmrVal = parseFloat(document.getElementById('rmr').value);
+        if (!isNaN(rmrVal)) {
+          const weeklyWorkoutCalories = workoutCalories * workoutsPerWeek;
+          const averageDailyWorkoutCalories = weeklyWorkoutCalories / 7;
+          const predictedDailyCalorieBurn = rmrVal * activity + averageDailyWorkoutCalories;
+          const targetEnergy = predictedDailyCalorieBurn * goalMultiplier;
+  
+          const predElem = document.getElementById('predicted_daily_calorie_burn');
+          predElem.value = predictedDailyCalorieBurn.toFixed(0);
+          predElem.classList.remove('calc-unavailable');
+          predElem.classList.add('calc-available');
+  
+          // Update table cells in the results table
+          const updateTableField = (id, content) => {
+            const elem = document.getElementById(id);
+            elem.textContent = content;
+            elem.classList.remove('calc-unavailable');
+            elem.classList.add('calc-available');
+          };
+  
+          updateTableField('target_energy', targetEnergy.toFixed(0));
+  
+          // Protein calculations
+          const proteinFactor = parseFloat(document.getElementById('protein').value);
+          const weight = parseFloat(document.getElementById('weight').value);
+          const weightkg = weight / 2.204;
+          updateTableField('protein_value', proteinFactor.toFixed(2) + " g/kg of FFM");
+          const proteinGrams = weightkg * proteinFactor;
+          updateTableField('protein_grams', proteinGrams.toFixed(0) + " g");
+          const proteinCalories = proteinGrams * 4;
+          updateTableField('protein_calories', proteinCalories.toFixed(0) + " kcal");
+  
+          // Fat calculations
+          const fatPercentage = parseFloat(document.getElementById('fat').value);
+          updateTableField('fat_percentage', (fatPercentage * 100).toFixed(0) + "%");
+          const fatGrams = (targetEnergy * fatPercentage) / 9;
+          updateTableField('fat_grams', fatGrams.toFixed(0) + " g");
+          const fatCalories = fatGrams * 9;
+          updateTableField('fat_calories', fatCalories.toFixed(0) + " kcal");
+  
+          // Fiber calculations
+          const fiberGrams = (targetEnergy / 1000) * 14;
+          updateTableField('fiber_value', "14 g/1000kcal");
+          updateTableField('fiber_grams', fiberGrams.toFixed(0) + " g");
+  
+          // Carbs calculations
+          const remainingCarbCalories = targetEnergy - (proteinCalories + fatCalories);
+          const carbGrams = remainingCarbCalories > 0 ? remainingCarbCalories / 4 : 0;
+          const carbPercentage = targetEnergy > 0 ? (remainingCarbCalories / targetEnergy) * 100 : 0;
+          updateTableField('carb_percentage', carbPercentage.toFixed(2) + " %");
+          updateTableField('carb_grams', carbGrams.toFixed(0) + " g");
+          updateTableField('carb_calories', remainingCarbCalories.toFixed(0) + " kcal");
+  
+          // Fluid calculations
+          const fluidIntake = weightkg * 40;
+          updateTableField('fluid_ml_per_kg', "40 ml/kg/day");
+          updateTableField('fluid_total', fluidIntake.toFixed(0) + " ml");
+        }
+      } else {
+        // Clear and mark calculated fields as unavailable
+        const inputFields = ['predicted_daily_calorie_burn'];
+        const tableFields = ['target_energy', 'protein_value', 'protein_grams', 'protein_calories', 
+                             'fat_percentage', 'fat_grams', 'fat_calories', 'fiber_value', 'fiber_grams', 
+                             'carb_percentage', 'carb_grams', 'carb_calories', 'fluid_ml_per_kg', 'fluid_total'];
+        inputFields.forEach(id => {
+          const elem = document.getElementById(id);
+          elem.value = "";
+          elem.classList.remove('calc-available');
+          elem.classList.add('calc-unavailable');
+        });
+        tableFields.forEach(id => {
+          const elem = document.getElementById(id);
+          elem.textContent = "";
+          elem.classList.remove('calc-available');
+          elem.classList.add('calc-unavailable');
+        });
+      }
+    }
+  
+    /**
+     * Main function to calculate all values.
+     */
+    function calculateValues() {
+      updateInputStyles();
+      calculateBodyComposition();
+      calculateOtherValues();
+  
+      // Save common values to the database/local storage
+      saveToDatabase('age', document.getElementById('age').value);
+      saveToDatabase('weight', document.getElementById('weight').value);
+      saveToDatabase('bodyfat', document.getElementById('bodyfat').value);
+      saveToDatabase('height', document.getElementById('height').value);
+      saveToDatabase('gender', document.getElementById('gender').value);
+      saveToDatabase('activity', document.getElementById('activity').value);
+      saveToDatabase('workout_calories', document.getElementById('workout_calories').value);
+      saveToDatabase('workouts_per_week', document.getElementById('workouts_per_week').value);
+      saveToDatabase('goal', document.getElementById('goal').value);
+      saveToDatabase('protein', document.getElementById('protein').value);
+      saveToDatabase('fat', document.getElementById('fat').value);
+    }
+  
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initDatabase();
+      document.getElementById('age').value = loadFromDatabase('age') || '';
+      document.getElementById('weight').value = loadFromDatabase('weight') || '';
+      document.getElementById('bodyfat').value = loadFromDatabase('bodyfat') || '';
+      document.getElementById('height').value = loadFromDatabase('height') || '';
+      document.getElementById('gender').value = loadFromDatabase('gender') || 'male';
+      document.getElementById('activity').value = loadFromDatabase('activity') || '1.1';
+      document.getElementById('workout_calories').value = loadFromDatabase('workout_calories') || '';
+      document.getElementById('workouts_per_week').value = loadFromDatabase('workouts_per_week') || '';
+      document.getElementById('goal').value = loadFromDatabase('goal') || '1';
+      document.getElementById('protein').value = loadFromDatabase('protein') || '1.2';
+      document.getElementById('fat').value = loadFromDatabase('fat') || '0.3';
+      calculateValues();
+    });
+  
+    document.querySelectorAll('input, select').forEach(input => {
+      input.addEventListener('change', (event) => {
+        saveToDatabase(event.target.id, event.target.value);
+        calculateValues();
+      });
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  
+  <script>
+  // Add this PDF generation function
+  function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Create a canvas to read the image data
+    const img = document.createElement('img');
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw background with reduced opacity
+      ctx.globalAlpha = 0.3; // Adjust this value between 0.1-0.5 for desired transparency
+      ctx.drawImage(img, 0, 0);
+      ctx.globalAlpha = 1.0; // Reset to default
+      
+      // Get image data
+      const imgData = canvas.toDataURL('image/png');
+      
+      // Add to PDF
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+      
+      // Continue with PDF generation
+      generatePDFContent(doc);
+    };
+    
+    img.onerror = function() {
+      console.error('Failed to load image for PDF background');
+      generatePDFContent(doc);
+    };
+    
+    // Use path without leading ./ for better cross-platform compatibility
+    img.src = 'background.png'; 
+  }
+
+  function generatePDFContent(doc) {
+    // Make text content more visible with darker font
+    doc.setTextColor(0, 0, 0); // Black text
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Fitomics Nutrition Calculator Report', 15, 20);
+    
+    // Input Parameters Section
+    doc.setFontSize(14);
+    doc.text('Personal Information', 15, 35);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    
+    const inputs = [
+      ['Age:', document.getElementById('age').value + ' years'],
+      ['Gender:', document.getElementById('gender').value],
+      ['Height:', document.getElementById('height').value + ' inches'],
+      ['Weight:', document.getElementById('weight').value + ' lbs'],
+      ['Body Fat:', document.getElementById('bodyfat').value + '%'],
+      ['Activity Level:', document.getElementById('activity').selectedOptions[0].text],
+      ['Workout Calories:', document.getElementById('workout_calories').value + ' kcal/session'],
+      ['Workouts/Week:', document.getElementById('workouts_per_week').value]
+    ];
+
+    inputs.forEach((item, index) => {
+      doc.text(`${item[0]} ${item[1]}`, 15, 45 + (index * 7));
+    });
+    
+    // Results Section
+    doc.setFontSize(14); 
+    doc.setFont('helvetica', 'bold');
+    doc.text('Nutrition Recommendations', 15, 110);
+    
+    // Add table for results
+    doc.autoTable({
+      startY: 115,
+      head: [['Nutrient', 'Value', 'Amount', 'Calories']],
+      body: [
+        ['Target Energy', document.getElementById('target_energy').textContent, '', ''],
+        ['Protein', document.getElementById('protein_value').textContent, 
+         document.getElementById('protein_grams').textContent, 
+         document.getElementById('protein_calories').textContent],
+        ['Fat', document.getElementById('fat_percentage').textContent,
+         document.getElementById('fat_grams').textContent,
+         document.getElementById('fat_calories').textContent],
+        ['Carbs', document.getElementById('carb_percentage').textContent,
+         document.getElementById('carb_grams').textContent,
+         document.getElementById('carb_calories').textContent],
+        ['Fiber', document.getElementById('fiber_value').textContent,
+         document.getElementById('fiber_grams').textContent, ''],
+        ['Fluid Intake', document.getElementById('fluid_ml_per_kg').textContent,
+         document.getElementById('fluid_total').textContent, '']
+      ],
+      theme: 'grid',
+      styles: { fontSize: 10 },
+      headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255] }
+    });
+    
+    // Add footer
+    doc.setFontSize(8);
+    doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, 15, 280);
+    
+    // Save the PDF
+    doc.save('nutrition_report.pdf');
+  }
+  </script>
+</body>
+</html>
