@@ -294,7 +294,7 @@
           <h2>Cardiovascular Measurements</h2>
         </div>
         <div class="form-group">
-          <label for="six_min_distance">6 min Distance (Cooper Formula):</label>
+          <label for="six_min_distance">6 min Distance (Miles):</label>
           <input type="number" id="six_min_distance" name="six_min_distance">
         </div>
         <div class="form-group">
@@ -312,6 +312,10 @@
         <div class="form-group">
           <label for="post_heart_rate">1-minute Post Heart Rate (bpm):</label>
           <input type="number" id="post_heart_rate" name="post_heart_rate">
+        </div>
+        <div class="form-group">
+          <label for="storer_vo2max">Bike/Storer VO2 Max (ml/kg/min):</label>
+          <input type="number" id="storer_vo2max" name="storer_vo2max" readonly>
         </div>
 
         <!-- Nutrient Selection and Results -->
@@ -631,6 +635,48 @@
           elem.classList.add('calc-unavailable');
         });
       }
+
+      // Calculate Cooper VO2 Max
+      const sixMinDistance = parseFloat(document.getElementById('six_min_distance').value);
+      if (!isNaN(sixMinDistance)) {
+        const cooperVO2Max = 35.97 * (sixMinDistance * 2) - 11.29;
+        const cooperElem = document.getElementById('cooper_vo2max');
+        cooperElem.value = cooperVO2Max.toFixed(2);
+        cooperElem.classList.remove('calc-unavailable');
+        cooperElem.classList.add('calc-available');
+      } else {
+        const cooperElem = document.getElementById('cooper_vo2max');
+        cooperElem.value = "";
+        cooperElem.classList.remove('calc-available');
+        cooperElem.classList.add('calc-unavailable');
+      }
+      
+      // Calculate Bike/Storer VO2 Max
+      const watts = parseFloat(document.getElementById('watts_peak_workload').value);
+      const age = parseFloat(document.getElementById('age').value);
+      const weight = parseFloat(document.getElementById('weight').value);
+      const gender = document.getElementById('gender').value;
+      
+      if (!isNaN(watts) && !isNaN(age) && !isNaN(weight)) {
+        const weightKg = weight / 2.204; // Convert pounds to kg
+        let storerVO2Max;
+        
+        if (gender === 'male') {
+          storerVO2Max = 10.51 * watts + 6.35 * weightKg - 10.49 * age + 519.3;
+        } else { // female
+          storerVO2Max = 9.39 * watts + 7.7 * weightKg - 5.88 * age + 136.7;
+        }
+        
+        const storerElem = document.getElementById('storer_vo2max');
+        storerElem.value = storerVO2Max.toFixed(2);
+        storerElem.classList.remove('calc-unavailable');
+        storerElem.classList.add('calc-available');
+      } else {
+        const storerElem = document.getElementById('storer_vo2max');
+        storerElem.value = "";
+        storerElem.classList.remove('calc-available');
+        storerElem.classList.add('calc-unavailable');
+      }
     }
   
     /**
@@ -676,6 +722,7 @@
       saveToDatabase('cooper_vo2max', document.getElementById('cooper_vo2max').value);
       saveToDatabase('watts_peak_workload', document.getElementById('watts_peak_workload').value);
       saveToDatabase('hr_bpm', document.getElementById('hr_bpm').value);
+      saveToDatabase('storer_vo2max', document.getElementById('storer_vo2max').value);
     }
   
     document.addEventListener('DOMContentLoaded', async () => {
@@ -713,6 +760,7 @@
       document.getElementById('cooper_vo2max').value = loadFromDatabase('cooper_vo2max') || '';
       document.getElementById('watts_peak_workload').value = loadFromDatabase('watts_peak_workload') || '';
       document.getElementById('hr_bpm').value = loadFromDatabase('hr_bpm') || '';
+      document.getElementById('storer_vo2max').value = loadFromDatabase('storer_vo2max') || '';
       
       calculateValues();
     });
