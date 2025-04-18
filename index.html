@@ -44,7 +44,7 @@
       color: var(--accent-color);
     }
 
-    /* Form “card” style */
+    /* Form "card" style */
     form {
       background-color: #fff;
       padding: 1.5rem;
@@ -162,6 +162,28 @@
           </label>
           <input type="number" id="bodyfat" name="bodyfat">
         </div>
+        <div class="form-group">
+          <label for="sbp_mmhg">SBP (mmHg):</label>
+          <input type="number" id="sbp_mmhg" name="sbp_mmhg">
+        </div>
+        <div class="form-group">
+          <label for="dbp_mmhg">DBP (mmHg):</label>
+          <input type="number" id="dbp_mmhg" name="dbp_mmhg">
+        </div>
+        <div class="form-group">
+          <label for="resting_hr">Resting Heart Rate (bpm):</label>
+          <input type="number" id="resting_hr" name="resting_hr">
+        </div>
+        <div class="form-group">
+          <label for="goal">Goals: Fat Loss, Muscle Gain, or Maintenance:</label>
+          <select id="goal" name="goal">
+            <option value="0.8">Aggressive Fat Loss</option>
+            <option value="0.9">Moderate Fat Loss</option>
+            <option value="1" selected>Maintenance</option>
+            <option value="1.1">Moderate Muscle Gain</option>
+            <option value="1.2">Aggressive Muscle Gain</option>
+          </select>
+        </div>
 
         <!-- Calculated Body Composition -->
         <div class="form-group">
@@ -184,9 +206,39 @@
           <label for="bmi">Body Mass Index (kg/m²):</label>
           <input type="number" id="bmi" name="bmi" readonly>
         </div>
+        
+        <!-- Activity and Workout -->
+        <div class="form-group full-width">
+          <h2>Activity Levels</h2>
+        </div>
+        <div class="form-group">
+          <label for="activity">Activity Level:</label>
+          <select id="activity" name="activity">
+            <option value="1.1">Little Activity (0-5000 steps)</option>
+            <option value="1.2">Lightly Active (5,000-10,000 steps)</option>
+            <option value="1.4">Active (10,000-15,000 steps)</option>
+            <option value="1.6">Very Active (>15,000 steps)</option>
+          </select>
+        </div>                  
+        <div class="form-group">
+          <label for="workout_calories">Enter Average Calories Expended During a Workout:</label>
+          <input type="number" id="workout_calories" name="workout_calories">
+        </div>
+        <div class="form-group">
+          <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
+          <input type="number" id="workouts_per_week" name="workouts_per_week">
+        </div>
+        <div class="form-group">
+          <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
+          <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" readonly>
+        </div>
         <div class="form-group">
           <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
           <input type="text" id="rmr" readonly>
+        </div>
+        <div class="form-group">
+          <label for="measured_rmr">Measured Resting Metabolic Rate:</label>
+          <input type="number" id="measured_rmr" name="measured_rmr">
         </div>
 
         <!-- Physical Assessment Measurements -->
@@ -200,6 +252,10 @@
         <div class="form-group">
           <label for="grip_strength_right">Grip Strength Right (kg):</label>
           <input type="number" id="grip_strength_right" name="grip_strength_right">
+        </div>
+        <div class="form-group">
+          <label for="grip_strength_avg">Average Grip Strength (kg):</label>
+          <input type="number" id="grip_strength_avg" name="grip_strength_avg" readonly>
         </div>
         <div class="form-group">
           <label for="bench_10rm">10RM - Bench:</label>
@@ -216,10 +272,6 @@
         <div class="form-group">
           <label for="dl_10rm">10RM - DL:</label>
           <input type="number" id="dl_10rm" name="dl_10rm">
-        </div>
-        
-        <div class="form-group full-width">
-          <h2>Strength Scores</h2>
         </div>
         <div class="form-group">
           <label for="upper_strength_score">Upper Strength Score (Percentile Rank):</label>
@@ -250,66 +302,12 @@
           <input type="number" id="watts_peak_workload" name="watts_peak_workload">
         </div>
         <div class="form-group">
-          <label for="hr_bpm">HR (bpm):</label>
+          <label for="hr_bpm">Ending Heart Rate (bpm):</label>
           <input type="number" id="hr_bpm" name="hr_bpm">
         </div>
-
-        <!-- Activity and Workout -->
         <div class="form-group">
-          <label for="activity">Activity Level (table below):</label>
-          <select id="activity" name="activity">
-            <option value="1.1">Little Activity</option>
-            <option value="1.2">Lightly Active</option>
-            <option value="1.4">Active</option>
-            <option value="1.6">Very Active</option>
-          </select>
-        </div>
-        <!-- Activity Explanation Table -->
-        <div class="form-group full-width">
-          <table>
-            <tr>
-              <th>Activity Status</th>
-              <th>Average Daily Steps</th>
-            </tr>
-            <tr>
-              <td>Little Activity</td>
-              <td>0-5000</td>
-            </tr>
-            <tr>
-              <td>Lightly Active</td>
-              <td>5,000-10,000</td>
-            </tr>
-            <tr>
-              <td>Active</td>
-              <td>10,000-15,000</td>
-            </tr>
-            <tr>
-              <td>Very Active</td>
-              <td>>15,000</td>
-            </tr>
-          </table>
-        </div>
-        <div class="form-group">
-          <label for="workout_calories">Enter Average Calories Expended During a Workout:</label>
-          <input type="number" id="workout_calories" name="workout_calories">
-        </div>
-        <div class="form-group">
-          <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
-          <input type="number" id="workouts_per_week" name="workouts_per_week">
-        </div>
-        <div class="form-group">
-          <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
-          <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" readonly>
-        </div>
-        <div class="form-group">
-          <label for="goal">Fat Loss, Muscle Gain, or Maintenance:</label>
-          <select id="goal" name="goal">
-            <option value="0.8">Aggressive Fat Loss</option>
-            <option value="0.9">Moderate Fat Loss</option>
-            <option value="1" selected>Maintenance</option>
-            <option value="1.1">Moderate Muscle Gain</option>
-            <option value="1.2">Aggressive Muscle Gain</option>
-          </select>
+          <label for="post_heart_rate">1-minute Post Heart Rate (bpm):</label>
+          <input type="number" id="post_heart_rate" name="post_heart_rate">
         </div>
 
         <!-- Nutrient Selection and Results -->
@@ -528,6 +526,21 @@
     }
   
     /**
+     * Calculates the average grip strength.
+     */
+    function calculateAverageGripStrength() {
+      const leftGrip = parseFloat(document.getElementById('grip_strength_left').value);
+      const rightGrip = parseFloat(document.getElementById('grip_strength_right').value);
+      
+      if (!isNaN(leftGrip) && !isNaN(rightGrip)) {
+        const avgGrip = (leftGrip + rightGrip) / 2;
+        document.getElementById('grip_strength_avg').value = avgGrip.toFixed(2);
+      } else {
+        document.getElementById('grip_strength_avg').value = "";
+      }
+    }
+  
+    /**
      * Performs calculations that depend on workout, activity, and nutrient data.
      */
     function calculateOtherValues() {
@@ -623,6 +636,7 @@
       updateInputStyles();
       calculateBodyComposition();
       calculateOtherValues();
+      calculateAverageGripStrength();
   
       // Save common values to the database/local storage
       saveToDatabase('age', document.getElementById('age').value);
@@ -636,6 +650,27 @@
       saveToDatabase('goal', document.getElementById('goal').value);
       saveToDatabase('protein', document.getElementById('protein').value);
       saveToDatabase('fat', document.getElementById('fat').value);
+      saveToDatabase('sbp_mmhg', document.getElementById('sbp_mmhg').value);
+      saveToDatabase('dbp_mmhg', document.getElementById('dbp_mmhg').value);
+      saveToDatabase('resting_hr', document.getElementById('resting_hr').value);
+      saveToDatabase('measured_rmr', document.getElementById('measured_rmr').value);
+      saveToDatabase('post_heart_rate', document.getElementById('post_heart_rate').value);
+      
+      // Add missing fields to database save
+      saveToDatabase('grip_strength_left', document.getElementById('grip_strength_left').value);
+      saveToDatabase('grip_strength_right', document.getElementById('grip_strength_right').value);
+      saveToDatabase('grip_strength_avg', document.getElementById('grip_strength_avg').value);
+      saveToDatabase('bench_10rm', document.getElementById('bench_10rm').value);
+      saveToDatabase('chop_10rm', document.getElementById('chop_10rm').value);
+      saveToDatabase('pulldown_10rm', document.getElementById('pulldown_10rm').value);
+      saveToDatabase('dl_10rm', document.getElementById('dl_10rm').value);
+      saveToDatabase('upper_strength_score', document.getElementById('upper_strength_score').value);
+      saveToDatabase('lower_strength_score', document.getElementById('lower_strength_score').value);
+      saveToDatabase('core_strength_score', document.getElementById('core_strength_score').value);
+      saveToDatabase('total_strength_score', document.getElementById('total_strength_score').value);
+      saveToDatabase('six_min_distance', document.getElementById('six_min_distance').value);
+      saveToDatabase('watts_peak_workload', document.getElementById('watts_peak_workload').value);
+      saveToDatabase('hr_bpm', document.getElementById('hr_bpm').value);
     }
   
     document.addEventListener('DOMContentLoaded', async () => {
@@ -651,6 +686,28 @@
       document.getElementById('goal').value = loadFromDatabase('goal') || '1';
       document.getElementById('protein').value = loadFromDatabase('protein') || '1.2';
       document.getElementById('fat').value = loadFromDatabase('fat') || '0.3';
+      document.getElementById('sbp_mmhg').value = loadFromDatabase('sbp_mmhg') || '';
+      document.getElementById('dbp_mmhg').value = loadFromDatabase('dbp_mmhg') || '';
+      document.getElementById('resting_hr').value = loadFromDatabase('resting_hr') || '';
+      document.getElementById('measured_rmr').value = loadFromDatabase('measured_rmr') || '';
+      document.getElementById('post_heart_rate').value = loadFromDatabase('post_heart_rate') || '';
+      
+      // Add missing fields to database load
+      document.getElementById('grip_strength_left').value = loadFromDatabase('grip_strength_left') || '';
+      document.getElementById('grip_strength_right').value = loadFromDatabase('grip_strength_right') || '';
+      document.getElementById('grip_strength_avg').value = loadFromDatabase('grip_strength_avg') || '';
+      document.getElementById('bench_10rm').value = loadFromDatabase('bench_10rm') || '';
+      document.getElementById('chop_10rm').value = loadFromDatabase('chop_10rm') || '';
+      document.getElementById('pulldown_10rm').value = loadFromDatabase('pulldown_10rm') || '';
+      document.getElementById('dl_10rm').value = loadFromDatabase('dl_10rm') || '';
+      document.getElementById('upper_strength_score').value = loadFromDatabase('upper_strength_score') || '';
+      document.getElementById('lower_strength_score').value = loadFromDatabase('lower_strength_score') || '';
+      document.getElementById('core_strength_score').value = loadFromDatabase('core_strength_score') || '';
+      document.getElementById('total_strength_score').value = loadFromDatabase('total_strength_score') || '';
+      document.getElementById('six_min_distance').value = loadFromDatabase('six_min_distance') || '';
+      document.getElementById('watts_peak_workload').value = loadFromDatabase('watts_peak_workload') || '';
+      document.getElementById('hr_bpm').value = loadFromDatabase('hr_bpm') || '';
+      
       calculateValues();
     });
   
@@ -665,112 +722,112 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
   
   <script>
-  // Add this PDF generation function
-  function downloadPDF() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+    // Add this PDF generation function
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
 
-    // Create a canvas to read the image data
-    const img = document.createElement('img');
-    img.onload = function() {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
+      // Create a canvas to read the image data
+      const img = document.createElement('img');
+      img.onload = function() {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw background with reduced opacity
+        ctx.globalAlpha = 0.3; // Adjust this value between 0.1-0.5 for desired transparency
+        ctx.drawImage(img, 0, 0);
+        ctx.globalAlpha = 1.0; // Reset to default
+        
+        // Get image data
+        const imgData = canvas.toDataURL('image/png');
+        
+        // Add to PDF
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+        doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+        
+        // Continue with PDF generation
+        generatePDFContent(doc);
+      };
       
-      // Draw background with reduced opacity
-      ctx.globalAlpha = 0.3; // Adjust this value between 0.1-0.5 for desired transparency
-      ctx.drawImage(img, 0, 0);
-      ctx.globalAlpha = 1.0; // Reset to default
+      img.onerror = function() {
+        console.error('Failed to load image for PDF background');
+        generatePDFContent(doc);
+      };
       
-      // Get image data
-      const imgData = canvas.toDataURL('image/png');
-      
-      // Add to PDF
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
-      
-      // Continue with PDF generation
-      generatePDFContent(doc);
-    };
-    
-    img.onerror = function() {
-      console.error('Failed to load image for PDF background');
-      generatePDFContent(doc);
-    };
-    
-    // Use path without leading ./ for better cross-platform compatibility
-    img.src = 'background.png'; 
-  }
+      // Use path without leading ./ for better cross-platform compatibility
+      img.src = 'background.png'; 
+    }
 
-  function generatePDFContent(doc) {
-    // Make text content more visible with darker font
-    doc.setTextColor(0, 0, 0); // Black text
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Fitomics Nutrition Calculator Report', 15, 20);
-    
-    // Input Parameters Section
-    doc.setFontSize(14);
-    doc.text('Personal Information', 15, 35);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    
-    const inputs = [
-      ['Age:', document.getElementById('age').value + ' years'],
-      ['Gender:', document.getElementById('gender').value],
-      ['Height:', document.getElementById('height').value + ' inches'],
-      ['Weight:', document.getElementById('weight').value + ' lbs'],
-      ['Body Fat:', document.getElementById('bodyfat').value + '%'],
-      ['Activity Level:', document.getElementById('activity').selectedOptions[0].text],
-      ['Workout Calories:', document.getElementById('workout_calories').value + ' kcal/session'],
-      ['Workouts/Week:', document.getElementById('workouts_per_week').value]
-    ];
+    function generatePDFContent(doc) {
+      // Make text content more visible with darker font
+      doc.setTextColor(0, 0, 0); // Black text
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fitomics Nutrition Calculator Report', 15, 20);
+      
+      // Input Parameters Section
+      doc.setFontSize(14);
+      doc.text('Personal Information', 15, 35);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      const inputs = [
+        ['Age:', document.getElementById('age').value + ' years'],
+        ['Gender:', document.getElementById('gender').value],
+        ['Height:', document.getElementById('height').value + ' inches'],
+        ['Weight:', document.getElementById('weight').value + ' lbs'],
+        ['Body Fat:', document.getElementById('bodyfat').value + '%'],
+        ['Activity Level:', document.getElementById('activity').selectedOptions[0].text],
+        ['Workout Calories:', document.getElementById('workout_calories').value + ' kcal/session'],
+        ['Workouts/Week:', document.getElementById('workouts_per_week').value]
+      ];
 
-    inputs.forEach((item, index) => {
-      doc.text(`${item[0]} ${item[1]}`, 15, 45 + (index * 7));
-    });
-    
-    // Results Section
-    doc.setFontSize(14); 
-    doc.setFont('helvetica', 'bold');
-    doc.text('Nutrition Recommendations', 15, 110);
-    
-    // Add table for results
-    doc.autoTable({
-      startY: 115,
-      head: [['Nutrient', 'Value', 'Amount', 'Calories']],
-      body: [
-        ['Target Energy', document.getElementById('target_energy').textContent, '', ''],
-        ['Protein', document.getElementById('protein_value').textContent, 
-         document.getElementById('protein_grams').textContent, 
-         document.getElementById('protein_calories').textContent],
-        ['Fat', document.getElementById('fat_percentage').textContent,
-         document.getElementById('fat_grams').textContent,
-         document.getElementById('fat_calories').textContent],
-        ['Carbs', document.getElementById('carb_percentage').textContent,
-         document.getElementById('carb_grams').textContent,
-         document.getElementById('carb_calories').textContent],
-        ['Fiber', document.getElementById('fiber_value').textContent,
-         document.getElementById('fiber_grams').textContent, ''],
-        ['Fluid Intake', document.getElementById('fluid_ml_per_kg').textContent,
-         document.getElementById('fluid_total').textContent, '']
-      ],
-      theme: 'grid',
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255] }
-    });
-    
-    // Add footer
-    doc.setFontSize(8);
-    doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, 15, 280);
-    
-    // Save the PDF
-    doc.save('nutrition_report.pdf');
-  }
+      inputs.forEach((item, index) => {
+        doc.text(`${item[0]} ${item[1]}`, 15, 45 + (index * 7));
+      });
+      
+      // Results Section
+      doc.setFontSize(14); 
+      doc.setFont('helvetica', 'bold');
+      doc.text('Nutrition Recommendations', 15, 110);
+      
+      // Add table for results
+      doc.autoTable({
+        startY: 115,
+        head: [['Nutrient', 'Value', 'Amount', 'Calories']],
+        body: [
+          ['Target Energy', document.getElementById('target_energy').textContent, '', ''],
+          ['Protein', document.getElementById('protein_value').textContent, 
+           document.getElementById('protein_grams').textContent, 
+           document.getElementById('protein_calories').textContent],
+          ['Fat', document.getElementById('fat_percentage').textContent,
+           document.getElementById('fat_grams').textContent,
+           document.getElementById('fat_calories').textContent],
+          ['Carbs', document.getElementById('carb_percentage').textContent,
+           document.getElementById('carb_grams').textContent,
+           document.getElementById('carb_calories').textContent],
+          ['Fiber', document.getElementById('fiber_value').textContent,
+           document.getElementById('fiber_grams').textContent, ''],
+          ['Fluid Intake', document.getElementById('fluid_ml_per_kg').textContent,
+           document.getElementById('fluid_total').textContent, '']
+        ],
+        theme: 'grid',
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255] }
+      });
+      
+      // Add footer
+      doc.setFontSize(8);
+      doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, 15, 280);
+      
+      // Save the PDF
+      doc.save('nutrition_report.pdf');
+    }
   </script>
 </body>
 </html>
