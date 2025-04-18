@@ -79,6 +79,7 @@
 
     input[type="number"],
     input[type="text"],
+    input[type="date"],
     select {
       padding: 0.5rem;
       border: 1px solid var(--border-color);
@@ -88,6 +89,7 @@
     }
     input[type="number"]:focus,
     input[type="text"]:focus,
+    input[type="date"]:focus,
     select:focus {
       border-color: var(--accent-color);
       box-shadow: 0 0 5px rgba(255, 204, 128, 0.5);
@@ -135,6 +137,20 @@
     <h1>Fitomics Discovery Exam Report</h1>
     <form>
       <div class="form-grid">
+        <!-- New fields for name and date -->
+        <div class="form-group">
+          <label for="first_name">First Name:</label>
+          <input type="text" id="first_name" name="first_name">
+        </div>
+        <div class="form-group">
+          <label for="last_name">Last Name:</label>
+          <input type="text" id="last_name" name="last_name">
+        </div>
+        <div class="form-group">
+          <label for="exam_date">Date:</label>
+          <input type="date" id="exam_date" name="exam_date">
+        </div>
+        
         <!-- Personal Information -->
         <div class="form-group">
           <label for="age">Enter Age (Years):</label>
@@ -689,6 +705,9 @@
       calculateAverageGripStrength();
   
       // Save common values to the database/local storage
+      saveToDatabase('first_name', document.getElementById('first_name').value);
+      saveToDatabase('last_name', document.getElementById('last_name').value);
+      saveToDatabase('exam_date', document.getElementById('exam_date').value);
       saveToDatabase('age', document.getElementById('age').value);
       saveToDatabase('weight', document.getElementById('weight').value);
       saveToDatabase('bodyfat', document.getElementById('bodyfat').value);
@@ -727,6 +746,18 @@
   
     document.addEventListener('DOMContentLoaded', async () => {
       await initDatabase();
+      
+      // Set default date to today
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const todayFormatted = `${yyyy}-${mm}-${dd}`;
+      
+      // Load saved data or set defaults
+      document.getElementById('first_name').value = loadFromDatabase('first_name') || '';
+      document.getElementById('last_name').value = loadFromDatabase('last_name') || '';
+      document.getElementById('exam_date').value = loadFromDatabase('exam_date') || todayFormatted;
       document.getElementById('age').value = loadFromDatabase('age') || '';
       document.getElementById('weight').value = loadFromDatabase('weight') || '';
       document.getElementById('bodyfat').value = loadFromDatabase('bodyfat') || '';
@@ -824,11 +855,32 @@
       doc.setFont('helvetica', 'bold');
       doc.text('Fitomics Nutrition Calculator Report', 15, 20);
       
+      // Get name and format it
+      const firstName = document.getElementById('first_name').value || '';
+      const lastName = document.getElementById('last_name').value || '';
+      const fullName = (firstName + ' ' + lastName).trim();
+      const examDate = document.getElementById('exam_date').value || '';
+      
+      // Add client name if available
+      if (fullName) {
+        doc.setFontSize(14);
+        doc.text(`Client: ${fullName}`, 15, 30);
+      }
+      
+      // Add exam date if available
+      if (examDate) {
+        const displayDate = new Date(examDate).toLocaleDateString();
+        doc.text(`Date: ${displayDate}`, 15, 37);
+      }
+      
       // Input Parameters Section
       doc.setFontSize(14);
-      doc.text('Personal Information', 15, 35);
+      doc.text('Personal Information', 15, 47);
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
+      
+      // Adjust the starting Y position to account for the name and date
+      const startY = 57;
       
       const inputs = [
         ['Age:', document.getElementById('age').value + ' years'],
@@ -842,7 +894,7 @@
       ];
 
       inputs.forEach((item, index) => {
-        doc.text(`${item[0]} ${item[1]}`, 15, 45 + (index * 7));
+        doc.text(`${item[0]} ${item[1]}`, 15, startY + (index * 7));
       });
       
       // Results Section
