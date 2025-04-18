@@ -658,13 +658,13 @@
       const gender = document.getElementById('gender').value;
       
       if (!isNaN(watts) && !isNaN(age) && !isNaN(weight)) {
-        const weightKg = weight / 2.204; // Convert pounds to kg
+        const weightkg = weight / 2.204; // Define weightkg in this scope
         let storerVO2Max;
         
         if (gender === 'male') {
-          storerVO2Max = 10.51 * watts + 6.35 * weightKg - 10.49 * age + 519.3;
+          storerVO2Max = (10.51 * watts + 6.35 * weightkg - 10.49 * age + 519.3)/weightkg;
         } else { // female
-          storerVO2Max = 9.39 * watts + 7.7 * weightKg - 5.88 * age + 136.7;
+          storerVO2Max = (9.39 * watts + 7.7 * weightkg - 5.88 * age + 136.7)/weightkg;
         }
         
         const storerElem = document.getElementById('storer_vo2max');
