@@ -152,11 +152,39 @@
     .btn + .btn {
       margin-left: 8px;
     }
+    
+    /* Navigation button styles */
+    .nav-button-container {
+      display: flex;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    
+    .nav-button {
+      padding: 10px 20px;
+      background-color: var(--accent-color);
+      color: var(--primary-bg);
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    
+    .nav-button:hover {
+      background-color: #ffb74d;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
   </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
 </head>
 <body>
   <div class="container">
+    <!-- Navigation button at the top -->
+    <div class="nav-button-container">
+      <a href="reportgpttest.html" class="nav-button">View Report Design</a>
+    </div>
+    
     <h1>Fitomics Discovery Exam Report</h1>
     <form>
       <div class="form-group full-width">
@@ -462,6 +490,11 @@
         </div>
       </div>
     </form>
+    
+    <!-- Navigation button at the bottom -->
+    <div class="nav-button-container">
+      <a href="reportgpttest.html" class="nav-button">View Report Design</a>
+    </div>
   </div>
 
   <div class="modal fade" id="bodyFatExamplesModal" tabindex="-1" aria-labelledby="bodyFatExamplesModalLabel" aria-hidden="true">
