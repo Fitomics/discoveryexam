@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Discovery Exam PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Glacial Indifference', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #ffffff;
+      /* Removed text-align: center for better layout control inside pages */
+      color: #00263d;
+    }
+    .page {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      min-height: 1100px; /* Approximate aspect ratio for Letter size */
+      /* aspect-ratio: 2550 / 3300; Removed for flexibility */
+      margin: 30px auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,38,61,0.15);
+      padding: 40px 50px 100px 50px; /* Added more padding */
+      box-sizing: border-box; /* Include padding in dimensions */
+    }
+    .title-text {
+      margin: 0 auto 30px auto; /* Increased bottom margin */
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .graph-container {
+      position: relative;
+      width: 90%;
+      margin: 20px auto; /* Added margin */
+      padding: 24px;
+      border-radius: 10px;
+      background-color: #f8f9fa; /* Light background for container */
+      border: 1px solid #e4ac61;
+      text-align: center; /* Center content inside graph container */
+    }
+    .graph-image {
+      width: 100%;
+      max-width: 600px; /* Limit image width */
+      max-height: 400px; /* Limit image height */
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid #e4ac61;
+      margin-bottom: 15px; /* Space below image */
+    }
+    .meta-field { /* Style for Name/Date fields */
+        display: block; /* Make them block elements */
+        font-size: 18px;
+        width: 80%; /* Adjust width */
+        margin: 15px auto; /* Center with margin */
+        padding: 10px 14px;
+        text-align: center;
+        border: 1px solid #ccd5df;
+        border-radius: 6px;
+        font-family: 'Glacial Indifference', sans-serif;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        background-color: #f0f0f0; /* Indicate read-only */
+        color: #333;
+    }
+    .value-field { /* General style for value inputs */
+      font-size: 14px; /* Adjusted size */
+      width: auto; /* Let table cells define width */
+      min-width: 80px; /* Minimum width */
+      margin: 2px; /* Reduced margin */
+      padding: 6px 10px; /* Adjusted padding */
+      text-align: center;
+      border: 1px solid #ccd5df;
+      border-radius: 4px; /* Smaller radius */
+      font-family: 'Glacial Indifference', sans-serif;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      background-color: #f0f0f0; /* Indicate read-only */
+       color: #333;
+    }
+     /* Specific adjustments for inputs directly under graph-container */
+    .graph-container > .value-field {
+        display: inline-block; /* Allow inline display */
+        width: 120px; /* Fixed width for consistency */
+        margin: 10px;
+    }
+
+    .unit-label {
+      font-size: 14px; /* Match value field */
+      margin-left: 5px; /* Reduced margin */
+      vertical-align: middle;
+      color: #555; /* Slightly dimmer color */
+    }
+    .table-wrapper {
+      width: 95%; /* Increase width */
+      margin: 20px auto; /* Added margin */
+      overflow-x: auto; /* Handle potential overflow */
+    }
+    .table-wrapper table {
+      width: 100%;
+      border-collapse: collapse;
+       font-size: 14px; /* Base font size for tables */
+    }
+    .table-wrapper th, .table-wrapper td {
+      padding: 8px 10px; /* Adjusted padding */
+      border: 1px solid #c19962;
+      text-align: left;
+      vertical-align: middle; /* Align vertically */
+    }
+     .table-wrapper th {
+        background-color: #fdf6ec; /* Light header background */
+        font-weight: bold;
+     }
+     .table-wrapper td:nth-child(1) { /* Style first column (labels) */
+         font-weight: 600;
+          white-space: nowrap; /* Prevent labels wrapping */
+     }
+      .table-wrapper input.value-field { /* Inputs within tables */
+         width: 90%; /* Fill cell width better */
+         box-sizing: border-box; /* Include border/padding in width */
+      }
+
+    button {
+      display: block; /* Make button block */
+      margin: 40px auto 20px auto; /* Center button below content */
+      padding: 12px 28px;
+      font-size: 16px;
+      background-color: #c19962;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+       transition: background-color 0.2s ease;
+    }
+     button:hover {
+         background-color: #a98451;
+     }
+
+    .selected-macros {
+      width: 90%;
+      margin: 0 auto 20px auto;
+      text-align: center;
+      padding: 15px 15px 20px 15px; /* Added more bottom padding */
+      background-color: #f8f8f8;
+      border: 1px solid #c19962;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column; /* Changed to column to stack title and then items */
+      align-items: center;
+    }
+
+    .selected-macros .section-subtitle {
+      text-align: center;
+      font-size: 22px;
+      margin: 0 auto 15px auto; /* Reduced top margin since it's inside the box */
+      color: #00263d;
+      font-weight: 600;
+      border-bottom: 1px solid #c19962;
+      padding-bottom: 8px;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .macro-item {
+      margin: 8px 20px;
+      display: inline-block; /* Allow items to appear side by side */
+    }
+
+    .macro-items-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="pdfWrapper">
+    <div class="page">
+      <div class="title-text">Discovery Exam Report</div>
+      <input class="meta-field" id="clientName" readonly>
+      <input class="meta-field" id="examDate" readonly>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Summary Table</div>
+      <div class="table-wrapper">
+        <table>
+          <tr>
+            <th>Variable</th>
+            <th>Value</th>
+            <th>Note</th> </tr>
+          <tr>
+            <td>Body Mass Index (BMI)</td>
+            <td><input class="value-field" id="summaryBmiValue" readonly></td>
+            <td><input class="value-field" id="summaryBmiNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Fat Mass Index (FMI)</td>
+            <td><input class="value-field" id="summaryFmiValue" readonly></td>
+            <td><input class="value-field" id="summaryFmiNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Fat‑Free Mass Index (FFMI)</td>
+            <td><input class="value-field" id="summaryFfmiValue" readonly></td>
+            <td><input class="value-field" id="summaryFfmiNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Grip Strength</td>
+            <td><input class="value-field" id="summaryGripValue" readonly></td>
+            <td><input class="value-field" id="summaryGripNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Heart Rate Recovery (1 min)</td>
+            <td><input class="value-field" id="summaryHrrValue" readonly></td>
+            <td><input class="value-field" id="summaryHrrNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Resting Heart Rate</td>
+            <td><input class="value-field" id="summaryRhrValue" readonly></td>
+            <td><input class="value-field" id="summaryRhrNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Resting Metabolic Rate</td>
+            <td><input class="value-field" id="summaryRmrValue" readonly></td>
+            <td><input class="value-field" id="summaryRmrNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Systolic BP</td>
+            <td><input class="value-field" id="summarySbpValue" readonly></td>
+            <td><input class="value-field" id="summarySbpNote" readonly></td>
+          </tr>
+          <tr>
+            <td>Diastolic BP</td>
+            <td><input class="value-field" id="summaryDbpValue" readonly></td>
+            <td><input class="value-field" id="summaryDbpNote" readonly></td>
+          </tr>
+          <tr>
+            <td>VO₂ Max (Est.)</td> <td><input class="value-field" id="summaryVo2Value" readonly></td>
+            <td><input class="value-field" id="summaryVo2Note" readonly></td>
+          </tr>
+          <tr>
+            <td>Functional Strength Score</td>
+            <td><input class="value-field" id="summaryFssValue" readonly></td>
+            <td><input class="value-field" id="summaryFssNote" readonly></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Body Mass Index</div>
+      <div class="graph-container">
+        <img class="graph-image" src="BMI.png" alt="BMI Graph">
+        <input class="value-field" id="graphBmi" readonly><span class="unit-label">kg/m²</span>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Fat & Fat-Free Mass Index</div>
+      <div class="graph-container">
+        <img class="graph-image" src="FMI_FFMI.png" alt="FMI FFMI Graph">
+        <input class="value-field" id="graphFmi" readonly><span class="unit-label">kg/m²</span>
+        <input class="value-field" id="graphFfmi" readonly><span class="unit-label">kg/m²</span>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Blood Pressure</div>
+      <div class="graph-container">
+        <img class="graph-image" src="SBPDBP.png" alt="Blood Pressure Graph">
+        <input class="value-field" id="graphSbp" readonly><span class="unit-label">mmHg</span>
+        <input class="value-field" id="graphDbp" readonly><span class="unit-label">mmHg</span>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Resting Heart Rate</div>
+      <div class="graph-container">
+        <img class="graph-image" src="RHR.png" alt="RHR Graph">
+        <input class="value-field" id="graphRhr" readonly><span class="unit-label">bpm</span>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Resting Metabolic Rate</div>
+      <div class="graph-container">
+        <img class="graph-image" src="RMRINT.png" alt="RMR Graph">
+        <input class="value-field" id="graphRmrMeasured" readonly><span class="unit-label">kcal/day</span>
+        <div class="table-wrapper">
+          <table>
+            <tr><th>Metric</th><th>Value</th></tr>
+            <tr><td>Predicted RMR</td><td><input class="value-field" id="tableRmrPredicted" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr><td>Measured RMR</td><td><input class="value-field" id="tableRmrMeasured" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr><td>% Calories from Fat</td><td><input class="value-field" id="tableRmrFatPercent" readonly><span class="unit-label">%</span></td></tr>
+            <tr><td>% Calories from Carbohydrate</td><td><input class="value-field" id="tableRmrCarbPercent" readonly><span class="unit-label">%</span></td></tr>
+            <tr><td>Conservative Weight Loss Target</td><td><input class="value-field" id="tableTargetLossCons" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr><td>Aggressive Weight Loss Target</td><td><input class="value-field" id="tableTargetLossAggr" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr><td>Conservative Weight Gain Target</td><td><input class="value-field" id="tableTargetGainCons" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr><td>Aggressive Weight Gain Target</td><td><input class="value-field" id="tableTargetGainAggr" readonly><span class="unit-label">kcal/day</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">VO₂ Max</div>
+      <div class="graph-container">
+        <img class="graph-image" src="VO2Percentile.png" alt="VO2 Graph">
+        <div class="table-wrapper">
+          <table>
+            <tr><td>Estimated VO₂ Max (ml/kg/min)</td><td><input class="value-field" id="tableVo2Value" readonly><span class="unit-label"></span></td></tr>
+            <tr><td>Estimated VO₂ Max (METS)</td><td><input class="value-field" id="tableVo2Mets" readonly><span class="unit-label"></span></td></tr>
+            <tr><td>Percentile</td><td><input class="value-field" id="tableVo2Percentile" readonly><span class="unit-label">%</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Grip Strength</div>
+      <div class="graph-container">
+        <img class="graph-image" src="GripStrength.png" alt="Grip Strength Graph">
+        <div class="table-wrapper">
+          <table>
+            <tr><td>Right Hand Grip Strength</td><td><input class="value-field" id="graphGripRight" readonly><span class="unit-label">kg</span></td></tr>
+            <tr><td>Left Hand Grip Strength</td><td><input class="value-field" id="graphGripLeft" readonly><span class="unit-label">kg</span></td></tr>
+            <tr><td>Average Grip Strength</td><td><input class="value-field" id="graphGripAvg" readonly><span class="unit-label">kg</span></td></tr>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Functional Strength Scores</div>
+      <div class="graph-container">
+         <div>Upper Body Score: <input class="value-field" id="graphUpperScore" readonly><span class="unit-label"></span></div>
+        <div>Lower Body Score: <input class="value-field" id="graphLowerScore" readonly><span class="unit-label"></span></div>
+        <div>Core Score: <input class="value-field" id="graphCoreScore" readonly><span class="unit-label"></span></div>
+        <div>Total Score: <input class="value-field" id="graphTotalScore" readonly><span class="unit-label"></span></div>
+        <img class="graph-image" style="margin-top: 20px;" src="bellcurve.png" alt="Functional Strength Bell Curve">
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Predicted Rep Maxes</div>
+      <div class="table-wrapper">
+        <table style="margin-top: 20px;">
+          <tr>
+            <th>Predicted Rep Max</th>
+            <th>Bench Press (lbs)</th>
+            <th>Pulldown (lbs)</th>
+            <th>Deadlift (lbs)</th>
+            </tr>
+          <tr><td>1</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>2</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>3</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>4</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>5</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>6</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>7</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>8</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>9</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr>
+              <td>10</td>
+              <td><input class="value-field" id="repmax10Bench" readonly></td>
+              <td><input class="value-field" id="repmax10Pulldown" readonly></td>
+              <td><input class="value-field" id="repmax10Deadlift" readonly></td>
+          </tr>
+          <tr><td>11</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>12</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>13</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>14</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+          <tr><td>15</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="page">
+      <div class="title-text">Initial Nutrition Targets</div>
+      
+      <div class="selected-macros">
+        <h3 class="section-subtitle">Dietary Assumptions</h3>
+        
+        <div class="macro-items-container">
+          <div class="macro-item">
+            <span class="macro-label">Protein Assumption:</span>
+            <input class="value-field" id="nutritionProteinTarget" readonly>
+            <span class="unit-label">g/kg FFM</span>
+          </div>
+          <div class="macro-item">
+            <span class="macro-label">Fat Content:</span>
+            <input class="value-field" id="nutritionFatTarget" readonly>
+            <span class="unit-label">% of calories</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="table-wrapper">
+        <table>
+          <tr><th>Target</th><th>Value</th></tr>
+          <tr>
+            <td>Energy Target</td>
+            <td>
+              <input class="value-field" id="nutritionEnergy" readonly>
+              <span class="unit-label">kcal/day</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Protein Target</td>
+            <td>
+              <input class="value-field" id="nutritionProtein" readonly>
+              <span class="unit-label">g/day</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Carbohydrate Target</td>
+            <td>
+              <input class="value-field" id="nutritionCarbs" readonly>
+              <span class="unit-label">g/day</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Fat Target</td>
+            <td>
+              <input class="value-field" id="nutritionFat" readonly>
+              <span class="unit-label">g/day</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Fiber Target</td>
+            <td>
+              <input class="value-field" id="nutritionFiber" readonly>
+              <span class="unit-label">g/day</span>
+            </td>
+          </tr>
+          <tr>
+            <td>Fluid Target</td>
+            <td>
+              <input class="value-field" id="nutritionFluid" readonly>
+              <span class="unit-label">ml/day</span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div><button onclick="generatePDF()">Download PDF Preview</button>
+
+  <script>
+    // Update the existing calculateVo2Percentile function
+    function calculateVo2Percentile(gender, age, vo2Value) {
+      // Return early if any required values are missing
+      if (!gender || !age || !vo2Value || isNaN(parseFloat(vo2Value))) {
+        return 'N/A';
+      }
+      
+      gender = gender.toUpperCase();
+      age = parseInt(age);
+      vo2Value = parseFloat(vo2Value);
+      
+      // Convert VO2 Max to METS for the calculation
+      const vo2ValueMets = vo2Value / 3.5;
+      
+      // Percentile calculation table - same coefficients but will be using METS now
+      const percentileTable = [
+        {gender: 'FEMALE', ageLow: 18, ageHigh: 19, intercept: -38.39370468, slope: 8.408706891},
+        {gender: 'FEMALE', ageLow: 20, ageHigh: 29, intercept: -30.77369941, slope: 8.710278691},
+        {gender: 'FEMALE', ageLow: 30, ageHigh: 39, intercept: -31.6543755, slope: 9.256543442},
+        {gender: 'FEMALE', ageLow: 40, ageHigh: 49, intercept: -31.79589193, slope: 9.657290896},
+        {gender: 'FEMALE', ageLow: 50, ageHigh: 59, intercept: -30.18427375, slope: 10.01526944},
+        {gender: 'FEMALE', ageLow: 60, ageHigh: 69, intercept: -31.79829302, slope: 11.91748344},
+        {gender: 'FEMALE', ageLow: 70, ageHigh: 79, intercept: -30.41205179, slope: 13.75099602},
+        {gender: 'FEMALE', ageLow: 80, ageHigh: 89, intercept: -33.57744583, slope: 16.0898446},
+        {gender: 'MALE', ageLow: 18, ageHigh: 19, intercept: -36.26322582, slope: 7.433576287},
+        {gender: 'MALE', ageLow: 20, ageHigh: 29, intercept: -36.33493979, slope: 7.793652529},
+        {gender: 'MALE', ageLow: 30, ageHigh: 39, intercept: -38.26153919, slope: 8.37609897},
+        {gender: 'MALE', ageLow: 40, ageHigh: 49, intercept: -38.95930276, slope: 8.659028352},
+        {gender: 'MALE', ageLow: 50, ageHigh: 59, intercept: -33.05833684, slope: 8.969738411},
+        {gender: 'MALE', ageLow: 60, ageHigh: 69, intercept: -30.50893082, slope: 9.931446541},
+        {gender: 'MALE', ageLow: 70, ageHigh: 79, intercept: -30.23581148, slope: 11.60411056},
+        {gender: 'MALE', ageLow: 80, ageHigh: 89, intercept: -30.85004941, slope: 13.4229249}
+      ];
+      
+      // Find the appropriate row in the table
+      const row = percentileTable.find(r => 
+        r.gender === gender && age >= r.ageLow && age <= r.ageHigh
+      );
+      
+      if (!row) {
+        return 'N/A'; // No matching row found
+      }
+      
+      // Apply the formula using METS
+      const percentile = row.intercept + (row.slope * vo2ValueMets);
+      
+      // Check if percentile is 100 or greater
+      if (percentile >= 100) {
+        return ">99.9"; // Display special notation for very high percentiles
+      }
+      
+      // Format to 1 decimal place for normal range values
+      return percentile.toFixed(1);
+    }
+
+    // Helper function to safely get data and populate fields
+    function populateField(elementId, storageKey, options = {}) {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            // console.warn(`Element with ID "${elementId}" not found.`);
+            return; // Skip if element doesn't exist
+        }
+
+        let value = localStorage.getItem(storageKey);
+
+        // Default value if localStorage item is null or undefined
+        const defaultValue = options.defaultValue !== undefined ? options.defaultValue : 'N/A';
+
+        if (value === null || value === undefined || value.trim() === '') {
+            value = defaultValue;
+        } else {
+            // Remove known units if needed (simple removal)
+             value = value.replace(/ kcal/g, '')
+                         .replace(/ ml/g, '')
+                         .replace(/ g/g, '')
+                         .replace(/ kg\/mg/g, '')
+                         .replace(/ kg/g, '')
+                         .replace(/ lbs/g, '')
+                         .replace(/ %/g, '')
+                         .replace(/ bpm/g, '')
+                         .replace(/ mmHg/g, '')
+                         .replace(/ ml\/kg\/min/g, '')
+                         .replace(/ %ile/g, '')
+                         .trim();
+
+             // Apply formatting function if provided
+             if (typeof options.formatter === 'function') {
+                 value = options.formatter(value);
+             }
+        }
+
+         // Ensure final value is not just whitespace if defaultValue wasn't used
+         if (typeof value === 'string' && value.trim() === '') {
+             value = defaultValue;
+         }
+
+        element.value = value;
+    }
+
+    // Function to format date as MM/DD/YYYY
+    function formatDate(dateString) {
+        if (!dateString || !/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+            return 'N/A'; // Basic validation
+        }
+        try {
+             // Add time part to avoid timezone interpretation issues with just date string
+            const date = new Date(dateString + 'T00:00:00');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${month}/${day}/${year}`;
+        } catch (e) {
+            console.error("Error formatting date:", e);
+            return dateString; // Return original if formatting fails
+        }
+    }
+
+    // Helper function to calculate rep maxes
+    function calculateRepMaxes(rm10) {
+        if (!rm10 || isNaN(parseFloat(rm10))) return Array(15).fill('N/A');
+        
+        // Calculate 1RM by dividing 10RM by 0.79
+        const rm1 = parseFloat(rm10) / 0.79;
+        
+        // Coefficients for each rep max
+        const coefficients = [
+            1.00, 0.98, 0.96, 0.93, 0.91, 
+            0.88, 0.86, 0.84, 0.81, 0.79, 
+            0.77, 0.75, 0.73, 0.71, 0.69
+        ];
+        
+        // Calculate all rep maxes
+        return coefficients.map(coef => Math.round(rm1 * coef));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- Populate Fields ---
+
+        // Page 1: Meta Info
+        const firstName = localStorage.getItem('first_name') || '';
+        const lastName = localStorage.getItem('last_name') || '';
+        document.getElementById('clientName').value = `${firstName} ${lastName}`.trim() || 'N/A';
+        populateField('examDate', 'exam_date', { formatter: formatDate });
+
+        // Page 2: Summary Table (Value Fields)
+        populateField('summaryBmiValue', 'bmi');
+        populateField('summaryFmiValue', 'fat_mass_index');
+        populateField('summaryFfmiValue', 'fat_free_mass_index');
+        populateField('summaryGripValue', 'grip_strength_avg');
+        populateField('summaryRhrValue', 'resting_hr');
+        populateField('summarySbpValue', 'sbp_mmhg');
+        populateField('summaryDbpValue', 'dbp_mmhg');
+        populateField('summaryFssValue', 'total_strength_score');
+
+        // Summary RMR: Prioritize Measured over Predicted
+        const measuredRMR = localStorage.getItem('measured_rmr');
+        const predictedRMR = localStorage.getItem('rmr');
+        document.getElementById('summaryRmrValue').value = (measuredRMR && measuredRMR.trim() !== '') ? measuredRMR : (predictedRMR || 'N/A');
+
+        // Replace the existing VO2 Max logic with the new unified value
+        const unifiedVO2Max = localStorage.getItem('unified_vo2max');
+        const gender = localStorage.getItem('gender');
+        const age = localStorage.getItem('age');
+
+        if (unifiedVO2Max && unifiedVO2Max.trim() !== '') {
+            document.getElementById('summaryVo2Value').value = unifiedVO2Max;
+            document.getElementById('tableVo2Value').value = unifiedVO2Max;
+            
+            // Calculate and populate METS (VO2 Max divided by 3.5)
+            const vo2Value = parseFloat(unifiedVO2Max);
+            if (!isNaN(vo2Value)) {
+                const metsValue = (vo2Value / 3.5).toFixed(1);
+                document.getElementById('tableVo2Mets').value = metsValue;
+                
+                // Calculate and populate percentile using the VO2 Max value
+                // The function will convert to METS internally
+                const percentile = calculateVo2Percentile(gender, age, vo2Value);
+                document.getElementById('tableVo2Percentile').value = percentile;
+
+                // Handle the >99.9 notation for summary note (keep the "%ile" suffix)
+                if (percentile === ">99.9") {
+                  document.getElementById('summaryVo2Note').value = ">99.9%ile";
+                } else if (percentile !== 'N/A') {
+                  document.getElementById('summaryVo2Note').value = `${percentile}%ile`;
+                } else {
+                  document.getElementById('summaryVo2Note').value = 'N/A';
+                }
+            } else {
+                document.getElementById('tableVo2Mets').value = 'N/A';
+                document.getElementById('tableVo2Percentile').value = 'N/A';
+                document.getElementById('summaryVo2Note').value = 'N/A';
+            }
+        } else {
+            document.getElementById('summaryVo2Value').value = 'N/A';
+            document.getElementById('tableVo2Value').value = 'N/A';
+            document.getElementById('tableVo2Mets').value = 'N/A';
+            document.getElementById('tableVo2Percentile').value = 'N/A';
+            document.getElementById('summaryVo2Note').value = 'N/A';
+        }
+
+        // Heart Rate Recovery calculation
+        const endingHR = parseFloat(localStorage.getItem('hr_bpm'));
+        const postHR = parseFloat(localStorage.getItem('post_heart_rate'));
+        if (!isNaN(endingHR) && !isNaN(postHR)) {
+            document.getElementById('summaryHrrValue').value = (endingHR - postHR).toFixed(0);
+        } else {
+            document.getElementById('summaryHrrValue').value = 'N/A';
+        }
+
+        // Page 3: BMI Graph
+        populateField('graphBmi', 'bmi');
+
+        // Page 4: FMI/FFMI Graph
+        populateField('graphFmi', 'fat_mass_index');
+        populateField('graphFfmi', 'fat_free_mass_index');
+
+        // Page 5: BP Graph
+        populateField('graphSbp', 'sbp_mmhg');
+        populateField('graphDbp', 'dbp_mmhg');
+
+        // Page 6: RHR Graph
+        populateField('graphRhr', 'resting_hr');
+
+        // Page 7: RMR Graph & Table
+        populateField('graphRmrMeasured', 'measured_rmr', { defaultValue: predictedRMR || 'N/A' }); // Show measured near graph, fallback to predicted
+        populateField('tableRmrPredicted', 'rmr');
+        populateField('tableRmrMeasured', 'measured_rmr');
+        populateField('tableRmrFatPercent', 'fat_calories_percent');
+        populateField('tableRmrCarbPercent', 'carb_calories_percent');
+        populateField('tableTargetLossCons', 'weight_loss_conservative');
+        populateField('tableTargetLossAggr', 'weight_loss_aggressive');
+        populateField('tableTargetGainCons', 'weight_gain_conservative');
+        populateField('tableTargetGainAggr', 'weight_gain_aggressive');
+
+        // Page 8: VO2 Max Graph & Table
+        // Percentile needs data - skip for now
+
+        // Page 9: Grip Strength Graph
+        populateField('graphGripRight', 'grip_strength_right');
+        populateField('graphGripLeft', 'grip_strength_left');
+        populateField('graphGripAvg', 'grip_strength_avg');
+
+        // Page 10: Functional Strength Scores Graph
+        populateField('graphUpperScore', 'upper_strength_score');
+        populateField('graphLowerScore', 'lower_strength_score');
+        populateField('graphCoreScore', 'core_strength_score');
+        populateField('graphTotalScore', 'total_strength_score');
+
+        // Page 11: Rep Max Table (Row 10 only)
+        populateField('repmax10Bench', 'bench_10rm');
+        populateField('repmax10Pulldown', 'pulldown_10rm');
+        populateField('repmax10Deadlift', 'dl_10rm');
+        // Chop (chop_10rm) doesn't have a column in the provided table structure
+
+        // Calculate and populate rep maxes
+        const bench10rm = localStorage.getItem('bench_10rm');
+        const pulldown10rm = localStorage.getItem('pulldown_10rm');
+        const deadlift10rm = localStorage.getItem('dl_10rm');
+
+        const benchRepMaxes = calculateRepMaxes(bench10rm);
+        const pulldownRepMaxes = calculateRepMaxes(pulldown10rm);
+        const deadliftRepMaxes = calculateRepMaxes(deadlift10rm);
+
+        // Get the specific rep max table (page 11)
+        const repMaxTable = document.querySelector('.page:nth-of-type(11) .table-wrapper table');
+        if (repMaxTable) {
+            // Loop through all rows (1-15)
+            for (let i = 1; i <= 15; i++) {
+                // Row index is i-1 because of the header row
+                const row = repMaxTable.rows[i];
+                if (row) {
+                    // Access input fields in each cell (columns 1, 2, 3 for bench, pulldown, deadlift)
+                    const benchInput = row.cells[1].querySelector('input');
+                    const pulldownInput = row.cells[2].querySelector('input');
+                    const deadliftInput = row.cells[3].querySelector('input');
+                    
+                    // Set values from calculated rep maxes (index i-1 for 0-based array)
+                    if (benchInput) benchInput.value = benchRepMaxes[i-1] || 'N/A';
+                    if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i-1] || 'N/A';
+                    if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i-1] || 'N/A';
+                }
+            }
+        }
+
+        // Page 12: Nutrition Targets Table
+        populateField('nutritionEnergy', 'target_energy');
+        populateField('nutritionProtein', 'protein_grams');
+        populateField('nutritionCarbs', 'carb_grams');
+        populateField('nutritionFat', 'fat_grams');
+        populateField('nutritionFiber', 'fiber_grams');
+        populateField('nutritionFluid', 'fluid_total');
+        
+        // Add these new lines to populate the selected protein and fat values
+        const proteinValue = localStorage.getItem('protein') || '1.2'; // Default to 1.2 if not set
+        document.getElementById('nutritionProteinTarget').value = proteinValue;
+        
+        // Convert fat value from decimal to percentage
+        const fatValue = localStorage.getItem('fat') || '0.3'; // Default to 0.3 if not set
+        const fatPercentage = (parseFloat(fatValue) * 100).toFixed(0);
+        document.getElementById('nutritionFatTarget').value = fatPercentage;
+    });
+
+    // PDF Generation function (no changes needed here)
+    async function generatePDF() {
+      const { jsPDF } = window.jspdf;
+      // Use A4 size for better international compatibility? (Letter is default)
+      // const pdf = new jsPDF('portrait', 'pt', 'a4');
+      // const pdfWidth = 595; // A4 width in points
+      // const pdfHeight = 842; // A4 height in points
+
+       const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size
+       const pdfWidth = 612; // Letter width in points
+       const pdfHeight = 792; // Letter height in points
+
+      const pdfWrapper = document.getElementById('pdfWrapper');
+      const pages = pdfWrapper.children; // Get all direct children (each page div)
+
+      // Show a loading indicator maybe?
+      console.log(`Generating PDF with ${pages.length} pages...`);
+      document.body.style.cursor = 'wait'; // Indicate processing
+
+      for (let i = 0; i < pages.length; i++) {
+        const pageElement = pages[i];
+        console.log(`Processing page ${i + 1}...`);
+
+        try {
+            const canvas = await html2canvas(pageElement, {
+                scale: 2, // Increase resolution
+                useCORS: true, // If images are from external sources
+                logging: false, // Reduce console noise
+                 width: pageElement.offsetWidth, // Use element's actual width
+                 height: pageElement.offsetHeight // Use element's actual height
+            });
+
+            const imgData = canvas.toDataURL('image/png');
+
+             // Calculate aspect ratio to fit image onto PDF page
+             const imgProps= pdf.getImageProperties(imgData);
+             const imgWidth = pdfWidth; // Fit to width
+             const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+             let pageHeightRequired = imgHeight; // How tall this image is on the PDF
+
+             // Add the image
+             pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+             // Add a new page if this isn't the last element
+             if (i < pages.length - 1) {
+                 console.log(`Adding new page after page ${i + 1}`);
+                 pdf.addPage();
+             }
+        } catch (error) {
+             console.error(`Error processing page ${i + 1}:`, error);
+             // Optionally add error text to the PDF page
+             if (i > 0) pdf.addPage(); // Add new page for error message if not first page
+             pdf.setTextColor(255, 0, 0); // Red text
+             pdf.text(`Error rendering page ${i + 1}. Please check console.`, 40, 40);
+             pdf.setTextColor(0, 0, 0); // Reset text color
+             if (i < pages.length - 1) pdf.addPage(); // Add next page
+        }
+      }
+
+       // Get filename elements
+        const firstName = localStorage.getItem('first_name') || 'Client';
+        const lastName = localStorage.getItem('last_name') || 'Report';
+        const examDate = localStorage.getItem('exam_date') || new Date().toISOString().slice(0,10); // Today's date as fallback
+        const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const safeDate = examDate.replace(/-/g, '');
+        const filename = `Discovery_Report_${safeLastName}_${safeFirstName}_${safeDate}.pdf`;
+
+
+      console.log("Saving PDF...");
+      pdf.save(filename);
+       document.body.style.cursor = 'default'; // Reset cursor
+      console.log("PDF generation complete.");
+    }
+  </script>
+</body>
+</html>
