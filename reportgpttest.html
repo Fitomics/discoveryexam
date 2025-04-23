@@ -6,6 +6,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <style>
     body {
       font-family: 'Glacial Indifference', sans-serif;
@@ -25,11 +26,11 @@
       background: #ffffff;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,38,61,0.15);
-      padding: 40px 50px 100px 50px; /* Added more padding */
-      box-sizing: border-box; /* Include padding in dimensions */
+      padding: 40px 50px 100px 50px; 
+      box-sizing: border-box; 
     }
     .title-text {
-      margin: 0 auto 30px auto; /* Increased bottom margin */
+      margin: 0 auto 30px auto; 
       font-size: 36px;
       font-weight: bold;
       text-align: center;
@@ -37,7 +38,7 @@
     .graph-container {
       position: relative;
       width: 90%;
-      margin: 20px auto; /* Added margin */
+      margin: 20px auto; 
       padding: 24px;
       border-radius: 10px;
       background-color: #f8f9fa; /* Light background for container */
@@ -175,6 +176,30 @@
       justify-content: center;
       width: 100%;
     }
+
+    .charts-grid {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 30px auto 0;
+      justify-content: center;
+    }
+
+    .chart-card {
+      flex: 0 0 220px;          /* each chart fixed ~220px wide */
+      background: var(--bg-card);
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 300px;            /* a little taller for clarity */
+    }
   </style>
 </head>
 <body>
@@ -254,8 +279,44 @@
     <div class="page">
       <div class="title-text">Body Mass Index</div>
       <div class="graph-container">
-        <img class="graph-image" src="BMI.png" alt="BMI Graph">
-        <input class="value-field" id="graphBmi" readonly><span class="unit-label">kg/m²</span>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <h3>All‑cause Mortality</h3>
+            <div class="chart-container">
+              <canvas id="mortChartAll"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Communicable Disease</h3>
+            <div class="chart-container">
+              <canvas id="mortChartComm"></canvas>
+            </div>
+          </div>
+          <div class="chart-card">
+            <h3>Non‑communicable Disease</h3>
+            <div class="chart-container">
+              <canvas id="mortChartNcd"></canvas>
+            </div>
+          </div>
+        </div>
+        <!-- visible BMI input that Chart.js reads -->
+        <input
+          type="number"
+          id="bmi-input"
+          class="value-field"
+          min="10"
+          max="50"
+          step="0.1"
+          readonly
+        >
+        <!-- show/hide this when invalid -->
+        <div id="error-message"
+             style="display:none;color:#9b2c2c;margin-top:8px;">
+          BMI must be between 10 and 50
+        </div>
+        <!-- hidden mirror for PDF generation -->
+        <input type="hidden" id="graphBmi">
+        <span class="unit-label">kg/m²</span>
       </div>
     </div>
 
@@ -827,5 +888,175 @@
       console.log("PDF generation complete.");
     }
   </script>
+
+<script>
+  // Hazard‐ratio functions
+  function hrAll(b){
+    return b < 22.5
+      ? Math.exp(0.049 * (22.5 - b))
+      : b <= 25
+      ? 1
+      : Math.exp(0.054 * (b - 25));
+  }
+  const CD_PIVOT = 26;
+  function hrCD(b){
+    return b < CD_PIVOT
+      ? Math.exp(0.0629 * (CD_PIVOT - b))
+      : Math.exp(0.0494 * (b - CD_PIVOT));
+  }
+  const NCD_PIVOT = 25;
+  function hrNCD(b){
+    return b < NCD_PIVOT
+      ? Math.exp(0.0373 * (NCD_PIVOT - b))
+      : Math.exp(0.0398 * (b - NCD_PIVOT));
+  }
+
+  // X values
+  const xs = Array.from({ length: 401 }, (_, i) => 10 + i * 0.1);
+
+  const savedBmi = parseFloat(localStorage.getItem('bmi'));
+  const GAP = 0.5;    // ← control half‑width of the gap here
+
+  // Chart builder
+  Chart.register({
+    id: 'scatterOnTop',
+    afterDatasetsDraw(chart) {
+      chart.data.datasets.forEach((ds, i) => {
+        if (ds.type === 'scatter') {
+          const meta = chart.getDatasetMeta(i);
+          meta.data.forEach(pt => pt.draw(chart.ctx));
+        }
+      });
+    }
+  });
+
+  function buildChart(id, hrFn, baseColor) {
+    const colorMap = {
+      crimson: 'rgba(220,20,60,0.2)',
+      royalblue: 'rgba(65,105,225,0.2)',
+      seagreen: 'rgba(46,139,87,0.2)'
+    };
+
+    // build your full dataset with a hole around savedBmi
+    const lineData = xs.map(x => ({
+      x,
+      y: (savedBmi && Math.abs(x - savedBmi) < GAP)
+         ? null                // ← null causes a break
+         : (hrFn(x) - 1) * 100
+    }));
+
+    return new Chart(document.getElementById(id), {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: id,
+            data: lineData,
+            borderColor: colorMap[baseColor],
+            borderWidth: 0.8,
+            tension: 0.3,
+            cubicInterpolationMode: 'monotone',
+            spanGaps: false,   // ← required to actually break the line
+            fill: false,
+            order: 0
+          },
+          {
+            label: 'RR=0%',
+            data: xs.map(x => ({ x, y: 0 })),
+            borderColor: 'rgba(102,102,102,0.2)',
+            borderDash: [6, 4],
+            borderWidth: 0.5,
+            pointRadius: 0,
+            fill: false,
+            order: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        plugins: {
+          scatterOnTop: true,
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            min: 9,
+            max: 55,
+            title: { display: true, text: 'BMI (kg/m²)' }
+          },
+          y: {
+            type: 'linear',
+            min: -20,        /* tighter lower bound */
+            max: 250,        /* tighter upper bound */
+            grace: '5%',
+            title: { display: true, text: 'Relative risk increase (%)' }
+          }
+        }
+      }
+    });
+  }
+
+  // Instantiate charts
+  const charts = [
+    { chart: buildChart('mortChartAll', hrAll, 'crimson'), fn: hrAll },
+    { chart: buildChart('mortChartComm', hrCD, 'royalblue'), fn: hrCD },
+    { chart: buildChart('mortChartNcd', hrNCD, 'seagreen'), fn: hrNCD }
+  ];
+
+  // Handle BMI input
+  const bmiInput = document.getElementById('bmi-input');
+  const errorMsg = document.getElementById('error-message');
+
+  function updateCharts(b) {
+    if (isNaN(b) || b < 10 || b > 50) {
+      if (errorMsg) errorMsg.style.display = 'block';
+      // remove any existing markers
+      charts.forEach(({ chart }) => {
+        chart.data.datasets = chart.data.datasets.slice(0, 2);
+        chart.update();
+      });
+      return;
+    }
+    if (errorMsg) errorMsg.style.display = 'none';
+    localStorage.savedBmi = b;
+
+    charts.forEach(({ chart, fn }) => {
+      const rr = (fn(b) - 1) * 100; // percent RR increase
+      chart.data.datasets = chart.data.datasets.slice(0, 2);
+      const gap = GAP; // ← use your global GAP here
+      chart.data.datasets[0].data = xs.map(x =>
+        Math.abs(x - b) < gap
+          ? { x, y: null }
+          : { x, y: (fn(x) - 1) * 100 }
+      );
+      chart.data.datasets.push({
+        type: 'scatter',
+        data: [{ x: b, y: rr }],
+        pointRadius: 8,
+        pointStyle: 'rectRot',
+        pointBackgroundColor: 'rgba(0,0,0,0.7)',
+        pointBorderColor: 'rgba(255,255,255,0.9)',
+        pointBorderWidth: 1.5,
+        showLine: false,
+        order: 99
+      });
+      chart.update('none');
+    });
+  }
+
+  // load stored BMI, populate inputs and plot point
+  
+  if (!isNaN(savedBmi)) {
+    document.getElementById('bmi-input').value = savedBmi;
+    document.getElementById('graphBmi').value = savedBmi;
+    updateCharts(savedBmi);
+  }
+
+  bmiInput.addEventListener('input', () => updateCharts(+bmiInput.value));
+</script>
+
 </body>
 </html>
