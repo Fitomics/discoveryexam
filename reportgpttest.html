@@ -373,9 +373,29 @@
     <div class="page">
       <div class="title-text">Fat & Fat-Free Mass Index</div>
       <div class="graph-container">
-        <img class="graph-image" src="FMI_FFMI.png" alt="FMI FFMI Graph">
-        <input class="value-field" id="graphFmi" readonly><span class="unit-label">kg/m²</span>
-        <input class="value-field" id="graphFfmi" readonly><span class="unit-label">kg/m²</span>
+        <div style="display: flex; flex-direction: column; width: 100%;">
+          <!-- FMI Chart Section -->
+          <div style="margin-bottom: 10px;">
+            <div style="height: 300px;">
+              <canvas id="fmiChart"></canvas>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
+              <span style="font-weight: 600; margin-right: 10px;">FMI:</span>
+              <input class="value-field" id="graphFmi" readonly><span class="unit-label">kg/m²</span>
+            </div>
+          </div>
+          
+          <!-- FFMI Chart Section -->
+          <div style="margin-top: 30px;">
+            <div style="height: 300px;">
+              <canvas id="ffmiChart"></canvas>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
+              <span style="font-weight: 600; margin-right: 10px;">FFMI:</span>
+              <input class="value-field" id="graphFfmi" readonly><span class="unit-label">kg/m²</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1116,75 +1136,249 @@
 </script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  /* 1.  β & pivot table from Rantanen -------------------------------- */
-  const RANTANEN = {
-    M:[ {max:54,β:0.035,P:40},
-        {max:64,β:0.028,P:40},
-        {max:150,β:0.024,P:35} ],
-    F:[ {max:54,β:0.043,P:25},
-        {max:64,β:0.029,P:25},
-        {max:150,β:0.022,P:20} ]
-  };
-  function coeffs(sex,age){ return RANTANEN[sex].find(r=>age<=r.max); }
-  
-  /* 2.  Relative-risk function – symmetrical exponential ------------- */
-  const FLOOR = 0.45;                    // ← NEW  empirical minimum RR
-  function rrGrip(g,sex,age){
-    const {β,P} = coeffs(sex,age);
-    return Math.max( Math.exp(β*(P - g)), FLOOR );   // ← plateau removed / floor added
+  // Define better hazard ratio functions for FMI and FFMI with clearer J-curves
+  function hrFMI(fmi) {
+    // More pronounced J-curve for FMI with minimum at FMI=5
+    if (fmi < 5) {
+      return Math.exp(0.12 * (5 - fmi)); // Steeper rise at low values
+    } else {
+      return 1 + 0.02 * Math.pow(fmi - 5, 1.8); // More gradual curve at higher values
+    }
   }
+
+  function hrFFMI(ffmi) {
+    // U-shape with minimum at FFMI=22
+    if (ffmi < 22) {
+      return Math.exp(0.08 * (22 - ffmi)); // Steeper rise at low values
+    } else {
+      return 1 + 0.02 * Math.pow(ffmi - 22, 1.5); // More gradual rise at high values
+    }
+  }
+
+  // Generate data points with proper distribution across the entire range
+  const xsFMI = Array.from({length: 201}, (_, i) => i * 0.1);   // 0-20 kg/m²
+  const xsFFMI = Array.from({length: 161}, (_, i) => 12 + i * 0.1);  // 12-28 kg/m²
   
-  /* 3.  Build curve points ------------------------------------------- */
-  const age   = +localStorage.getItem('age') || 50;
-  const sex   = (localStorage.getItem('gender')||'MALE').startsWith('F') ? 'F':'M';
-  const grip  = +localStorage.getItem('grip_strength_avg');
-  const xs    = Array.from({length:111},(_,i)=>10+i);        // 1-kg resolution
-  const curve = xs.map(x=>({x,y:rrGrip(x,sex,age)}));
-  
-  /* 4.  Chart.js ------------------------------------------------------ */
-  const gripChart = document.getElementById('gripChart');
-  if (gripChart) {
-    new Chart(gripChart, {
-      type: 'line',
-      data: {
-        datasets: [
-          { 
-            data: curve, 
-            borderColor: '#0074D9', 
+  // Calculate curves with our improved functions
+  const fmiCurve = xsFMI.map(x => ({x, y: hrFMI(x)}));
+  const ffmiCurve = xsFFMI.map(x => ({x, y: hrFFMI(x)}));
+
+  // Setup charts if elements exist
+  const fmiChartElement = document.getElementById('fmiChart');
+  const ffmiChartElement = document.getElementById('ffmiChart');
+
+  if (fmiChartElement && ffmiChartElement) {
+    // Build chart function with better defaults
+    function buildChart(element, data, label, color, xMin, xMax) {
+      return new Chart(element, {
+        type: 'line',
+        data: { 
+          datasets: [{
+            label,
+            data,
+            borderColor: color,
+            backgroundColor: color + '20', // Add slight fill color
+            tension: 0.4,
             borderWidth: 2,
-            tension: 0.25, 
-            pointRadius: 0, 
-            spanGaps: true 
-          },
-          { 
-            data: xs.map(x => ({x, y: 1})), 
+            pointRadius: 0,
+            fill: false // Set to true if you want area under curve filled
+          }, {
+            // HR=1 reference line
+            data: xMin === 0 ? 
+              Array.from({length: 201}, (_, i) => ({x: i * 0.1, y: 1})) : 
+              Array.from({length: 161}, (_, i) => ({x: 12 + i * 0.1, y: 1})),
             borderColor: '#666',
-            borderDash: [6, 4], 
-            pointRadius: 0 
-          }
-        ].concat(isNaN(grip) ? [] : [{
-          type: 'scatter',
-          data: [{x: grip, y: rrGrip(grip, sex, age)}],
-          pointRadius: 8, 
-          backgroundColor: '#000', 
-          borderColor: '#fff', 
-          borderWidth: 2
-        }])
-      },
-      options: {
-        responsive: true, 
-        maintainAspectRatio: false, 
-        animation: false,
-        plugins: {legend: {display: false}},
-        scales: {
-          x: {type: 'linear', min: 10, max: 65, title: {display: true, text: 'Grip strength (kg)'}},
-          y: {type: 'linear', min: 0.4, max: 1.6, title: {display: true, text: 'Relative risk'}}
+            borderDash: [6, 4],
+            pointRadius: 0,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { 
+              type: 'linear',
+              min: xMin,
+              max: xMax,
+                title: {
+                display: true,
+                text: label === 'FMI HR' ? 'FMI (kg/m²)' : 'FFMI (kg/m²)'
+              },
+              ticks: {
+                stepSize: xMin === 0 ? 2 : 2 // Step size for axis ticks
+              }
+            },
+            y: { 
+              min: 0.5, 
+              max: 3.5, 
+              title: {
+                display: true,
+                text: 'Hazard ratio'
+              },
+              ticks: {
+                stepSize: 0.5 // Control y-axis tick steps
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              enabled: true,
+              callbacks: {
+                label: function(context) {
+                  const value = context.parsed.x.toFixed(1);
+                  const hr = context.parsed.y.toFixed(2);
+                  return `${label.includes('FMI') ? 'FMI' : 'FFMI'}: ${value}, HR: ${hr}`;
+                }
+              }
+            }
+          },
+          animation: false
+        }
+      });
+    }
+
+    // Create the charts with explicit min/max x values
+    const fmiChart = buildChart(fmiChartElement, fmiCurve, 'FMI HR', 'crimson', 0, 20);
+    const ffmiChart = buildChart(ffmiChartElement, ffmiCurve, 'FFMI HR', 'teal', 12, 28);
+
+    // Update charts with user data
+    function updateCharts() {
+      // Use stored FMI/FFMI values first if they exist
+      let fmi = parseFloat(localStorage.getItem('fat_mass_index'));
+      let ffmi = parseFloat(localStorage.getItem('fat_free_mass_index'));
+      
+      // If values don't exist in storage, try to calculate them
+      if (isNaN(fmi) || isNaN(ffmi)) {
+        const height = parseFloat(localStorage.getItem('height_cm')) / 100; // convert to meters
+        const weight = parseFloat(localStorage.getItem('weight_kg'));
+        const bodyFat = parseFloat(localStorage.getItem('body_fat_percent'));
+        
+        if (height && weight && bodyFat) {
+          fmi = calcFMI(weight, bodyFat, height);
+          ffmi = calcFFMI(weight, bodyFat, height);
         }
       }
-    });
+      
+      // Update only if we have valid values
+      if (!isNaN(fmi) && !isNaN(ffmi)) {
+        // Update the input fields
+        document.getElementById('graphFmi').value = fmi.toFixed(1);
+        document.getElementById('graphFfmi').value = ffmi.toFixed(1);
+        
+        // Update charts with properly visible markers
+        updateChart(fmiChart, fmi, hrFMI);
+        updateChart(ffmiChart, ffmi, hrFFMI);
+      }
+    }
+
+    function updateChart(chart, value, hrFunction) {
+      // Remove any existing marker dots
+      chart.data.datasets = chart.data.datasets.filter(d => !d.isDot);
+      
+      // Add new marker dot with improved visibility
+      chart.data.datasets.push({
+        type: 'scatter',
+        isDot: true,
+        data: [{x: value, y: hrFunction(value)}],
+        pointRadius: 8,
+        backgroundColor: '#000',
+        borderColor: '#fff',
+        borderWidth: 2
+      });
+      
+      chart.update('none');
+    }
+
+    // Calculation functions
+    function calcFMI(weight, bodyFatPercent, height) {
+      const fatMass = weight * (bodyFatPercent / 100);
+      return fatMass / (height * height);
+    }
+
+    function calcFFMI(weight, bodyFatPercent, height) {
+      const fatFreeMass = weight * (1 - bodyFatPercent / 100);
+      return fatFreeMass / (height * height);
+    }
+
+    // Call update on load
+    updateCharts();
   }
 });
 </script>
-
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    /* 1.  β & pivot table from Rantanen -------------------------------- */
+    const RANTANEN = {
+      M:[ {max:54,β:0.035,P:40},
+          {max:64,β:0.028,P:40},
+          {max:150,β:0.024,P:35} ],
+      F:[ {max:54,β:0.043,P:25},
+          {max:64,β:0.029,P:25},
+          {max:150,β:0.022,P:20} ]
+    };
+    function coeffs(sex,age){ return RANTANEN[sex].find(r=>age<=r.max); }
+    
+    /* 2.  Relative-risk function – symmetrical exponential ------------- */
+    const FLOOR = 0.45;                    // ← NEW  empirical minimum RR
+    function rrGrip(g,sex,age){
+      const {β,P} = coeffs(sex,age);
+      return Math.max( Math.exp(β*(P - g)), FLOOR );   // ← plateau removed / floor added
+    }
+    
+    /* 3.  Build curve points ------------------------------------------- */
+    const age   = +localStorage.getItem('age') || 50;
+    const sex   = (localStorage.getItem('gender')||'MALE').startsWith('F') ? 'F':'M';
+    const grip  = +localStorage.getItem('grip_strength_avg');
+    const xs    = Array.from({length:111},(_,i)=>10+i);        // 1-kg resolution
+    const curve = xs.map(x=>({x,y:rrGrip(x,sex,age)}));
+    
+    /* 4.  Chart.js ------------------------------------------------------ */
+    const gripChart = document.getElementById('gripChart');
+    if (gripChart) {
+      new Chart(gripChart, {
+        type: 'line',
+        data: {
+          datasets: [
+            { 
+              data: curve, 
+              borderColor: '#0074D9', 
+              borderWidth: 2,
+              tension: 0.25, 
+              pointRadius: 0, 
+              spanGaps: true 
+            },
+            { 
+              data: xs.map(x => ({x, y: 1})), 
+              borderColor: '#666',
+              borderDash: [6, 4], 
+              pointRadius: 0 
+            }
+          ].concat(isNaN(grip) ? [] : [{
+            type: 'scatter',
+            data: [{x: grip, y: rrGrip(grip, sex, age)}],
+            pointRadius: 8, 
+            backgroundColor: '#000', 
+            borderColor: '#fff', 
+            borderWidth: 2
+          }])
+        },
+        options: {
+          responsive: true, 
+          maintainAspectRatio: false, 
+          animation: false,
+          plugins: {legend: {display: false}},
+          scales: {
+            x: {type: 'linear', min: 10, max: 65, title: {display: true, text: 'Grip strength (kg)'}},
+            y: {type: 'linear', min: 0.4, max: 1.6, title: {display: true, text: 'Relative risk'}}
+          }
+        }
+      });
+    }
+  });
+  </script>
 </body>
 </html>
