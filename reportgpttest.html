@@ -384,7 +384,14 @@
     <div class="page">
       <div class="title-text">Grip Strength</div>
       <div class="graph-container">
-        <img class="graph-image" src="GripStrength.png" alt="Grip Strength Graph">
+        <!-- Remove this static image -->
+        <!-- <img class="graph-image" src="GripStrength.png" alt="Grip Strength Graph"> -->
+        
+        <!-- Add the canvas for the chart -->
+        <div class="chart-container" style="position: relative; width: 100%; height: 400px;">
+          <canvas id="gripChart"></canvas>
+        </div>
+        
         <div class="table-wrapper">
           <table>
             <tr><td>Right Hand Grip Strength</td><td><input class="value-field" id="graphGripRight" readonly><span class="unit-label">kg</span></td></tr>
@@ -1056,6 +1063,77 @@
   }
 
   bmiInput.addEventListener('input', () => updateCharts(+bmiInput.value));
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  /* 1.  β & pivot table from Rantanen -------------------------------- */
+  const RANTANEN = {
+    M:[ {max:54,β:0.035,P:40},
+        {max:64,β:0.028,P:40},
+        {max:150,β:0.024,P:35} ],
+    F:[ {max:54,β:0.043,P:25},
+        {max:64,β:0.029,P:25},
+        {max:150,β:0.022,P:20} ]
+  };
+  function coeffs(sex,age){ return RANTANEN[sex].find(r=>age<=r.max); }
+  
+  /* 2.  Relative-risk function – symmetrical exponential ------------- */
+  const FLOOR = 0.45;                    // ← NEW  empirical minimum RR
+  function rrGrip(g,sex,age){
+    const {β,P} = coeffs(sex,age);
+    return Math.max( Math.exp(β*(P - g)), FLOOR );   // ← plateau removed / floor added
+  }
+  
+  /* 3.  Build curve points ------------------------------------------- */
+  const age   = +localStorage.getItem('age') || 50;
+  const sex   = (localStorage.getItem('gender')||'MALE').startsWith('F') ? 'F':'M';
+  const grip  = +localStorage.getItem('grip_strength_avg');
+  const xs    = Array.from({length:111},(_,i)=>10+i);        // 1-kg resolution
+  const curve = xs.map(x=>({x,y:rrGrip(x,sex,age)}));
+  
+  /* 4.  Chart.js ------------------------------------------------------ */
+  const gripChart = document.getElementById('gripChart');
+  if (gripChart) {
+    new Chart(gripChart, {
+      type: 'line',
+      data: {
+        datasets: [
+          { 
+            data: curve, 
+            borderColor: '#0074D9', 
+            borderWidth: 2,
+            tension: 0.25, 
+            pointRadius: 0, 
+            spanGaps: true 
+          },
+          { 
+            data: xs.map(x => ({x, y: 1})), 
+            borderColor: '#666',
+            borderDash: [6, 4], 
+            pointRadius: 0 
+          }
+        ].concat(isNaN(grip) ? [] : [{
+          type: 'scatter',
+          data: [{x: grip, y: rrGrip(grip, sex, age)}],
+          pointRadius: 8, 
+          backgroundColor: '#000', 
+          borderColor: '#fff', 
+          borderWidth: 2
+        }])
+      },
+      options: {
+        responsive: true, 
+        maintainAspectRatio: false, 
+        animation: false,
+        plugins: {legend: {display: false}},
+        scales: {
+          x: {type: 'linear', min: 10, max: 65, title: {display: true, text: 'Grip strength (kg)'}},
+          y: {type: 'linear', min: 0.4, max: 1.6, title: {display: true, text: 'Relative risk'}}
+        }
+      }
+    });
+  }
+});
 </script>
 
 </body>
