@@ -7,6 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <style>
     /* --- Global Styles --- */
     body {
@@ -449,7 +450,7 @@
     <div class="page">
       <div class="title-text">Resting Heart Rate</div>
       <div class="graph-container">
-        <div style="height: 400px; width: 100%;">
+        <div class="chart-container" style="position: relative; width: 100%; height: 400px;">
           <canvas id="rhrChart"></canvas>
         </div>
         <div style="margin-top: 15px;">
@@ -517,7 +518,10 @@
         <div>Lower Body Score: <input class="value-field" id="graphLowerScore" readonly><span class="unit-label"></span></div>
         <div>Core Score: <input class="value-field" id="graphCoreScore" readonly><span class="unit-label"></span></div>
         <div>Total Score: <input class="value-field" id="graphTotalScore" readonly><span class="unit-label"></span></div>
-        <img class="graph-image" style="margin-top: 20px;" src="bellcurve.png" alt="Functional Strength Bell Curve">
+        <!-- Replace the image with a canvas container -->
+        <div class="chart-container" style="height: 300px; margin-top: 20px;">
+            <canvas id="strengthChart"></canvas>
+        </div>
       </div>
     </div>
 
@@ -1055,13 +1059,8 @@
       });
     }
     if (!isNaN(savedBmi)) {
-        // document.getElementById('bmi-input').value = savedBmi; // Already populated by populateField
-        // document.getElementById('graphBmi').value = savedBmi; // Already populated by populateField
-        updateBmiCharts(savedBmi);
+      updateBmiCharts(savedBmi);
     }
-    // Link update to input change if it were editable:
-    // const bmiInputElement = document.getElementById('bmi-input');
-    // if (bmiInputElement) bmiInputElement.addEventListener('input', () => updateBmiCharts(+bmiInputElement.value));
   </script>
 
   <script>
@@ -1127,6 +1126,93 @@
       if (gripChartEl) { new Chart(gripChartEl,{type:'line',data:{datasets:[{data:curve,borderColor:'#0074D9',borderWidth:2,tension:0.25,pointRadius:0,spanGaps:true},{data:xs_grip.map(x=>({x,y:1})),borderColor:'#666',borderDash:[6,4],pointRadius:0}].concat(isNaN(grip)?[]:[{type:'scatter',data:[{x:grip,y:rrGrip(grip,sex,age)}],pointRadius:8,backgroundColor:'#000',borderColor:'#fff',borderWidth:2}])},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:10,max:65,title:{display:true,text:'Grip strength (kg)'}},y:{type:'linear',min:0.4,max:1.6,title:{display:true,text:'Relative risk'}}}}}) }
     });
   </script>
+    <script>
+      // Functional Strength Score Distribution Chart
+      document.addEventListener('DOMContentLoaded', function() {
+          // Check if the plugin is registered *now* that DOM is ready
+          const isAnnotationPluginRegistered = Chart.registry.plugins.get('annotation');
+          if (!isAnnotationPluginRegistered) {
+               // Optional: Add a fallback attempt to register if needed, but usually not required if loaded correctly
+               if (window.ChartAnnotation) {
+                   try {
+                       Chart.register(window.ChartAnnotation);
+                       console.log("Annotation plugin registered within DOMContentLoaded.");
+                   } catch (e) { console.error("Error registering annotation plugin within DOMContentLoaded:", e); }
+               } else {
+                  console.error("Annotation plugin not loaded/registered by DOMContentLoaded. Annotations unavailable.");
+               }
+          } else {
+              // console.log("Annotation plugin was already registered."); // Optional log
+          }
 
+          const strengthChartEl = document.getElementById('strengthChart');
+          if (!strengthChartEl) {
+              console.error("Canvas element 'strengthChart' not found.");
+              return;
+          }
+
+          // --- Check for existing chart instance and destroy it ---
+          let existingChart = Chart.getChart(strengthChartEl);
+          if (existingChart) {
+              console.log("Destroying existing chart instance on 'strengthChart'.");
+              existingChart.destroy();
+          }
+          // ---------------------------------------------------------
+
+          // Get the score from localStorage
+          const scoreString = localStorage.getItem('total_strength_score');
+          const totalStrengthScore = scoreString ? parseFloat(scoreString) : NaN;
+
+          // parameters for the normal distribution
+          const μ = 500; const σ = 150;
+          const chartDataPoints = [];
+          for (let x = 0; x <= 1000; x += 2) {
+            const y = (1 / (σ * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - μ) / σ, 2));
+            chartDataPoints.push({x: x, y: y});
+          }
+
+          const ctx = strengthChartEl.getContext('2d');
+
+          // Define annotations - only add if score is valid AND plugin IS registered
+          const annotationsConfig = {};
+          const pluginIsReady = Chart.registry.plugins.get('annotation'); // Re-check or use previous check result
+
+          if (!isNaN(totalStrengthScore) && pluginIsReady) {
+              console.log(`Adding annotation line at score: ${totalStrengthScore}`);
+              annotationsConfig.scoreLine = {
+                type: 'line',
+                xMin: totalStrengthScore,
+                xMax: totalStrengthScore,
+                borderColor: 'dark-blue',  // Bright color
+                borderWidth: 3      // Very thick
+              };
+          } else if (isNaN(totalStrengthScore)) {
+              console.warn("Total strength score not found or invalid. Annotation line not added.");
+          } else if (!pluginIsReady) {
+              console.error("Annotation plugin is not registered. Annotation line not added.");
+          }
+
+
+          // --- Create the NEW Chart instance ---
+          console.log("Creating new chart instance on 'strengthChart'.");
+          const chart = new Chart(ctx, {
+              type: 'line',
+              data: { /* ... data config ... */
+                  datasets: [{ label: 'Expected Distribution', data: chartDataPoints, borderColor: '#c19962', borderWidth: 3, pointRadius: 0, tension: 0.4, fill: false }]
+              },
+              options: { /* ... options config ... */
+                  responsive: true, maintainAspectRatio: false,
+                  scales: { x: { type: 'linear', min: 0, max: 1000, title: { display: true, text: 'Functional Strength Score', font: { size: 12 } }, ticks: { stepSize: 100 } }, y: { display: false, min: 0 } },
+                  plugins: {
+                      legend: { display: false }, tooltip: { enabled: false },
+                      ...(pluginIsReady && { annotation: { annotations: annotationsConfig } }) // Use updated status
+                  },
+                  animation: false
+              }
+          });
+          // ------------------------------------
+
+      });
+    </script>
 </body>
 </html>
