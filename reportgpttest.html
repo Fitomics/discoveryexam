@@ -402,17 +402,37 @@
     <div class="page">
       <div class="title-text">Blood Pressure</div>
       <div class="graph-container">
-        <img class="graph-image" src="SBPDBP.png" alt="Blood Pressure Graph">
-        <input class="value-field" id="graphSbp" readonly><span class="unit-label">mmHg</span>
-        <input class="value-field" id="graphDbp" readonly><span class="unit-label">mmHg</span>
+        <!-- Replace image with two charts side by side -->
+        <div style="display: flex; flex-direction: column; width: 100%;">
+          <div style="height: 300px; margin-bottom: 20px;">
+            <canvas id="sbpChart"></canvas>
+          </div>
+          <div style="height: 300px;">
+            <canvas id="dbpChart"></canvas>
+          </div>
+        </div>
+        <div style="margin-top: 15px;">
+          <span style="font-weight: 600; margin-right: 10px;">Systolic BP:</span>
+          <input class="value-field" id="graphSbp" readonly><span class="unit-label">mmHg</span>
+        </div>
+        <div style="margin-top: 10px;">
+          <span style="font-weight: 600; margin-right: 10px;">Diastolic BP:</span>
+          <input class="value-field" id="graphDbp" readonly><span class="unit-label">mmHg</span>
+        </div>
       </div>
     </div>
 
     <div class="page">
       <div class="title-text">Resting Heart Rate</div>
       <div class="graph-container">
-        <img class="graph-image" src="RHR.png" alt="RHR Graph">
-        <input class="value-field" id="graphRhr" readonly><span class="unit-label">bpm</span>
+        <!-- Replace image with chart -->
+        <div style="height: 400px; width: 100%;">
+          <canvas id="rhrChart"></canvas>
+        </div>
+        <div style="margin-top: 15px;">
+          <span style="font-weight: 600; margin-right: 10px;">Resting Heart Rate:</span>
+          <input class="value-field" id="graphRhr" readonly><span class="unit-label">bpm</span>
+        </div>
       </div>
     </div>
 
@@ -1201,7 +1221,7 @@ document.addEventListener('DOMContentLoaded', function() {
               type: 'linear',
               min: xMin,
               max: xMax,
-                title: {
+              title: {
                 display: true,
                 text: label === 'FMI HR' ? 'FMI (kg/m²)' : 'FFMI (kg/m²)'
               },
@@ -1310,6 +1330,175 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
+  // Modify the createRiskCurveChart function to use a J-shaped function for RHR
+document.addEventListener('DOMContentLoaded', function() {
+  const createRiskCurveChart = (ctx, label, dataPoints, color, userValue = null) => {
+    // Set specific axis ranges based on chart type
+    let yAxisRange = { min: 0.7, max: 2.5 }; // Default y-axis range
+    let xAxisRange = {};
+    
+    // Customize ranges for each chart type to focus on clinically relevant ranges
+    if (label === 'Resting Heart Rate (bpm)') {
+      // Keep RHR ranges as they are
+      xAxisRange = { min: 40, max: 110 };
+    } else if (label === 'Systolic BP (mmHg)') {
+      // Adjust SBP range to emphasize higher values
+      xAxisRange = { min: 110, max: 180 }; // Show more of the upper range
+    } else if (label === 'Diastolic BP (mmHg)') {
+      // Adjust DBP range to emphasize higher values
+      xAxisRange = { min: 65, max: 110 }; // Show more of the upper range
+    }
+    
+    // Generate the chart
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: `Relative Risk - ${label}`,
+          data: dataPoints,
+          borderColor: color,
+          backgroundColor: `${color}20`,
+          fill: false,
+          tension: 0.3,
+          pointRadius: 0,
+          borderWidth: 3 // Even thicker line for emphasis
+        }, {
+          // Reference line at y=1
+          label: 'Reference',
+          data: dataPoints.map(p => ({ x: p.x, y: 1 })),
+          borderColor: '#666',
+          borderDash: [6, 4],
+          pointRadius: 0,
+          borderWidth: 1,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            // Using logarithmic scale for y-axis makes small changes at higher values more visible
+            type: 'logarithmic',
+            title: { 
+              display: true, 
+              text: 'Relative Risk', 
+              font: { weight: 'bold' } 
+            },
+            min: yAxisRange.min,
+            max: yAxisRange.max,
+            ticks: {
+              callback: function(value) {
+                return value.toFixed(1); // Format tick values
+              }
+            }
+          },
+          x: {
+            type: 'linear',
+            min: xAxisRange.min,
+            max: xAxisRange.max,
+            title: { 
+              display: true, 
+              text: label,
+              font: { weight: 'bold' } 
+            }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.parsed.x;
+                const risk = context.parsed.y.toFixed(2);
+                return `${label}: ${value}, Risk: ${risk}x`;
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Add user marker if value provided
+    if (userValue !== null && !isNaN(userValue)) {
+      const equationMap = {
+        'Resting Heart Rate (bpm)': rrRHR_J,
+        'Systolic BP (mmHg)': sbpEquation,
+        'Diastolic BP (mmHg)': dbpEquation
+      };
+      
+      const equation = equationMap[label];
+      if (equation) {
+        const riskValue = equation(userValue);
+        
+        chart.data.datasets.push({
+          type: 'scatter',
+          data: [{ x: userValue, y: riskValue }],
+          pointRadius: 8,
+          pointStyle: 'rectRot',
+          backgroundColor: '#000',
+          borderColor: '#fff',
+          borderWidth: 2
+        });
+        
+        chart.update('none');
+      }
+    }
+    
+    return chart;
+  };
+
+  // New J-shaped RHR function as provided
+  function rrRHR_J(rhr) {
+    if (rhr < 50) return Math.pow(1.12, (50 - rhr) / 10);   // risk if very low
+    if (rhr <= 60) return 1;                                // nadir
+    return Math.pow(1.09, (rhr - 60) / 10);                 // risk if elevated
+  }
+  
+  // Existing BP equations
+  const sbpEquation = sbp => {
+    const baseRisk = Math.pow(1.02, (sbp - 120) / 10);
+    // Apply additional boost for higher values
+    return sbp > 140 ? baseRisk * (1 + 0.008 * Math.pow(sbp - 140, 1.3)) : baseRisk;
+  };
+  
+  const dbpEquation = dbp => {
+    const baseRisk = Math.pow(1.02, (dbp - 80) / 5);
+    // Apply additional boost for higher values
+    return dbp > 90 ? baseRisk * (1 + 0.01 * Math.pow(dbp - 90, 1.2)) : baseRisk;
+  };
+
+  const generateDataPoints = (range, step, equationFn) => {
+    const data = [];
+    for (let x = range[0]; x <= range[1]; x += step) {
+      data.push({ x, y: parseFloat(equationFn(x).toFixed(3)) });
+    }
+    return data;
+  };
+
+  // Use the new function for RHR data and extend the lower range to show the J-curve
+  const rhrData = generateDataPoints([30, 120], 0.5, rrRHR_J); // Extended range to show both sides of the J-curve
+  const sbpData = generateDataPoints([90, 200], 0.5, sbpEquation); 
+  const dbpData = generateDataPoints([50, 120], 0.5, dbpEquation);
+
+  // Get user values from localStorage
+  const userRHR = parseFloat(localStorage.getItem('resting_hr'));
+  const userSBP = parseFloat(localStorage.getItem('sbp_mmhg'));
+  const userDBP = parseFloat(localStorage.getItem('dbp_mmhg'));
+
+  // Initialize charts with user values
+  const sbpChart = document.getElementById('sbpChart');
+  const dbpChart = document.getElementById('dbpChart');
+  const rhrChart = document.getElementById('rhrChart');
+  
+  if (sbpChart && dbpChart && rhrChart) {
+    createRiskCurveChart(sbpChart, 'Systolic BP (mmHg)', sbpData, '#d9534f', userSBP);
+    createRiskCurveChart(dbpChart, 'Diastolic BP (mmHg)', dbpData, '#5cb85c', userDBP);
+    createRiskCurveChart(rhrChart, 'Resting Heart Rate (bpm)', rhrData, '#428bca', userRHR);
+  }
+});
+</script>
+<script>
   document.addEventListener('DOMContentLoaded', function() {
     /* 1.  β & pivot table from Rantanen -------------------------------- */
     const RANTANEN = {
@@ -1379,6 +1568,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
   });
-  </script>
+</script>
 </body>
 </html>
