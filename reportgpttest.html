@@ -8,6 +8,27 @@
   <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <style>
+    /* Add this new style for the fixed position link */
+    .return-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      background-color: #c19962;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      z-index: 1000;
+      transition: background-color 0.2s ease;
+    }
+    
+    .return-link:hover {
+      background-color: #a98451;
+    }
+
+    /* Existing styles continue below */
     body {
       font-family: 'Glacial Indifference', sans-serif;
       margin: 0;
@@ -21,19 +42,45 @@
       width: 100%;
       max-width: 850px;
       min-height: 1100px; /* Approximate aspect ratio for Letter size */
-      /* aspect-ratio: 2550 / 3300; Removed for flexibility */
       margin: 30px auto;
-      background: #ffffff;
+      background: url('background.png'), #ffffff;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,38,61,0.15);
       padding: 40px 50px 100px 50px; 
       box-sizing: border-box; 
     }
+    
+    /* Make sure content remains legible by adding a semi-transparent white overlay */
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.85); /* Adjust opacity as needed */
+      border-radius: 12px;
+      z-index: 0;
+    }
+    
+    /* Ensure all content sits on top of the background */
+    .page > * {
+      position: relative;
+      z-index: 1;
+    }
+    
     .title-text {
       margin: 0 auto 30px auto; 
       font-size: 36px;
       font-weight: bold;
       text-align: center;
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); /* Add shadow for better contrast */
+      background-color: rgba(255, 255, 255, 0.5); /* Slight background for better readability */
+      padding: 10px;
+      border-radius: 8px;
     }
     .graph-container {
       position: relative;
@@ -41,7 +88,7 @@
       margin: 20px auto; 
       padding: 24px;
       border-radius: 10px;
-      background-color: #f8f9fa; /* Light background for container */
+      background-color: rgba(248, 249, 250, 0.9); /* More opaque background */
       border: 1px solid #e4ac61;
       text-align: center; /* Center content inside graph container */
     }
@@ -203,6 +250,9 @@
   </style>
 </head>
 <body>
+  <!-- Add the return link at the beginning of the body, before any other content -->
+  <a href="index.html" class="return-link">Return to Inputs</a>
+  
   <div id="pdfWrapper">
     <div class="page">
       <div class="title-text">Discovery Exam Report</div>
