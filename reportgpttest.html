@@ -8,7 +8,64 @@
   <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <style>
-    /* Add this new style for the fixed position link */
+    /* --- Global Styles --- */
+    body {
+      font-family: 'Glacial Indifference', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #ffffff;
+      color: #00263d;
+    }
+
+    /* --- Page Layout --- */
+    .page {
+      position: relative;
+      width: 100%;
+      max-width: 850px;
+      min-height: 1100px; /* Approximate aspect ratio for Letter size */
+      margin: 30px auto;
+      background: url('background.png'), #ffffff;
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,38,61,0.15);
+      padding: 40px 50px 100px 50px;
+      box-sizing: border-box;
+    }
+
+    /* Semi-transparent white overlay for background legibility */
+    .page::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.85); /* Adjust opacity as needed */
+      border-radius: 12px;
+      z-index: 0;
+    }
+
+    /* Ensure content sits above the background overlay */
+    .page > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- Page Elements --- */
+    .title-text {
+      margin: 0 auto 30px auto;
+      font-size: 36px;
+      font-weight: bold;
+      text-align: center;
+      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); /* Shadow for better contrast */
+      background-color: rgba(255, 255, 255, 0.5); /* Slight background for readability */
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    /* --- Navigation --- */
     .return-link {
       position: fixed;
       top: 15px;
@@ -23,84 +80,28 @@
       z-index: 1000;
       transition: background-color 0.2s ease;
     }
-    
-    .return-link:hover {
+
+    /* --- Buttons --- */
+    button {
+      display: block; /* Make button block */
+      margin: 40px auto 20px auto; /* Center button below content */
+      padding: 12px 28px;
+      font-size: 16px;
+      background-color: #c19962;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    /* Combined Hover State for Link and Button */
+    .return-link:hover,
+    button:hover {
       background-color: #a98451;
     }
 
-    /* Existing styles continue below */
-    body {
-      font-family: 'Glacial Indifference', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #ffffff;
-      /* Removed text-align: center for better layout control inside pages */
-      color: #00263d;
-    }
-    .page {
-      position: relative;
-      width: 100%;
-      max-width: 850px;
-      min-height: 1100px; /* Approximate aspect ratio for Letter size */
-      margin: 30px auto;
-      background: url('background.png'), #ffffff;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,38,61,0.15);
-      padding: 40px 50px 100px 50px; 
-      box-sizing: border-box; 
-    }
-    
-    /* Make sure content remains legible by adding a semi-transparent white overlay */
-    .page::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255, 255, 255, 0.85); /* Adjust opacity as needed */
-      border-radius: 12px;
-      z-index: 0;
-    }
-    
-    /* Ensure all content sits on top of the background */
-    .page > * {
-      position: relative;
-      z-index: 1;
-    }
-    
-    .title-text {
-      margin: 0 auto 30px auto; 
-      font-size: 36px;
-      font-weight: bold;
-      text-align: center;
-      text-shadow: 0 1px 3px rgba(255, 255, 255, 0.8); /* Add shadow for better contrast */
-      background-color: rgba(255, 255, 255, 0.5); /* Slight background for better readability */
-      padding: 10px;
-      border-radius: 8px;
-    }
-    .graph-container {
-      position: relative;
-      width: 90%;
-      margin: 20px auto; 
-      padding: 24px;
-      border-radius: 10px;
-      background-color: rgba(248, 249, 250, 0.9); /* More opaque background */
-      border: 1px solid #e4ac61;
-      text-align: center; /* Center content inside graph container */
-    }
-    .graph-image {
-      width: 100%;
-      max-width: 600px; /* Limit image width */
-      max-height: 400px; /* Limit image height */
-      object-fit: contain;
-      border-radius: 6px;
-      border: 1px solid #e4ac61;
-      margin-bottom: 15px; /* Space below image */
-    }
+    /* --- Form Inputs & Fields --- */
     .meta-field { /* Style for Name/Date fields */
         display: block; /* Make them block elements */
         font-size: 18px;
@@ -115,6 +116,7 @@
         background-color: #f0f0f0; /* Indicate read-only */
         color: #333;
     }
+
     .value-field { /* General style for value inputs */
       font-size: 14px; /* Adjusted size */
       width: auto; /* Let table cells define width */
@@ -127,9 +129,10 @@
       font-family: 'Glacial Indifference', sans-serif;
       box-shadow: 0 1px 3px rgba(0,0,0,0.03);
       background-color: #f0f0f0; /* Indicate read-only */
-       color: #333;
+      color: #333;
     }
-     /* Specific adjustments for inputs directly under graph-container */
+
+    /* Specific adjustments for inputs directly under graph-container */
     .graph-container > .value-field {
         display: inline-block; /* Allow inline display */
         width: 120px; /* Fixed width for consistency */
@@ -142,86 +145,63 @@
       vertical-align: middle;
       color: #555; /* Slightly dimmer color */
     }
+
+    /* --- Tables --- */
     .table-wrapper {
       width: 95%; /* Increase width */
       margin: 20px auto; /* Added margin */
       overflow-x: auto; /* Handle potential overflow */
     }
+
     .table-wrapper table {
       width: 100%;
       border-collapse: collapse;
-       font-size: 14px; /* Base font size for tables */
+      font-size: 14px; /* Base font size for tables */
     }
-    .table-wrapper th, .table-wrapper td {
+
+    .table-wrapper th,
+    .table-wrapper td {
       padding: 8px 10px; /* Adjusted padding */
       border: 1px solid #c19962;
       text-align: left;
       vertical-align: middle; /* Align vertically */
     }
-     .table-wrapper th {
-        background-color: #fdf6ec; /* Light header background */
-        font-weight: bold;
-     }
-     .table-wrapper td:nth-child(1) { /* Style first column (labels) */
-         font-weight: 600;
-          white-space: nowrap; /* Prevent labels wrapping */
-     }
-      .table-wrapper input.value-field { /* Inputs within tables */
-         width: 90%; /* Fill cell width better */
-         box-sizing: border-box; /* Include border/padding in width */
-      }
 
-    button {
-      display: block; /* Make button block */
-      margin: 40px auto 20px auto; /* Center button below content */
-      padding: 12px 28px;
-      font-size: 16px;
-      background-color: #c19962;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-       transition: background-color 0.2s ease;
+    .table-wrapper th {
+      background-color: #fdf6ec; /* Light header background */
+      font-weight: bold;
     }
-     button:hover {
-         background-color: #a98451;
-     }
 
-    .selected-macros {
+    .table-wrapper td:nth-child(1) { /* Style first column (labels) */
+        font-weight: 600;
+        white-space: nowrap; /* Prevent labels wrapping */
+    }
+
+    .table-wrapper input.value-field { /* Inputs within tables */
+        width: 90%; /* Fill cell width better */
+        box-sizing: border-box; /* Include border/padding in width */
+    }
+
+    /* --- Graph & Chart Containers --- */
+    .graph-container {
+      position: relative;
       width: 90%;
-      margin: 0 auto 20px auto;
-      text-align: center;
-      padding: 15px 15px 20px 15px; /* Added more bottom padding */
-      background-color: #f8f8f8;
-      border: 1px solid #c19962;
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column; /* Changed to column to stack title and then items */
-      align-items: center;
+      margin: 20px auto;
+      padding: 24px;
+      border-radius: 10px;
+      background-color: rgba(248, 249, 250, 0.9); /* More opaque background */
+      border: 1px solid #e4ac61;
+      text-align: center; /* Center content inside graph container */
     }
 
-    .selected-macros .section-subtitle {
-      text-align: center;
-      font-size: 22px;
-      margin: 0 auto 15px auto; /* Reduced top margin since it's inside the box */
-      color: #00263d;
-      font-weight: 600;
-      border-bottom: 1px solid #c19962;
-      padding-bottom: 8px;
-      width: 80%;
-      max-width: 400px;
-    }
-
-    .macro-item {
-      margin: 8px 20px;
-      display: inline-block; /* Allow items to appear side by side */
-    }
-
-    .macro-items-container {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+    .graph-image {
       width: 100%;
+      max-width: 600px; /* Limit image width */
+      max-height: 400px; /* Limit image height */
+      object-fit: contain;
+      border-radius: 6px;
+      border: 1px solid #e4ac61;
+      margin-bottom: 15px; /* Space below image */
     }
 
     .charts-grid {
@@ -235,10 +215,12 @@
 
     .chart-card {
       flex: 0 0 220px;          /* each chart fixed ~220px wide */
-      background: var(--bg-card);
+      /* Note: --bg-card and --shadow variables are used but not defined here. */
+      /* They must be defined elsewhere (e.g., :root) for these styles to apply correctly. */
+      background: var(--bg-card, #ffffff); /* Added fallback */
       padding: 16px;
       border-radius: 8px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow, 0 2px 4px rgba(0,0,0,0.1)); /* Added fallback */
       text-align: center;
     }
 
@@ -247,12 +229,59 @@
       width: 100%;
       height: 300px;            /* a little taller for clarity */
     }
+
+    /* --- Specific Content Sections --- */
+    .selected-macros {
+      width: 90%;
+      margin: 0 auto 20px auto;
+      text-align: center;
+      padding: 15px 15px 20px 15px; /* Added more bottom padding */
+      background-color: #f8f8f8;
+      border: 1px solid #c19962;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column; /* Stack title and items */
+      align-items: center;
+    }
+
+    .selected-macros .section-subtitle {
+      text-align: center;
+      font-size: 22px;
+      margin: 0 auto 15px auto; /* Reduced top margin */
+      color: #00263d;
+      font-weight: 600;
+      border-bottom: 1px solid #c19962;
+      padding-bottom: 8px;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .macro-items-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .macro-item {
+      margin: 8px 20px;
+      display: inline-block; /* Allow items side by side */
+    }
+
+    /* Specific styles for BMI charts */
+    #bmi-charts-grid .chart-card {
+      flex-basis: 500px; /* Increase width further */
+    }
+
+    #bmi-charts-grid .chart-container {
+      height: 300px; /* Limit image height */
+    }
+
   </style>
 </head>
 <body>
-  <!-- Add the return link at the beginning of the body, before any other content -->
   <a href="index.html" class="return-link">Return to Inputs</a>
-  
+
   <div id="pdfWrapper">
     <div class="page">
       <div class="title-text">Discovery Exam Report</div>
@@ -267,7 +296,8 @@
           <tr>
             <th>Variable</th>
             <th>Value</th>
-            <th>Note</th> </tr>
+            <th>Note</th>
+          </tr>
           <tr>
             <td>Body Mass Index (BMI)</td>
             <td><input class="value-field" id="summaryBmiValue" readonly></td>
@@ -329,7 +359,7 @@
     <div class="page">
       <div class="title-text">Body Mass Index</div>
       <div class="graph-container">
-        <div class="charts-grid">
+        <div class="charts-grid" id="bmi-charts-grid"> <!-- Add ID -->
           <div class="chart-card">
             <h3>All‑cause Mortality</h3>
             <div class="chart-container">
@@ -349,7 +379,6 @@
             </div>
           </div>
         </div>
-        <!-- visible BMI input that Chart.js reads -->
         <input
           type="number"
           id="bmi-input"
@@ -359,12 +388,10 @@
           step="0.1"
           readonly
         >
-        <!-- show/hide this when invalid -->
         <div id="error-message"
              style="display:none;color:#9b2c2c;margin-top:8px;">
           BMI must be between 10 and 50
         </div>
-        <!-- hidden mirror for PDF generation -->
         <input type="hidden" id="graphBmi">
         <span class="unit-label">kg/m²</span>
       </div>
@@ -374,7 +401,6 @@
       <div class="title-text">Fat & Fat-Free Mass Index</div>
       <div class="graph-container">
         <div style="display: flex; flex-direction: column; width: 100%;">
-          <!-- FMI Chart Section -->
           <div style="margin-bottom: 10px;">
             <div style="height: 300px;">
               <canvas id="fmiChart"></canvas>
@@ -384,8 +410,7 @@
               <input class="value-field" id="graphFmi" readonly><span class="unit-label">kg/m²</span>
             </div>
           </div>
-          
-          <!-- FFMI Chart Section -->
+
           <div style="margin-top: 30px;">
             <div style="height: 300px;">
               <canvas id="ffmiChart"></canvas>
@@ -402,7 +427,6 @@
     <div class="page">
       <div class="title-text">Blood Pressure</div>
       <div class="graph-container">
-        <!-- Replace image with two charts side by side -->
         <div style="display: flex; flex-direction: column; width: 100%;">
           <div style="height: 300px; margin-bottom: 20px;">
             <canvas id="sbpChart"></canvas>
@@ -425,7 +449,6 @@
     <div class="page">
       <div class="title-text">Resting Heart Rate</div>
       <div class="graph-container">
-        <!-- Replace image with chart -->
         <div style="height: 400px; width: 100%;">
           <canvas id="rhrChart"></canvas>
         </div>
@@ -474,14 +497,9 @@
     <div class="page">
       <div class="title-text">Grip Strength</div>
       <div class="graph-container">
-        <!-- Remove this static image -->
-        <!-- <img class="graph-image" src="GripStrength.png" alt="Grip Strength Graph"> -->
-        
-        <!-- Add the canvas for the chart -->
         <div class="chart-container" style="position: relative; width: 100%; height: 400px;">
           <canvas id="gripChart"></canvas>
         </div>
-        
         <div class="table-wrapper">
           <table>
             <tr><td>Right Hand Grip Strength</td><td><input class="value-field" id="graphGripRight" readonly><span class="unit-label">kg</span></td></tr>
@@ -495,7 +513,7 @@
     <div class="page">
       <div class="title-text">Functional Strength Scores</div>
       <div class="graph-container">
-         <div>Upper Body Score: <input class="value-field" id="graphUpperScore" readonly><span class="unit-label"></span></div>
+          <div>Upper Body Score: <input class="value-field" id="graphUpperScore" readonly><span class="unit-label"></span></div>
         <div>Lower Body Score: <input class="value-field" id="graphLowerScore" readonly><span class="unit-label"></span></div>
         <div>Core Score: <input class="value-field" id="graphCoreScore" readonly><span class="unit-label"></span></div>
         <div>Total Score: <input class="value-field" id="graphTotalScore" readonly><span class="unit-label"></span></div>
@@ -512,7 +530,7 @@
             <th>Bench Press (lbs)</th>
             <th>Pulldown (lbs)</th>
             <th>Deadlift (lbs)</th>
-            </tr>
+          </tr>
           <tr><td>1</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
           <tr><td>2</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
           <tr><td>3</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
@@ -539,10 +557,10 @@
 
     <div class="page">
       <div class="title-text">Initial Nutrition Targets</div>
-      
+
       <div class="selected-macros">
         <h3 class="section-subtitle">Dietary Assumptions</h3>
-        
+
         <div class="macro-items-container">
           <div class="macro-item">
             <span class="macro-label">Protein Assumption:</span>
@@ -556,7 +574,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="table-wrapper">
         <table>
           <tr><th>Target</th><th>Value</th></tr>
@@ -614,14 +632,14 @@
       if (!gender || !age || !vo2Value || isNaN(parseFloat(vo2Value))) {
         return 'N/A';
       }
-      
+
       gender = gender.toUpperCase();
       age = parseInt(age);
       vo2Value = parseFloat(vo2Value);
-      
+
       // Convert VO2 Max to METS for the calculation
       const vo2ValueMets = vo2Value / 3.5;
-      
+
       // Percentile calculation table - same coefficients but will be using METS now
       const percentileTable = [
         {gender: 'FEMALE', ageLow: 18, ageHigh: 19, intercept: -38.39370468, slope: 8.408706891},
@@ -641,24 +659,24 @@
         {gender: 'MALE', ageLow: 70, ageHigh: 79, intercept: -30.23581148, slope: 11.60411056},
         {gender: 'MALE', ageLow: 80, ageHigh: 89, intercept: -30.85004941, slope: 13.4229249}
       ];
-      
+
       // Find the appropriate row in the table
-      const row = percentileTable.find(r => 
+      const row = percentileTable.find(r =>
         r.gender === gender && age >= r.ageLow && age <= r.ageHigh
       );
-      
+
       if (!row) {
         return 'N/A'; // No matching row found
       }
-      
+
       // Apply the formula using METS
       const percentile = row.intercept + (row.slope * vo2ValueMets);
-      
+
       // Check if percentile is 100 or greater
       if (percentile >= 100) {
         return ">99.9"; // Display special notation for very high percentiles
       }
-      
+
       // Format to 1 decimal place for normal range values
       return percentile.toFixed(1);
     }
@@ -683,7 +701,7 @@
              value = value.replace(/ kcal/g, '')
                          .replace(/ ml/g, '')
                          .replace(/ g/g, '')
-                         .replace(/ kg\/mg/g, '')
+                         .replace(/ kg\/mg/g, '') // Note: unit might be kg/m² ? Check source data if issues
                          .replace(/ kg/g, '')
                          .replace(/ lbs/g, '')
                          .replace(/ %/g, '')
@@ -728,17 +746,17 @@
     // Helper function to calculate rep maxes
     function calculateRepMaxes(rm10) {
         if (!rm10 || isNaN(parseFloat(rm10))) return Array(15).fill('N/A');
-        
+
         // Calculate 1RM by dividing 10RM by 0.79
         const rm1 = parseFloat(rm10) / 0.79;
-        
+
         // Coefficients for each rep max
         const coefficients = [
-            1.00, 0.98, 0.96, 0.93, 0.91, 
-            0.88, 0.86, 0.84, 0.81, 0.79, 
+            1.00, 0.98, 0.96, 0.93, 0.91,
+            0.88, 0.86, 0.84, 0.81, 0.79,
             0.77, 0.75, 0.73, 0.71, 0.69
         ];
-        
+
         // Calculate all rep maxes
         return coefficients.map(coef => Math.round(rm1 * coef));
     }
@@ -765,26 +783,25 @@
         // Summary RMR: Prioritize Measured over Predicted
         const measuredRMR = localStorage.getItem('measured_rmr');
         const predictedRMR = localStorage.getItem('rmr');
-        document.getElementById('summaryRmrValue').value = (measuredRMR && measuredRMR.trim() !== '') ? measuredRMR : (predictedRMR || 'N/A');
+        document.getElementById('summaryRmrValue').value = (measuredRMR && measuredRMR.trim() !== '') ? measuredRMR.replace(/ kcal/g, '').trim() : (predictedRMR ? predictedRMR.replace(/ kcal/g, '').trim() : 'N/A');
 
-        // Replace the existing VO2 Max logic with the new unified value
+
+        // Summary VO2 Max and Percentile
         const unifiedVO2Max = localStorage.getItem('unified_vo2max');
         const gender = localStorage.getItem('gender');
         const age = localStorage.getItem('age');
 
         if (unifiedVO2Max && unifiedVO2Max.trim() !== '') {
-            document.getElementById('summaryVo2Value').value = unifiedVO2Max;
-            document.getElementById('tableVo2Value').value = unifiedVO2Max;
-            
-            // Calculate and populate METS (VO2 Max divided by 3.5)
-            const vo2Value = parseFloat(unifiedVO2Max);
-            if (!isNaN(vo2Value)) {
-                const metsValue = (vo2Value / 3.5).toFixed(1);
+            const vo2ValueClean = unifiedVO2Max.replace(/ ml\/kg\/min/g, '').trim();
+            document.getElementById('summaryVo2Value').value = vo2ValueClean;
+            document.getElementById('tableVo2Value').value = vo2ValueClean;
+
+            const vo2ValueNum = parseFloat(vo2ValueClean);
+            if (!isNaN(vo2ValueNum)) {
+                const metsValue = (vo2ValueNum / 3.5).toFixed(1);
                 document.getElementById('tableVo2Mets').value = metsValue;
-                
-                // Calculate and populate percentile using the VO2 Max value
-                // The function will convert to METS internally
-                const percentile = calculateVo2Percentile(gender, age, vo2Value);
+
+                const percentile = calculateVo2Percentile(gender, age, vo2ValueNum);
                 document.getElementById('tableVo2Percentile').value = percentile;
 
                 // Handle the >99.9 notation for summary note (keep the "%ile" suffix)
@@ -813,12 +830,29 @@
         const postHR = parseFloat(localStorage.getItem('post_heart_rate'));
         if (!isNaN(endingHR) && !isNaN(postHR)) {
             document.getElementById('summaryHrrValue').value = (endingHR - postHR).toFixed(0);
+            // Note for HRR could be added here based on value ranges if desired
+            // populateField('summaryHrrNote', ...); // Add logic if needed
         } else {
             document.getElementById('summaryHrrValue').value = 'N/A';
+            // populateField('summaryHrrNote', ...);
         }
+        // --- Populate remaining fields based on localStorage keys ---
+        // (Assuming populateField correctly handles units now)
+        // Summary Notes (These likely need logic based on the values)
+        populateField('summaryBmiNote', 'bmi_note'); // Example - Replace with actual key/logic
+        populateField('summaryFmiNote', 'fmi_note'); // Example
+        populateField('summaryFfmiNote', 'ffmi_note'); // Example
+        populateField('summaryGripNote', 'grip_note'); // Example
+        populateField('summaryRhrNote', 'rhr_note'); // Example
+        populateField('summaryRmrNote', 'rmr_note'); // Example
+        populateField('summarySbpNote', 'sbp_note'); // Example
+        populateField('summaryDbpNote', 'dbp_note'); // Example
+        populateField('summaryFssNote', 'fss_note'); // Example
 
         // Page 3: BMI Graph
-        populateField('graphBmi', 'bmi');
+        populateField('graphBmi', 'bmi'); // For hidden input
+        const bmiForChart = localStorage.getItem('bmi'); // Get value for visible input
+        if (bmiForChart) document.getElementById('bmi-input').value = bmiForChart.replace(/ kg\/m²/g, '').trim();
 
         // Page 4: FMI/FFMI Graph
         populateField('graphFmi', 'fat_mass_index');
@@ -832,7 +866,8 @@
         populateField('graphRhr', 'resting_hr');
 
         // Page 7: RMR Graph & Table
-        populateField('graphRmrMeasured', 'measured_rmr', { defaultValue: predictedRMR || 'N/A' }); // Show measured near graph, fallback to predicted
+        const measuredRMRGraph = localStorage.getItem('measured_rmr') || localStorage.getItem('rmr') || 'N/A';
+        document.getElementById('graphRmrMeasured').value = measuredRMRGraph.replace(/ kcal\/day/g, '').trim();
         populateField('tableRmrPredicted', 'rmr');
         populateField('tableRmrMeasured', 'measured_rmr');
         populateField('tableRmrFatPercent', 'fat_calories_percent');
@@ -842,8 +877,7 @@
         populateField('tableTargetGainCons', 'weight_gain_conservative');
         populateField('tableTargetGainAggr', 'weight_gain_aggressive');
 
-        // Page 8: VO2 Max Graph & Table
-        // Percentile needs data - skip for now
+        // Page 8: VO2 Max Graph & Table (Values populated earlier)
 
         // Page 9: Grip Strength Graph
         populateField('graphGripRight', 'grip_strength_right');
@@ -856,41 +890,35 @@
         populateField('graphCoreScore', 'core_strength_score');
         populateField('graphTotalScore', 'total_strength_score');
 
-        // Page 11: Rep Max Table (Row 10 only)
-        populateField('repmax10Bench', 'bench_10rm');
-        populateField('repmax10Pulldown', 'pulldown_10rm');
-        populateField('repmax10Deadlift', 'dl_10rm');
-        // Chop (chop_10rm) doesn't have a column in the provided table structure
-
-        // Calculate and populate rep maxes
+        // Page 11: Rep Max Table
         const bench10rm = localStorage.getItem('bench_10rm');
         const pulldown10rm = localStorage.getItem('pulldown_10rm');
         const deadlift10rm = localStorage.getItem('dl_10rm');
 
-        const benchRepMaxes = calculateRepMaxes(bench10rm);
-        const pulldownRepMaxes = calculateRepMaxes(pulldown10rm);
-        const deadliftRepMaxes = calculateRepMaxes(deadlift10rm);
+        const benchRepMaxes = calculateRepMaxes(bench10rm ? bench10rm.replace(' lbs', '') : null);
+        const pulldownRepMaxes = calculateRepMaxes(pulldown10rm ? pulldown10rm.replace(' lbs', '') : null);
+        const deadliftRepMaxes = calculateRepMaxes(deadlift10rm ? deadlift10rm.replace(' lbs', '') : null);
 
-        // Get the specific rep max table (page 11)
         const repMaxTable = document.querySelector('.page:nth-of-type(11) .table-wrapper table');
         if (repMaxTable) {
-            // Loop through all rows (1-15)
             for (let i = 1; i <= 15; i++) {
-                // Row index is i-1 because of the header row
-                const row = repMaxTable.rows[i];
+                const row = repMaxTable.rows[i]; // Skips header row
                 if (row) {
-                    // Access input fields in each cell (columns 1, 2, 3 for bench, pulldown, deadlift)
                     const benchInput = row.cells[1].querySelector('input');
                     const pulldownInput = row.cells[2].querySelector('input');
                     const deadliftInput = row.cells[3].querySelector('input');
-                    
-                    // Set values from calculated rep maxes (index i-1 for 0-based array)
-                    if (benchInput) benchInput.value = benchRepMaxes[i-1] || 'N/A';
-                    if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i-1] || 'N/A';
-                    if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i-1] || 'N/A';
+
+                    if (benchInput) benchInput.value = benchRepMaxes[i-1];
+                    if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i-1];
+                    if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i-1];
                 }
             }
         }
+         // Specifically populate the 10RM row from localStorage directly if needed
+         populateField('repmax10Bench', 'bench_10rm');
+         populateField('repmax10Pulldown', 'pulldown_10rm');
+         populateField('repmax10Deadlift', 'dl_10rm');
+
 
         // Page 12: Nutrition Targets Table
         populateField('nutritionEnergy', 'target_energy');
@@ -899,675 +927,206 @@
         populateField('nutritionFat', 'fat_grams');
         populateField('nutritionFiber', 'fiber_grams');
         populateField('nutritionFluid', 'fluid_total');
-        
-        // Add these new lines to populate the selected protein and fat values
-        const proteinValue = localStorage.getItem('protein') || '1.2'; // Default to 1.2 if not set
+
+        // Populate dietary assumptions
+        const proteinValue = localStorage.getItem('protein') || '1.2';
         document.getElementById('nutritionProteinTarget').value = proteinValue;
-        
-        // Convert fat value from decimal to percentage
-        const fatValue = localStorage.getItem('fat') || '0.3'; // Default to 0.3 if not set
+
+        const fatValue = localStorage.getItem('fat') || '0.3';
         const fatPercentage = (parseFloat(fatValue) * 100).toFixed(0);
         document.getElementById('nutritionFatTarget').value = fatPercentage;
     });
 
-    // PDF Generation function (no changes needed here)
+    // PDF Generation function
     async function generatePDF() {
-      const { jsPDF } = window.jspdf;
-      // Use A4 size for better international compatibility? (Letter is default)
-      // const pdf = new jsPDF('portrait', 'pt', 'a4');
-      // const pdfWidth = 595; // A4 width in points
-      // const pdfHeight = 842; // A4 height in points
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size
+        const pdfWidth = 612; // Letter width in points
+        const pdfHeight = 792; // Letter height in points
 
-       const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size
-       const pdfWidth = 612; // Letter width in points
-       const pdfHeight = 792; // Letter height in points
+        const pdfWrapper = document.getElementById('pdfWrapper');
+        const pages = Array.from(pdfWrapper.children).filter(el => el.classList.contains('page')); // Get only elements with 'page' class
 
-      const pdfWrapper = document.getElementById('pdfWrapper');
-      const pages = pdfWrapper.children; // Get all direct children (each page div)
+        console.log(`Generating PDF with ${pages.length} pages...`);
+        document.body.style.cursor = 'wait'; // Indicate processing
 
-      // Show a loading indicator maybe?
-      console.log(`Generating PDF with ${pages.length} pages...`);
-      document.body.style.cursor = 'wait'; // Indicate processing
+        for (let i = 0; i < pages.length; i++) {
+            const pageElement = pages[i];
+            console.log(`Processing page ${i + 1}...`);
 
-      for (let i = 0; i < pages.length; i++) {
-        const pageElement = pages[i];
-        console.log(`Processing page ${i + 1}...`);
+            try {
+                const canvas = await html2canvas(pageElement, {
+                    scale: 2, // Increase resolution for better quality
+                    useCORS: true,
+                    logging: false,
+                    width: pageElement.offsetWidth,
+                    height: pageElement.offsetHeight,
+                    // AllowTaint: false, // Try setting false if CORS errors persist with local images
+                    onclone: (clonedDoc) => {
+                        // Ensure canvas elements are visible/rendered in the clone if needed
+                        // This might be necessary if charts render asynchronously
+                    }
+                });
 
-        try {
-            const canvas = await html2canvas(pageElement, {
-                scale: 2, // Increase resolution
-                useCORS: true, // If images are from external sources
-                logging: false, // Reduce console noise
-                 width: pageElement.offsetWidth, // Use element's actual width
-                 height: pageElement.offsetHeight // Use element's actual height
-            });
+                const imgData = canvas.toDataURL('image/png');
+                const imgProps = pdf.getImageProperties(imgData);
 
-            const imgData = canvas.toDataURL('image/png');
+                // Calculate image dimensions to fit PDF page width
+                const imgWidth = pdfWidth;
+                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
+                let pageHeightRequired = imgHeight;
 
-             // Calculate aspect ratio to fit image onto PDF page
-             const imgProps= pdf.getImageProperties(imgData);
-             const imgWidth = pdfWidth; // Fit to width
-             const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-             let pageHeightRequired = imgHeight; // How tall this image is on the PDF
+                // Check if image height exceeds PDF page height (rare with current setup, but good practice)
+                if (imgHeight > pdfHeight) {
+                    // Handle oversized images if necessary (e.g., scaling differently, splitting)
+                    // For now, just add it potentially overflowing (jsPDF might handle this)
+                    console.warn(`Page ${i + 1} content might exceed PDF page height.`);
+                }
 
-             // Add the image
-             pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+                // Add the image
+                pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
-             // Add a new page if this isn't the last element
-             if (i < pages.length - 1) {
-                 console.log(`Adding new page after page ${i + 1}`);
-                 pdf.addPage();
-             }
-        } catch (error) {
-             console.error(`Error processing page ${i + 1}:`, error);
-             // Optionally add error text to the PDF page
-             if (i > 0) pdf.addPage(); // Add new page for error message if not first page
-             pdf.setTextColor(255, 0, 0); // Red text
-             pdf.text(`Error rendering page ${i + 1}. Please check console.`, 40, 40);
-             pdf.setTextColor(0, 0, 0); // Reset text color
-             if (i < pages.length - 1) pdf.addPage(); // Add next page
+                // Add a new page if this isn't the last element
+                if (i < pages.length - 1) {
+                    console.log(`Adding new page after page ${i + 1}`);
+                    pdf.addPage();
+                }
+            } catch (error) {
+                console.error(`Error processing page ${i + 1}:`, error);
+                // Add error text to the PDF page
+                if (i > 0 && pdf.internal.getNumberOfPages() === i + 1) pdf.addPage(); // Ensure error is on a new page
+                pdf.setTextColor(255, 0, 0); // Red text
+                pdf.text(`Error rendering page ${i + 1}. Check console.`, 40, 40);
+                pdf.setTextColor(0, 0, 0); // Reset text color
+                if (i < pages.length - 1) pdf.addPage(); // Try to add next page
+            }
         }
-      }
 
-       // Get filename elements
+        // Get filename elements
         const firstName = localStorage.getItem('first_name') || 'Client';
         const lastName = localStorage.getItem('last_name') || 'Report';
-        const examDate = localStorage.getItem('exam_date') || new Date().toISOString().slice(0,10); // Today's date as fallback
+        const examDate = localStorage.getItem('exam_date') || new Date().toISOString().slice(0,10);
         const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const safeDate = examDate.replace(/-/g, '');
         const filename = `Discovery_Report_${safeLastName}_${safeFirstName}_${safeDate}.pdf`;
 
-
-      console.log("Saving PDF...");
-      pdf.save(filename);
-       document.body.style.cursor = 'default'; // Reset cursor
-      console.log("PDF generation complete.");
+        console.log("Saving PDF...");
+        pdf.save(filename);
+        document.body.style.cursor = 'default'; // Reset cursor
+        console.log("PDF generation complete.");
     }
   </script>
 
-<script>
-  // Hazard‐ratio functions
-  function hrAll(b){
-    return b < 22.5
-      ? Math.exp(0.049 * (22.5 - b))
-      : b <= 25
-      ? 1
-      : Math.exp(0.054 * (b - 25));
-  }
-  const CD_PIVOT = 26;
-  function hrCD(b){
-    return b < CD_PIVOT
-      ? Math.exp(0.0629 * (CD_PIVOT - b))
-      : Math.exp(0.0494 * (b - CD_PIVOT));
-  }
-  const NCD_PIVOT = 25;
-  function hrNCD(b){
-    return b < NCD_PIVOT
-      ? Math.exp(0.0373 * (NCD_PIVOT - b))
-      : Math.exp(0.0398 * (b - NCD_PIVOT));
-  }
+  <script>
+    // BMI Hazard-ratio functions & Chart setup
+    function hrAll(b){ return b<22.5 ? Math.exp(0.049*(22.5-b)) : b<=25 ? 1 : Math.exp(0.054*(b-25)); }
+    const CD_PIVOT = 26; function hrCD(b){ return b<CD_PIVOT ? Math.exp(0.0629*(CD_PIVOT-b)) : Math.exp(0.0494*(b-CD_PIVOT)); }
+    const NCD_PIVOT = 25; function hrNCD(b){ return b<NCD_PIVOT ? Math.exp(0.0373*(NCD_PIVOT-b)) : Math.exp(0.0398*(b-NCD_PIVOT)); }
+    const xs_bmi = Array.from({ length: 401 }, (_, i) => 10 + i * 0.1);
+    const savedBmi = parseFloat(localStorage.getItem('bmi'));
+    const GAP_BMI = 0.5;
 
-  // X values
-  const xs = Array.from({ length: 401 }, (_, i) => 10 + i * 0.1);
+    Chart.register({ id:'scatterOnTop', afterDatasetsDraw(c){c.data.datasets.forEach((d,i)=>{if(d.type==='scatter'){c.getDatasetMeta(i).data.forEach(p=>p.draw(c.ctx))}})}});
 
-  const savedBmi = parseFloat(localStorage.getItem('bmi'));
-  const GAP = 0.5;    // ← control half‑width of the gap here
-
-  // Chart builder
-  Chart.register({
-    id: 'scatterOnTop',
-    afterDatasetsDraw(chart) {
-      chart.data.datasets.forEach((ds, i) => {
-        if (ds.type === 'scatter') {
-          const meta = chart.getDatasetMeta(i);
-          meta.data.forEach(pt => pt.draw(chart.ctx));
-        }
-      });
+    function buildBmiChart(id, hrFn, baseColor) {
+      const colorMap={'crimson':'rgba(220,20,60,0.2)','royalblue':'rgba(65,105,225,0.2)','seagreen':'rgba(46,139,87,0.2)'};
+      const lineData = xs_bmi.map(x=>({x,y:(savedBmi && Math.abs(x-savedBmi)<GAP_BMI)?null:(hrFn(x)-1)*100}));
+      return new Chart(document.getElementById(id),{type:'line',data:{datasets:[{label:id,data:lineData,borderColor:colorMap[baseColor],borderWidth:0.8,tension:0.3,cubicInterpolationMode:'monotone',spanGaps:false,fill:false,order:0},{label:'RR=0%',data:xs_bmi.map(x=>({x,y:0})),borderColor:'rgba(102,102,102,0.2)',borderDash:[6,4],borderWidth:0.5,pointRadius:0,fill:false,order:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{scatterOnTop:true,legend:{display:false}},scales:{x:{type:'linear',min:9,max:55,title:{display:true,text:'BMI (kg/m²)'}},y:{type:'linear',min:-20,max:250,grace:'5%',title:{display:true,text:'Relative risk increase (%)'}}}}});
     }
-  });
-
-  function buildChart(id, hrFn, baseColor) {
-    const colorMap = {
-      crimson: 'rgba(220,20,60,0.2)',
-      royalblue: 'rgba(65,105,225,0.2)',
-      seagreen: 'rgba(46,139,87,0.2)'
-    };
-
-    // build your full dataset with a hole around savedBmi
-    const lineData = xs.map(x => ({
-      x,
-      y: (savedBmi && Math.abs(x - savedBmi) < GAP)
-         ? null                // ← null causes a break
-         : (hrFn(x) - 1) * 100
-    }));
-
-    return new Chart(document.getElementById(id), {
-      type: 'line',
-      data: {
-        datasets: [
-          {
-            label: id,
-            data: lineData,
-            borderColor: colorMap[baseColor],
-            borderWidth: 0.8,
-            tension: 0.3,
-            cubicInterpolationMode: 'monotone',
-            spanGaps: false,   // ← required to actually break the line
-            fill: false,
-            order: 0
-          },
-          {
-            label: 'RR=0%',
-            data: xs.map(x => ({ x, y: 0 })),
-            borderColor: 'rgba(102,102,102,0.2)',
-            borderDash: [6, 4],
-            borderWidth: 0.5,
-            pointRadius: 0,
-            fill: false,
-            order: 1
-          }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false,
-        plugins: {
-          scatterOnTop: true,
-          legend: { display: false }
-        },
-        scales: {
-          x: {
-            type: 'linear',
-            min: 9,
-            max: 55,
-            title: { display: true, text: 'BMI (kg/m²)' }
-          },
-          y: {
-            type: 'linear',
-            min: -20,        /* tighter lower bound */
-            max: 250,        /* tighter upper bound */
-            grace: '5%',
-            title: { display: true, text: 'Relative risk increase (%)' }
-          }
-        }
-      }
-    });
-  }
-
-  // Instantiate charts
-  const charts = [
-    { chart: buildChart('mortChartAll', hrAll, 'crimson'), fn: hrAll },
-    { chart: buildChart('mortChartComm', hrCD, 'royalblue'), fn: hrCD },
-    { chart: buildChart('mortChartNcd', hrNCD, 'seagreen'), fn: hrNCD }
-  ];
-
-  // Handle BMI input
-  const bmiInput = document.getElementById('bmi-input');
-  const errorMsg = document.getElementById('error-message');
-
-  function updateCharts(b) {
-    if (isNaN(b) || b < 10 || b > 50) {
-      if (errorMsg) errorMsg.style.display = 'block';
-      // remove any existing markers
-      charts.forEach(({ chart }) => {
-        chart.data.datasets = chart.data.datasets.slice(0, 2);
-        chart.update();
-      });
-      return;
-    }
-    if (errorMsg) errorMsg.style.display = 'none';
-    localStorage.savedBmi = b;
-
-    charts.forEach(({ chart, fn }) => {
-      const rr = (fn(b) - 1) * 100; // percent RR increase
-      chart.data.datasets = chart.data.datasets.slice(0, 2);
-      const gap = GAP; // ← use your global GAP here
-      chart.data.datasets[0].data = xs.map(x =>
-        Math.abs(x - b) < gap
-          ? { x, y: null }
-          : { x, y: (fn(x) - 1) * 100 }
-      );
-      chart.data.datasets.push({
-        type: 'scatter',
-        data: [{ x: b, y: rr }],
-        pointRadius: 8,
-        pointStyle: 'rectRot',
-        pointBackgroundColor: 'rgba(0,0,0,0.7)',
-        pointBorderColor: 'rgba(255,255,255,0.9)',
-        pointBorderWidth: 1.5,
-        showLine: false,
-        order: 99
-      });
-      chart.update('none');
-    });
-  }
-
-  // load stored BMI, populate inputs and plot point
-  
-  if (!isNaN(savedBmi)) {
-    document.getElementById('bmi-input').value = savedBmi;
-    document.getElementById('graphBmi').value = savedBmi;
-    updateCharts(savedBmi);
-  }
-
-  bmiInput.addEventListener('input', () => updateCharts(+bmiInput.value));
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Define better hazard ratio functions for FMI and FFMI with clearer J-curves
-  function hrFMI(fmi) {
-    // More pronounced J-curve for FMI with minimum at FMI=5
-    if (fmi < 5) {
-      return Math.exp(0.12 * (5 - fmi)); // Steeper rise at low values
-    } else {
-      return 1 + 0.02 * Math.pow(fmi - 5, 1.8); // More gradual curve at higher values
-    }
-  }
-
-  function hrFFMI(ffmi) {
-    // U-shape with minimum at FFMI=22
-    if (ffmi < 22) {
-      return Math.exp(0.08 * (22 - ffmi)); // Steeper rise at low values
-    } else {
-      return 1 + 0.02 * Math.pow(ffmi - 22, 1.5); // More gradual rise at high values
-    }
-  }
-
-  // Generate data points with proper distribution across the entire range
-  const xsFMI = Array.from({length: 201}, (_, i) => i * 0.1);   // 0-20 kg/m²
-  const xsFFMI = Array.from({length: 161}, (_, i) => 12 + i * 0.1);  // 12-28 kg/m²
-  
-  // Calculate curves with our improved functions
-  const fmiCurve = xsFMI.map(x => ({x, y: hrFMI(x)}));
-  const ffmiCurve = xsFFMI.map(x => ({x, y: hrFFMI(x)}));
-
-  // Setup charts if elements exist
-  const fmiChartElement = document.getElementById('fmiChart');
-  const ffmiChartElement = document.getElementById('ffmiChart');
-
-  if (fmiChartElement && ffmiChartElement) {
-    // Build chart function with better defaults
-    function buildChart(element, data, label, color, xMin, xMax) {
-      return new Chart(element, {
-        type: 'line',
-        data: { 
-          datasets: [{
-            label,
-            data,
-            borderColor: color,
-            backgroundColor: color + '20', // Add slight fill color
-            tension: 0.4,
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false // Set to true if you want area under curve filled
-          }, {
-            // HR=1 reference line
-            data: xMin === 0 ? 
-              Array.from({length: 201}, (_, i) => ({x: i * 0.1, y: 1})) : 
-              Array.from({length: 161}, (_, i) => ({x: 12 + i * 0.1, y: 1})),
-            borderColor: '#666',
-            borderDash: [6, 4],
-            pointRadius: 0,
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { 
-              type: 'linear',
-              min: xMin,
-              max: xMax,
-              title: {
-                display: true,
-                text: label === 'FMI HR' ? 'FMI (kg/m²)' : 'FFMI (kg/m²)'
-              },
-              ticks: {
-                stepSize: xMin === 0 ? 2 : 2 // Step size for axis ticks
-              }
-            },
-            y: { 
-              min: 0.5, 
-              max: 3.5, 
-              title: {
-                display: true,
-                text: 'Hazard ratio'
-              },
-              ticks: {
-                stepSize: 0.5 // Control y-axis tick steps
-              }
-            }
-          },
-          plugins: {
-            legend: {
-              display: false
-            },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function(context) {
-                  const value = context.parsed.x.toFixed(1);
-                  const hr = context.parsed.y.toFixed(2);
-                  return `${label.includes('FMI') ? 'FMI' : 'FFMI'}: ${value}, HR: ${hr}`;
-                }
-              }
-            }
-          },
-          animation: false
-        }
-      });
+    const bmiCharts = [];
+    if (document.getElementById('mortChartAll') && document.getElementById('mortChartComm') && document.getElementById('mortChartNcd')) {
+      bmiCharts.push({ chart: buildBmiChart('mortChartAll', hrAll, 'crimson'), fn: hrAll });
+      bmiCharts.push({ chart: buildBmiChart('mortChartComm', hrCD, 'royalblue'), fn: hrCD });
+      bmiCharts.push({ chart: buildBmiChart('mortChartNcd', hrNCD, 'seagreen'), fn: hrNCD });
     }
 
-    // Create the charts with explicit min/max x values
-    const fmiChart = buildChart(fmiChartElement, fmiCurve, 'FMI HR', 'crimson', 0, 20);
-    const ffmiChart = buildChart(ffmiChartElement, ffmiCurve, 'FFMI HR', 'teal', 12, 28);
+    function updateBmiCharts(b) {
+      const errorMsg = document.getElementById('error-message');
+      if (isNaN(b) || b < 10 || b > 50) { if (errorMsg) errorMsg.style.display = 'block'; bmiCharts.forEach(({chart})=>{chart.data.datasets=chart.data.datasets.slice(0,2);chart.update()}); return; }
+      if (errorMsg) errorMsg.style.display = 'none';
+      // localStorage.savedBmi = b; // Avoid saving back here as it's read-only display
 
-    // Update charts with user data
-    function updateCharts() {
-      // Use stored FMI/FFMI values first if they exist
-      let fmi = parseFloat(localStorage.getItem('fat_mass_index'));
-      let ffmi = parseFloat(localStorage.getItem('fat_free_mass_index'));
-      
-      // If values don't exist in storage, try to calculate them
-      if (isNaN(fmi) || isNaN(ffmi)) {
-        const height = parseFloat(localStorage.getItem('height_cm')) / 100; // convert to meters
-        const weight = parseFloat(localStorage.getItem('weight_kg'));
-        const bodyFat = parseFloat(localStorage.getItem('body_fat_percent'));
-        
-        if (height && weight && bodyFat) {
-          fmi = calcFMI(weight, bodyFat, height);
-          ffmi = calcFFMI(weight, bodyFat, height);
-        }
-      }
-      
-      // Update only if we have valid values
-      if (!isNaN(fmi) && !isNaN(ffmi)) {
-        // Update the input fields
-        document.getElementById('graphFmi').value = fmi.toFixed(1);
-        document.getElementById('graphFfmi').value = ffmi.toFixed(1);
-        
-        // Update charts with properly visible markers
-        updateChart(fmiChart, fmi, hrFMI);
-        updateChart(ffmiChart, ffmi, hrFFMI);
-      }
-    }
-
-    function updateChart(chart, value, hrFunction) {
-      // Remove any existing marker dots
-      chart.data.datasets = chart.data.datasets.filter(d => !d.isDot);
-      
-      // Add new marker dot with improved visibility
-      chart.data.datasets.push({
-        type: 'scatter',
-        isDot: true,
-        data: [{x: value, y: hrFunction(value)}],
-        pointRadius: 8,
-        backgroundColor: '#000',
-        borderColor: '#fff',
-        borderWidth: 2
-      });
-      
-      chart.update('none');
-    }
-
-    // Calculation functions
-    function calcFMI(weight, bodyFatPercent, height) {
-      const fatMass = weight * (bodyFatPercent / 100);
-      return fatMass / (height * height);
-    }
-
-    function calcFFMI(weight, bodyFatPercent, height) {
-      const fatFreeMass = weight * (1 - bodyFatPercent / 100);
-      return fatFreeMass / (height * height);
-    }
-
-    // Call update on load
-    updateCharts();
-  }
-});
-</script>
-<script>
-  // Modify the createRiskCurveChart function to use a J-shaped function for RHR
-document.addEventListener('DOMContentLoaded', function() {
-  const createRiskCurveChart = (ctx, label, dataPoints, color, userValue = null) => {
-    // Set specific axis ranges based on chart type
-    let yAxisRange = { min: 0.7, max: 2.5 }; // Default y-axis range
-    let xAxisRange = {};
-    
-    // Customize ranges for each chart type to focus on clinically relevant ranges
-    if (label === 'Resting Heart Rate (bpm)') {
-      // Keep RHR ranges as they are
-      xAxisRange = { min: 40, max: 110 };
-    } else if (label === 'Systolic BP (mmHg)') {
-      // Adjust SBP range to emphasize higher values
-      xAxisRange = { min: 110, max: 180 }; // Show more of the upper range
-    } else if (label === 'Diastolic BP (mmHg)') {
-      // Adjust DBP range to emphasize higher values
-      xAxisRange = { min: 65, max: 110 }; // Show more of the upper range
-    }
-    
-    // Generate the chart
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        datasets: [{
-          label: `Relative Risk - ${label}`,
-          data: dataPoints,
-          borderColor: color,
-          backgroundColor: `${color}20`,
-          fill: false,
-          tension: 0.3,
-          pointRadius: 0,
-          borderWidth: 3 // Even thicker line for emphasis
-        }, {
-          // Reference line at y=1
-          label: 'Reference',
-          data: dataPoints.map(p => ({ x: p.x, y: 1 })),
-          borderColor: '#666',
-          borderDash: [6, 4],
-          pointRadius: 0,
-          borderWidth: 1,
-          fill: false
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            // Using logarithmic scale for y-axis makes small changes at higher values more visible
-            type: 'logarithmic',
-            title: { 
-              display: true, 
-              text: 'Relative Risk', 
-              font: { weight: 'bold' } 
-            },
-            min: yAxisRange.min,
-            max: yAxisRange.max,
-            ticks: {
-              callback: function(value) {
-                return value.toFixed(1); // Format tick values
-              }
-            }
-          },
-          x: {
-            type: 'linear',
-            min: xAxisRange.min,
-            max: xAxisRange.max,
-            title: { 
-              display: true, 
-              text: label,
-              font: { weight: 'bold' } 
-            }
-          }
-        },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const value = context.parsed.x;
-                const risk = context.parsed.y.toFixed(2);
-                return `${label}: ${value}, Risk: ${risk}x`;
-              }
-            }
-          }
-        }
-      }
-    });
-    
-    // Add user marker if value provided
-    if (userValue !== null && !isNaN(userValue)) {
-      const equationMap = {
-        'Resting Heart Rate (bpm)': rrRHR_J,
-        'Systolic BP (mmHg)': sbpEquation,
-        'Diastolic BP (mmHg)': dbpEquation
-      };
-      
-      const equation = equationMap[label];
-      if (equation) {
-        const riskValue = equation(userValue);
-        
-        chart.data.datasets.push({
-          type: 'scatter',
-          data: [{ x: userValue, y: riskValue }],
-          pointRadius: 8,
-          pointStyle: 'rectRot',
-          backgroundColor: '#000',
-          borderColor: '#fff',
-          borderWidth: 2
-        });
-        
+      bmiCharts.forEach(({ chart, fn }) => {
+        const rr = (fn(b) - 1) * 100; chart.data.datasets = chart.data.datasets.slice(0, 2); const gap=GAP_BMI;
+        chart.data.datasets[0].data = xs_bmi.map(x=>Math.abs(x-b)<gap?{x,y:null}:{x,y:(fn(x)-1)*100});
+        chart.data.datasets.push({type:'scatter',data:[{x:b,y:rr}],pointRadius:8,pointStyle:'rectRot',pointBackgroundColor:'rgba(0,0,0,0.7)',pointBorderColor:'rgba(255,255,255,0.9)',pointBorderWidth:1.5,showLine:false,order:99});
         chart.update('none');
-      }
-    }
-    
-    return chart;
-  };
-
-  // New J-shaped RHR function as provided
-  function rrRHR_J(rhr) {
-    if (rhr < 50) return Math.pow(1.12, (50 - rhr) / 10);   // risk if very low
-    if (rhr <= 60) return 1;                                // nadir
-    return Math.pow(1.09, (rhr - 60) / 10);                 // risk if elevated
-  }
-  
-  // Existing BP equations
-  const sbpEquation = sbp => {
-    const baseRisk = Math.pow(1.02, (sbp - 120) / 10);
-    // Apply additional boost for higher values
-    return sbp > 140 ? baseRisk * (1 + 0.008 * Math.pow(sbp - 140, 1.3)) : baseRisk;
-  };
-  
-  const dbpEquation = dbp => {
-    const baseRisk = Math.pow(1.02, (dbp - 80) / 5);
-    // Apply additional boost for higher values
-    return dbp > 90 ? baseRisk * (1 + 0.01 * Math.pow(dbp - 90, 1.2)) : baseRisk;
-  };
-
-  const generateDataPoints = (range, step, equationFn) => {
-    const data = [];
-    for (let x = range[0]; x <= range[1]; x += step) {
-      data.push({ x, y: parseFloat(equationFn(x).toFixed(3)) });
-    }
-    return data;
-  };
-
-  // Use the new function for RHR data and extend the lower range to show the J-curve
-  const rhrData = generateDataPoints([30, 120], 0.5, rrRHR_J); // Extended range to show both sides of the J-curve
-  const sbpData = generateDataPoints([90, 200], 0.5, sbpEquation); 
-  const dbpData = generateDataPoints([50, 120], 0.5, dbpEquation);
-
-  // Get user values from localStorage
-  const userRHR = parseFloat(localStorage.getItem('resting_hr'));
-  const userSBP = parseFloat(localStorage.getItem('sbp_mmhg'));
-  const userDBP = parseFloat(localStorage.getItem('dbp_mmhg'));
-
-  // Initialize charts with user values
-  const sbpChart = document.getElementById('sbpChart');
-  const dbpChart = document.getElementById('dbpChart');
-  const rhrChart = document.getElementById('rhrChart');
-  
-  if (sbpChart && dbpChart && rhrChart) {
-    createRiskCurveChart(sbpChart, 'Systolic BP (mmHg)', sbpData, '#d9534f', userSBP);
-    createRiskCurveChart(dbpChart, 'Diastolic BP (mmHg)', dbpData, '#5cb85c', userDBP);
-    createRiskCurveChart(rhrChart, 'Resting Heart Rate (bpm)', rhrData, '#428bca', userRHR);
-  }
-});
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    /* 1.  β & pivot table from Rantanen -------------------------------- */
-    const RANTANEN = {
-      M:[ {max:54,β:0.035,P:40},
-          {max:64,β:0.028,P:40},
-          {max:150,β:0.024,P:35} ],
-      F:[ {max:54,β:0.043,P:25},
-          {max:64,β:0.029,P:25},
-          {max:150,β:0.022,P:20} ]
-    };
-    function coeffs(sex,age){ return RANTANEN[sex].find(r=>age<=r.max); }
-    
-    /* 2.  Relative-risk function – symmetrical exponential ------------- */
-    const FLOOR = 0.45;                    // ← NEW  empirical minimum RR
-    function rrGrip(g,sex,age){
-      const {β,P} = coeffs(sex,age);
-      return Math.max( Math.exp(β*(P - g)), FLOOR );   // ← plateau removed / floor added
-    }
-    
-    /* 3.  Build curve points ------------------------------------------- */
-    const age   = +localStorage.getItem('age') || 50;
-    const sex   = (localStorage.getItem('gender')||'MALE').startsWith('F') ? 'F':'M';
-    const grip  = +localStorage.getItem('grip_strength_avg');
-    const xs    = Array.from({length:111},(_,i)=>10+i);        // 1-kg resolution
-    const curve = xs.map(x=>({x,y:rrGrip(x,sex,age)}));
-    
-    /* 4.  Chart.js ------------------------------------------------------ */
-    const gripChart = document.getElementById('gripChart');
-    if (gripChart) {
-      new Chart(gripChart, {
-        type: 'line',
-        data: {
-          datasets: [
-            { 
-              data: curve, 
-              borderColor: '#0074D9', 
-              borderWidth: 2,
-              tension: 0.25, 
-              pointRadius: 0, 
-              spanGaps: true 
-            },
-            { 
-              data: xs.map(x => ({x, y: 1})), 
-              borderColor: '#666',
-              borderDash: [6, 4], 
-              pointRadius: 0 
-            }
-          ].concat(isNaN(grip) ? [] : [{
-            type: 'scatter',
-            data: [{x: grip, y: rrGrip(grip, sex, age)}],
-            pointRadius: 8, 
-            backgroundColor: '#000', 
-            borderColor: '#fff', 
-            borderWidth: 2
-          }])
-        },
-        options: {
-          responsive: true, 
-          maintainAspectRatio: false, 
-          animation: false,
-          plugins: {legend: {display: false}},
-          scales: {
-            x: {type: 'linear', min: 10, max: 65, title: {display: true, text: 'Grip strength (kg)'}},
-            y: {type: 'linear', min: 0.4, max: 1.6, title: {display: true, text: 'Relative risk'}}
-          }
-        }
       });
     }
-  });
-</script>
+    if (!isNaN(savedBmi)) {
+        // document.getElementById('bmi-input').value = savedBmi; // Already populated by populateField
+        // document.getElementById('graphBmi').value = savedBmi; // Already populated by populateField
+        updateBmiCharts(savedBmi);
+    }
+    // Link update to input change if it were editable:
+    // const bmiInputElement = document.getElementById('bmi-input');
+    // if (bmiInputElement) bmiInputElement.addEventListener('input', () => updateBmiCharts(+bmiInputElement.value));
+  </script>
+
+  <script>
+    // FMI/FFMI Hazard-ratio functions & Chart setup
+    document.addEventListener('DOMContentLoaded', function() {
+      function hrFMI(fmi) { if(fmi<5){return Math.exp(0.12*(5-fmi))}else{return 1+0.02*Math.pow(fmi-5,1.8)}}
+      function hrFFMI(ffmi) { if(ffmi<22){return Math.exp(0.08*(22-ffmi))}else{return 1+0.02*Math.pow(ffmi-22,1.5)}}
+      const xsFMI = Array.from({length:201},(_,i)=>i*0.1); const xsFFMI = Array.from({length:161},(_,i)=>12+i*0.1);
+      const fmiCurve = xsFMI.map(x=>({x,y:hrFMI(x)})); const ffmiCurve = xsFFMI.map(x=>({x,y:hrFFMI(x)}));
+      const fmiChartElement = document.getElementById('fmiChart'); const ffmiChartElement = document.getElementById('ffmiChart');
+
+      if (fmiChartElement && ffmiChartElement) {
+        function buildFmiffmiChart(el,data,lbl,clr,xMin,xMax){return new Chart(el,{type:'line',data:{datasets:[{label:lbl,data:data,borderColor:clr,backgroundColor:clr+'20',tension:0.4,borderWidth:2,pointRadius:0,fill:false},{data:(xMin===0?Array.from({length:201},(_,i)=>({x:i*0.1,y:1})):Array.from({length:161},(_,i)=>({x:12+i*0.1,y:1}))),borderColor:'#666',borderDash:[6,4],pointRadius:0,borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{type:'linear',min:xMin,max:xMax,title:{display:true,text:lbl==='FMI HR'?'FMI (kg/m²)':'FFMI (kg/m²)'},ticks:{stepSize:xMin===0?2:2}},y:{min:0.5,max:3.5,title:{display:true,text:'Hazard ratio'},ticks:{stepSize:0.5}}},plugins:{legend:{display:false},tooltip:{enabled:true,callbacks:{label:function(ctx){const v=ctx.parsed.x.toFixed(1);const hr=ctx.parsed.y.toFixed(2);return `${lbl.includes('FMI')?'FMI':'FFMI'}: ${v}, HR: ${hr}`}}}},animation:false}})}
+        const fmiChart = buildFmiffmiChart(fmiChartElement,fmiCurve,'FMI HR','crimson',0,20);
+        const ffmiChart = buildFmiffmiChart(ffmiChartElement,ffmiCurve,'FFMI HR','teal',12,28);
+
+        function updateFmiffmiCharts() {
+          let fmi = parseFloat(localStorage.getItem('fat_mass_index')); let ffmi = parseFloat(localStorage.getItem('fat_free_mass_index'));
+          // Calculation fallback removed as data should come pre-calculated
+          if (!isNaN(fmi)) updateFmiffmiChart(fmiChart,fmi,hrFMI);
+          if (!isNaN(ffmi)) updateFmiffmiChart(ffmiChart,ffmi,hrFFMI);
+        }
+        function updateFmiffmiChart(chart,value,hrFunc){chart.data.datasets=chart.data.datasets.filter(d=>!d.isDot);chart.data.datasets.push({type:'scatter',isDot:true,data:[{x:value,y:hrFunc(value)}],pointRadius:8,backgroundColor:'#000',borderColor:'#fff',borderWidth:2});chart.update('none')}
+        updateFmiffmiCharts();
+      }
+    });
+  </script>
+
+  <script>
+    // BP & RHR Hazard-ratio functions & Chart setup
+    document.addEventListener('DOMContentLoaded', function() {
+      const createRiskCurveChart = (ctx, label, dataPoints, color, userValue = null, xMin, xMax, yMin=0.7, yMax=2.5, yType='logarithmic') => {
+        const chart = new Chart(ctx, {type:'line', data:{datasets:[{label:`Relative Risk - ${label}`, data:dataPoints, borderColor:color, backgroundColor:`${color}20`, fill:false, tension:0.3, pointRadius:0, borderWidth:2.5},{label:'Reference', data:dataPoints.map(p=>({x:p.x, y:1})), borderColor:'#666', borderDash:[6,4], pointRadius:0, borderWidth:1, fill:false}]}, options:{responsive:true, maintainAspectRatio:false, scales:{y:{type:yType, title:{display:true, text:'Relative Risk', font:{weight:'bold'}}, min:yMin, max:yMax, ticks:{callback:v=>v.toFixed(yType==='logarithmic'?1:2)}}, x:{type:'linear', min:xMin, max:xMax, title:{display:true, text:label, font:{weight:'bold'}}}}, plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>`${label}: ${ctx.parsed.x.toFixed(0)}, Risk: ${ctx.parsed.y.toFixed(2)}x`}}}}});
+        if (userValue !== null && !isNaN(userValue)) {
+          const eqMap={'Resting Heart Rate (bpm)':rrRHR_J, 'Systolic BP (mmHg)':sbpEquation, 'Diastolic BP (mmHg)':dbpEquation}; const eq=eqMap[label];
+          if(eq){const risk=eq(userValue); chart.data.datasets.push({type:'scatter', data:[{x:userValue, y:risk}], pointRadius:8, pointStyle:'rectRot', backgroundColor:'#000', borderColor:'#fff', borderWidth:2}); chart.update('none');}
+        } return chart;
+      };
+      function rrRHR_J(rhr){if(rhr<50)return Math.pow(1.12,(50-rhr)/10);if(rhr<=60)return 1;return Math.pow(1.09,(rhr-60)/10)}
+      const sbpEquation = sbp=>{const base=Math.pow(1.02,(sbp-120)/10);return sbp>140?base*(1+0.008*Math.pow(sbp-140,1.3)):base};
+      const dbpEquation = dbp=>{const base=Math.pow(1.02,(dbp-80)/5);return dbp>90?base*(1+0.01*Math.pow(dbp-90,1.2)):base};
+      const genData=(rng,st,fn)=>{let d=[];for(let x=rng[0];x<=rng[1];x+=st){d.push({x,y:parseFloat(fn(x).toFixed(3))})}return d};
+
+      const rhrData = genData([30,120],0.5,rrRHR_J); const sbpData = genData([90,200],0.5,sbpEquation); const dbpData = genData([50,120],0.5,dbpEquation);
+      const userRHR = parseFloat(localStorage.getItem('resting_hr')); const userSBP = parseFloat(localStorage.getItem('sbp_mmhg')); const userDBP = parseFloat(localStorage.getItem('dbp_mmhg'));
+      const sbpChartEl = document.getElementById('sbpChart'); const dbpChartEl = document.getElementById('dbpChart'); const rhrChartEl = document.getElementById('rhrChart');
+
+      if (sbpChartEl) createRiskCurveChart(sbpChartEl, 'Systolic BP (mmHg)', sbpData, '#d9534f', userSBP, 110, 180);
+      if (dbpChartEl) createRiskCurveChart(dbpChartEl, 'Diastolic BP (mmHg)', dbpData, '#5cb85c', userDBP, 65, 110);
+      if (rhrChartEl) createRiskCurveChart(rhrChartEl, 'Resting Heart Rate (bpm)', rhrData, '#428bca', userRHR, 40, 110);
+    });
+  </script>
+
+  <script>
+    // Grip Strength Hazard-ratio functions & Chart setup
+    document.addEventListener('DOMContentLoaded', function() {
+      const RANTANEN={M:[{max:54,β:0.035,P:40},{max:64,β:0.028,P:40},{max:150,β:0.024,P:35}],F:[{max:54,β:0.043,P:25},{max:64,β:0.029,P:25},{max:150,β:0.022,P:20}]};
+      function coeffs(s,a){return RANTANEN[s].find(r=>a<=r.max)} const FLOOR=0.45;
+      function rrGrip(g,s,a){const {β,P}=coeffs(s,a);return Math.max(Math.exp(β*(P-g)),FLOOR)}
+      const age = +localStorage.getItem('age')||50; const sex = (localStorage.getItem('gender')||'MALE').startsWith('F')?'F':'M'; const grip = +localStorage.getItem('grip_strength_avg');
+      const xs_grip = Array.from({length:111},(_,i)=>10+i); const curve = xs_grip.map(x=>({x,y:rrGrip(x,sex,age)}));
+      const gripChartEl = document.getElementById('gripChart');
+      if (gripChartEl) { new Chart(gripChartEl,{type:'line',data:{datasets:[{data:curve,borderColor:'#0074D9',borderWidth:2,tension:0.25,pointRadius:0,spanGaps:true},{data:xs_grip.map(x=>({x,y:1})),borderColor:'#666',borderDash:[6,4],pointRadius:0}].concat(isNaN(grip)?[]:[{type:'scatter',data:[{x:grip,y:rrGrip(grip,sex,age)}],pointRadius:8,backgroundColor:'#000',borderColor:'#fff',borderWidth:2}])},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{type:'linear',min:10,max:65,title:{display:true,text:'Grip strength (kg)'}},y:{type:'linear',min:0.4,max:1.6,title:{display:true,text:'Relative risk'}}}}}) }
+    });
+  </script>
+
 </body>
 </html>
