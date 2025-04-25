@@ -6,6 +6,7 @@
  * @param {number|string} vo2Value - VO2 Max value in ml/kg/min
  * @returns {string} - Percentile formatted to one decimal place, '>99.9', or 'N/A'.
  */
+
 function calculateVo2Percentile(gender, age, vo2Value) {
   // Return early if any required values are missing or invalid
   if (!gender || !age || !vo2Value || isNaN(parseFloat(vo2Value)) || isNaN(parseInt(age))) {
@@ -523,7 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastName = localStorage.getItem('last_name') || '';
   const clientNameElement = document.getElementById('clientName');
   if (clientNameElement) {
-      clientNameElement.value = `${firstName} ${lastName}`.trim() || 'N/A';
+      // Fix: Change .value to .textContent for div element
+      clientNameElement.textContent = `${firstName} ${lastName}`.trim() || 'N/A';
   }
   populateField('examDate', 'exam_date', { formatter: formatDate });
 
