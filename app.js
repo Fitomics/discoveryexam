@@ -466,11 +466,44 @@ const createRiskCurveChart = (ctx, label, dataPoints, color, userValue = null, x
 };
 
 
-// --- Grip Strength Charting ---
-const RANTANEN = { M: [{ max: 54, β: 0.035, P: 40 }, { max: 64, β: 0.028, P: 40 }, { max: 150, β: 0.024, P: 35 }], F: [{ max: 54, β: 0.043, P: 25 }, { max: 64, β: 0.029, P: 25 }, { max: 150, β: 0.022, P: 20 }] };
-function coeffs(sex, age) { return RANTANEN[sex].find(r => age <= r.max) || RANTANEN[sex][RANTANEN[sex].length - 1]; } // Added fallback
-const FLOOR = 0.45;
-function rrGrip(grip, sex, age) { const { β, P } = coeffs(sex, age); return Math.max(Math.exp(β * (P - grip)), FLOOR); }
+// --- Grip Strength Calculation Logic ---
+
+/* 1.  β & pivot table from Rantanen -------------------------------- */
+const RANTANEN = {
+  M:[ {max:54,β:0.035,P:40},
+      {max:64,β:0.028,P:40},
+      {max:150,β:0.024,P:35} ],
+  F:[ {max:54,β:0.043,P:25},
+      {max:64,β:0.029,P:25},
+      {max:150,β:0.022,P:20} ]
+};
+// Helper function to find the correct coefficients based on sex and age
+function coeffs(sex, age) {
+    // Ensure sex is 'M' or 'F'
+    const validSex = (String(sex).toUpperCase().startsWith('F')) ? 'F' : 'M';
+    const ageNum = parseInt(age);
+    if (isNaN(ageNum)) {
+        console.warn("coeffs: Invalid age provided", age);
+        // Return default coeffs (e.g., middle band for Male) if age is invalid, or handle error appropriately
+        return RANTANEN['M'][1];
+    }
+    // Find the matching age band or use the last one as fallback
+    return RANTANEN[validSex].find(r => ageNum <= r.max) || RANTANEN[validSex][RANTANEN[validSex].length - 1];
+}
+
+
+/* 2.  Relative-risk function – symmetrical exponential ------------- */
+const FLOOR = 0.45;                    // Empirical minimum RR
+function rrGrip(grip, sex, age) {
+    const gripNum = parseFloat(grip);
+    if (isNaN(gripNum)) {
+        console.warn("rrGrip: Invalid grip value provided", grip);
+        return NaN; // Or handle appropriately
+    }
+    const { β, P } = coeffs(sex, age); // Get coefficients for the given sex and age
+    // Calculate relative risk, ensuring it doesn't go below the floor
+    return Math.max(Math.exp(β * (P - gripNum)), FLOOR);
+}
 
 
 // --- Functional Strength Score Charting ---
@@ -516,12 +549,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Summary VO2 Max, METs, Percentile, and Note
-  const unifiedVO2Max = localStorage.getItem('unified_vo2max');
   const gender = localStorage.getItem('gender');
-  const ageStr = localStorage.getItem('age'); // Keep as string initially for checks
+  const ageStr = localStorage.getItem('age');
+  const unifiedVO2Max = localStorage.getItem('unified_vo2max');
   const vo2ValueClean = unifiedVO2Max ? String(unifiedVO2Max).replace(/ ml\/kg\/min/gi, '').trim() : '';
   const vo2ValueNum = parseFloat(vo2ValueClean);
   const ageNum = parseInt(ageStr);
+  const vo2MetsNum = !isNaN(vo2ValueNum) ? vo2ValueNum / 3.5 : NaN; // vo2MetsNum is now defined
 
   if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
       populateField('summaryVo2Value', 'unified_vo2max'); // Populates the value field
@@ -768,44 +802,77 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // Grip Strength Chart
-  const gripAge = parseInt(localStorage.getItem('age')) || 50; // Default age if missing
-  const gripSex = (localStorage.getItem('gender') || 'MALE').toUpperCase().startsWith('F') ? 'F' : 'M';
-  const userGripAvg = parseFloat(localStorage.getItem('grip_strength_avg'));
-  const xs_grip = Array.from({ length: 111 }, (_, i) => 10 + i); // Grip range 10-120
-  const gripCurve = xs_grip.map(x => ({ x: x, y: rrGrip(x, gripSex, gripAge) }));
+  const gripAge = parseInt(ageStr); // Attempt to parse
+  const isAgeValid = ageStr && !isNaN(gripAge); // Check if age exists and is a valid number
+
   const gripChartEl = document.getElementById('gripChart');
+  const gripContainer = gripChartEl ? gripChartEl.closest('.graph-container') : null; // Find the container
 
-  if (gripChartEl) {
-      let gripScatterDataset = [];
-      if (!isNaN(userGripAvg)) {
-          gripScatterDataset.push({
-              type: 'scatter',
-              label: 'User Avg Grip',
-              data: [{ x: userGripAvg, y: rrGrip(userGripAvg, gripSex, gripAge) }],
-              pointRadius: 8, pointStyle: 'rectRot', backgroundColor: 'rgba(0,0,0,0.8)', borderColor: '#fff', borderWidth: 2
-          });
-      }
+  if (gripChartEl && gripContainer) {
+      if (isAgeValid) {
+          // Age is valid, proceed with chart creation
+          console.log(`Initializing Grip Strength chart for age: ${gripAge}`);
+          const gripSex = (localStorage.getItem('gender') || 'MALE').toUpperCase().startsWith('F') ? 'F' : 'M';
+          const userGripAvg = parseFloat(localStorage.getItem('grip_strength_avg'));
+          const xs_grip = Array.from({ length: 111 }, (_, i) => 10 + i); // Grip range 10-120
 
-      new Chart(gripChartEl, {
-          type: 'line',
-          data: {
-              datasets: [
-                  { label: 'Grip Strength RR', data: gripCurve, borderColor: '#0074D9', borderWidth: 2, tension: 0.25, pointRadius: 0, spanGaps: true },
-                  { label: 'Reference RR=1.0', data: xs_grip.map(x => ({ x: x, y: 1 })), borderColor: '#666', borderDash: [6, 4], pointRadius: 0 },
-                  ...gripScatterDataset
-              ]
-          },
-          options: {
-              responsive: true, maintainAspectRatio: false, animation: false,
-              plugins: { scatterOnTop: true, legend: { display: false } },
-              scales: {
-                  x: { type: 'linear', min: 10, max: 65, title: { display: true, text: 'Grip strength (kg)' } },
-                  y: { type: 'linear', min: FLOOR - 0.05, max: 1.6, title: { display: true, text: 'Relative risk (All-Cause Mortality)' } } // Adjusted min slightly
+          // *** Use the rrGrip function defined above ***
+          const gripCurve = xs_grip.map(x => ({ x: x, y: rrGrip(x, gripSex, gripAge) }));
+
+          let gripScatterDataset = [];
+          if (!isNaN(userGripAvg)) {
+              // *** Use the rrGrip function defined above for the user point ***
+              const userRisk = rrGrip(userGripAvg, gripSex, gripAge);
+              if (!isNaN(userRisk)) { // Check if risk calculation was successful
+                  gripScatterDataset.push({
+                      type: 'scatter',
+                      label: 'User Avg Grip',
+                      data: [{ x: userGripAvg, y: userRisk }],
+                      pointRadius: 8, pointStyle: 'rectRot', backgroundColor: 'rgba(0,0,0,0.8)', borderColor: '#fff', borderWidth: 2
+                  });
+              } else {
+                  console.warn(`Could not calculate risk for user grip average: ${userGripAvg}`);
               }
           }
-      });
+
+          new Chart(gripChartEl, {
+              type: 'line',
+              data: {
+                  datasets: [
+                      { label: 'Grip Strength RR', data: gripCurve, borderColor: '#0074D9', borderWidth: 2, tension: 0.5, pointRadius: 0, spanGaps: true },
+                      { label: 'Reference RR=1.0', data: xs_grip.map(x => ({ x: x, y: 1 })), borderColor: '#666', borderDash: [6, 4], pointRadius: 0 },
+                      ...gripScatterDataset
+                  ]
+              },
+              options: {
+                  responsive: true, maintainAspectRatio: false, animation: false,
+                  plugins: { scatterOnTop: true, legend: { display: false } },
+                  scales: {
+                      x: { type: 'linear', min: 10, max: 65, title: { display: true, text: 'Grip strength (kg)' } },
+                      // Use the FLOOR constant defined above for the minimum y-axis value
+                      y: { type: 'linear', min: FLOOR - 0.05, max: 3.0, title: { display: true, text: 'Relative risk (All-Cause Mortality)' } }
+                  }
+              }
+          });
+      } else {
+          // Age is missing or invalid, display message instead of chart
+          console.warn("Grip Strength chart not generated: Age data missing or invalid.");
+          gripChartEl.style.display = 'none'; // Hide the canvas element
+          const messageElement = document.createElement('p');
+          messageElement.textContent = 'Age data is missing or invalid. Grip strength chart requires age to be calculated.';
+          messageElement.style.textAlign = 'center';
+          messageElement.style.padding = '20px';
+          messageElement.style.color = '#cc0000'; // Warning color
+          const canvasContainer = gripChartEl.parentElement;
+          if (canvasContainer) {
+              canvasContainer.appendChild(messageElement);
+          } else {
+              gripContainer.appendChild(messageElement);
+          }
+      }
   } else {
-      console.warn("Grip Strength chart canvas not found.");
+      if (!gripChartEl) console.warn("Grip Strength chart canvas element 'gripChart' not found.");
+      if (!gripContainer) console.warn("Could not find '.graph-container' for Grip Strength chart.");
   }
 
   // Functional Strength Score Chart
@@ -898,13 +965,47 @@ document.addEventListener('DOMContentLoaded', () => {
       console.warn("Functional Strength chart canvas element 'strengthChart' not found.");
   }
 
+  // Add this code in the DOMContentLoaded event listener, after other charts init
+  // but before the closing "Report initialization complete." console.log
+
+  // Initialize VO2 Max Chart
+  const vo2ChartElement = document.getElementById('vo2CategoryChart');
+  if (vo2ChartElement) {
+    const ctx = vo2ChartElement.getContext('2d');
+    if (ctx && gender && !isNaN(ageNum) && !isNaN(vo2MetsNum)) {
+      console.log(`Initializing VO2 Max chart for ${gender}, age ${ageNum}, VO2 METs ${vo2MetsNum.toFixed(1)}`);
+      createOrUpdateVo2CategoryChart(ctx, gender, ageNum, vo2MetsNum);
+    } else {
+      console.warn("Cannot initialize VO2 Max chart: Missing or invalid data", {
+        hasContext: !!ctx,
+        gender,
+        age: ageNum,
+        vo2Mets: vo2MetsNum
+      });
+      // Display an error message on the canvas if possible
+      if (ctx) {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "red";
+        ctx.textAlign = "center";
+        ctx.fillText("VO₂ Max chart requires gender, age, and VO₂ data.", 
+                    vo2ChartElement.width / 2, 
+                    vo2ChartElement.height / 2);
+      }
+    }
+  } else {
+    console.warn("VO2 Max chart canvas element 'vo2CategoryChart' not found.");
+  }
 
   // --- Add Event Listener for PDF Button ---
-  const pdfButton = document.getElementById('generatePdfButton'); // ASSUMING you have a button with this ID
+  // Find the button by its actual onclick attribute or add an ID
+  const pdfButton = document.querySelector('button[onclick="generatePDF()"]');
   if (pdfButton) {
-      pdfButton.addEventListener('click', generatePDF);
+      // The onclick attribute already handles the call, no extra listener needed
+      // If you prefer an ID: give the button id="generatePdfButton" and uncomment below
+      // pdfButton.addEventListener('click', generatePDF);
+      console.log("PDF Generation button found.");
   } else {
-      console.warn("PDF Generation button ('generatePdfButton') not found. PDF generation must be triggered manually.");
+      console.warn("PDF Generation button not found. PDF generation must be triggered manually or via existing onclick.");
   }
 
   console.log("Report initialization complete.");

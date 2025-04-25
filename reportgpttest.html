@@ -8,6 +8,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <!-- Load VO2 data and chart logic BEFORE app.js -->
+  <script src="vo2data.js"></script>
+  <script src="vo2chart.js"></script>
+  <!-- Load main application logic -->
   <script src="app.js"></script>
   <style>
     /* --- Global Styles --- */
@@ -485,7 +489,9 @@
     <div class="page">
       <div class="title-text">VO₂ Max</div>
       <div class="graph-container">
-        <img class="graph-image" src="VO2Percentile.png" alt="VO2 Graph">
+        <div class="chart-container" style="height: 300px; margin-bottom: 20px;">
+            <canvas id="vo2CategoryChart"></canvas> <!-- Ensure this canvas exists -->
+        </div>
         <div class="table-wrapper">
           <table>
             <tr><td>Estimated VO₂ Max (ml/kg/min)</td><td><input class="value-field" id="tableVo2Value" readonly><span class="unit-label"></span></td></tr>
