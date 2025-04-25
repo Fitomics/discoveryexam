@@ -510,6 +510,57 @@ function rrGrip(grip, sex, age) {
 // --- Functional Strength Score Charting ---
 // (Uses annotation plugin, ensure it's loaded separately)
 
+/**
+ * Updates the RMR comparison visualization with data from measured and predicted RMR.
+ * Shows the difference between measured and predicted RMR using a colored scale.
+ */
+function updateRMRComparisonVisualization() {
+  // Get the predicted and measured RMR values from localStorage
+  const predictedRMRStr = localStorage.getItem('rmr');
+  const measuredRMRStr = localStorage.getItem('measured_rmr');
+  console.log('Parsed RMR values:', { predictedRMRStr, measuredRMRStr }); // <-- Add this line
+
+  // Clean and parse the values
+  const predictedRMR = parseFloat(String(predictedRMRStr).replace(/[^0-9.]/g, ''));
+  const measuredRMR = parseFloat(String(measuredRMRStr).replace(/[^0-9.]/g, ''));
+
+  // Check if both values are valid numbers
+  if (isNaN(predictedRMR) || isNaN(measuredRMR) || predictedRMR === 0) {
+    console.warn('Invalid RMR values for comparison visualization:', { predictedRMR, measuredRMR });
+    document.getElementById('percentDiff').textContent = 'Insufficient data for comparison';
+    return;
+  }
+
+  // Calculate the percentage difference
+  const diff = ((measuredRMR - predictedRMR) / predictedRMR) * 100;
+
+  // Update the percentage difference display
+  const percentDiffEl = document.getElementById('percentDiff');
+  if (percentDiffEl) {
+    percentDiffEl.textContent = `Measured RMR is ${Math.abs(diff).toFixed(1)}% ${diff >= 0 ? 'higher' : 'lower'} than predicted`;
+  }
+
+  // Determine which segment to highlight based on the difference
+  let highlightIndex;
+  if (diff <= -31)      highlightIndex = 0; // Much Lower
+  else if (diff <= -16) highlightIndex = 1; // Lower
+  else if (diff <= 15)  highlightIndex = 2; // Within Range
+  else if (diff <= 30)  highlightIndex = 3; // Higher
+  else                  highlightIndex = 4; // Much Higher
+
+  // Highlight the appropriate segment
+  for (let i = 0; i < 5; i++) {
+    const segmentEl = document.getElementById(`seg${i}`);
+    if (segmentEl) {
+      if (i === highlightIndex) {
+        segmentEl.classList.add('highlight');
+      } else {
+        segmentEl.classList.remove('highlight');
+      }
+    }
+  }
+}
+
 
 // ==========================================================================
 // ========== MAIN DOM CONTENT LOADED LISTENER ==============================
@@ -661,6 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
   populateField('tableTargetLossAggr', 'weight_loss_aggressive');
   populateField('tableTargetGainCons', 'weight_gain_conservative');
   populateField('tableTargetGainAggr', 'weight_gain_aggressive');
+
+  // *** ADD THIS LINE ***
+  updateRMRComparisonVisualization(); // Call the function to update the RMR bar
 
   // Page 8: VO2 Max Graph & Table (Values populated earlier in VO2 section)
 

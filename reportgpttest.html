@@ -322,6 +322,95 @@ body {
       height: 300px; /* Limit image height */
     }
 
+/* RMR Comparison Visualization Styles */
+.rmr-comparison {
+  width: 100%;
+  margin: 20px auto 30px auto;
+}
+
+.rmr-percent-diff {
+  font-weight: bold;
+  margin-bottom: 15px;
+  font-size: 18px;
+  text-align: center;
+  color: #003b59;
+}
+
+.bar-container {
+  display: flex;
+  border: 1px solid #c19962;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0, 38, 61, 0.08);
+}
+
+.segment {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 5px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.segment .title {
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+
+.segment .subtitle {
+  font-size: 11px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.much-lower { background-color: #d67c62; }
+.lower      { background-color: #f9dead; }
+.exact      { background-color: #e0f0d8; }
+.higher     { background-color: #b3d59c; }
+.much-higher{ background-color: #6fa544; }
+
+/* Updated highlight style: less intense, gold BORDER, no animation */
+.segment.highlight {
+  /* Remove outline properties */
+  /* outline: 4px solid #c19962; */
+  /* outline-offset: -2px; */
+
+  /* Use a thicker border for the highlight effect */
+  border: 4px solid #c19962; /* Gold border, 4px thick */
+
+  box-shadow: 0 6px 12px rgba(0, 38, 61, 0.15); /* Softer shadow */
+  z-index: 10;
+  position: relative;
+  font-weight: bold;
+  /* Removed background-image gradient */
+  /* Removed animation property */
+}
+
+.segment.highlight .title {
+  font-size: 16px; /* Slightly larger than default */
+  color: #00263d; /* Darker text for contrast on lighter backgrounds */
+  /* Removed text-shadow */
+  letter-spacing: 0.2px;
+}
+
+.segment.highlight .subtitle {
+  font-size: 11px; /* Keep subtitle size consistent */
+  font-weight: normal; /* Normal weight */
+}
+
+/* Less intense de-emphasis for other segments */
+.segment:not(.highlight) {
+  opacity: 0.9; /* Slightly reduced opacity */
+  filter: saturate(0.95); /* Minimal desaturation */
+  transform: scale(1); /* No scaling */
+}
+
   </style>
 </head>
 <body>
@@ -507,7 +596,33 @@ body {
     <div class="page">
       <div class="title-text">Resting Metabolic Rate</div>
       <div class="graph-container">
-        <img class="graph-image" src="RMRINT.png" alt="RMR Graph">
+        <!-- Replace static image with interactive RMR comparison visualization -->
+        <div class="rmr-comparison">
+          <div id="percentDiff" class="rmr-percent-diff"></div>
+          <div class="bar-container">
+            <div id="seg0" class="segment much-lower">
+              <span class="title">Much Lower</span>
+              <span class="subtitle">31% or lower than predicted</span>
+            </div>
+            <div id="seg1" class="segment lower">
+              <span class="title">Lower</span>
+              <span class="subtitle">16–30% lower than predicted</span>
+            </div>
+            <div id="seg2" class="segment exact">
+              <span class="title">±15%</span>
+              <span class="subtitle">Within 15% of predicted</span>
+            </div>
+            <div id="seg3" class="segment higher">
+              <span class="title">Higher</span>
+              <span class="subtitle">16–30% higher than predicted</span>
+            </div>
+            <div id="seg4" class="segment much-higher">
+              <span class="title">Much Higher</span>
+              <span class="subtitle">31% or higher than predicted</span>
+            </div>
+          </div>
+        </div>
+        
         <input class="value-field" id="graphRmrMeasured" readonly><span class="unit-label">kcal/day</span>
         <div class="table-wrapper">
           <table>
