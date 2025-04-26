@@ -575,495 +575,529 @@ document.addEventListener('DOMContentLoaded', () => {
   const lastName = localStorage.getItem('last_name') || '';
   const clientNameElement = document.getElementById('clientName');
   if (clientNameElement) {
-      // Fix: Change .value to .textContent for div element
       clientNameElement.textContent = `${firstName} ${lastName}`.trim() || 'N/A';
   }
   populateField('examDate', 'exam_date', { formatter: formatDate });
+  const gender = localStorage.getItem('gender'); // Get gender once
+  const ageStr = localStorage.getItem('age'); // Get age once
+  const ageNum = parseInt(ageStr); // Parse age once
 
-  // Page 2: Summary Table (Value Fields)
+  // Page 2: Summary Table (Value Fields & Notes)
   populateField('summaryBmiValue', 'bmi');
-  populateField('summaryFmiValue', 'fat_mass_index');
-  populateField('summaryFfmiValue', 'fat_free_mass_index');
-  populateField('summaryGripValue', 'grip_strength_avg');
-  populateField('summaryRhrValue', 'resting_hr');
-  populateField('summarySbpValue', 'sbp_mmhg');
-  populateField('summaryDbpValue', 'dbp_mmhg');
-  populateField('summaryFssValue', 'total_strength_score');
+  const bmiValueElement = document.getElementById('summaryBmiValue');
+  const bmiNoteElement = document.getElementById('summaryBmiNote');
+  if (bmiValueElement && bmiNoteElement) {
+      bmiNoteElement.value = getBmiNote(bmiValueElement.value);
+  } else { /* ... console warnings ... */ }
 
-  // Summary RMR: Prioritize Measured over Predicted
-  const measuredRMR = localStorage.getItem('measured_rmr');
-  const predictedRMR = localStorage.getItem('rmr');
+  populateField('summaryFmiValue', 'fat_mass_index');
+  const fmiValueElement = document.getElementById('summaryFmiValue');
+  const fmiNoteElement = document.getElementById('summaryFmiNote');
+  if (fmiValueElement && fmiNoteElement) {
+      fmiNoteElement.value = getFmiNote(fmiValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  populateField('summaryFfmiValue', 'fat_free_mass_index');
+  const ffmiValueElement = document.getElementById('summaryFfmiValue');
+  const ffmiNoteElement = document.getElementById('summaryFfmiNote');
+  if (ffmiValueElement && ffmiNoteElement) {
+      ffmiNoteElement.value = getFfmiNote(ffmiValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  populateField('summaryGripValue', 'grip_strength_avg');
+  const gripValueElement = document.getElementById('summaryGripValue');
+  const gripNoteElement = document.getElementById('summaryGripNote');
+  if (gripValueElement && gripNoteElement && gender && !isNaN(ageNum)) {
+      const gripAvg = parseFloat(gripValueElement.value);
+      if (!isNaN(gripAvg)) {
+          const gripRisk = rrGrip(gripAvg, gender, ageNum); // Calculate risk
+          gripNoteElement.value = getGripNote(gripRisk); // Get note from risk
+      } else {
+          gripNoteElement.value = 'N/A';
+      }
+  } else {
+      if (gripNoteElement) gripNoteElement.value = 'N/A';
+      /* ... console warnings ... */
+  }
+
+  populateField('summaryRhrValue', 'resting_hr');
+  const rhrValueElement = document.getElementById('summaryRhrValue');
+  const rhrNoteElement = document.getElementById('summaryRhrNote');
+  if (rhrValueElement && rhrNoteElement) {
+      rhrNoteElement.value = getRhrNote(rhrValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  populateField('summarySbpValue', 'sbp_mmhg');
+  const sbpValueElement = document.getElementById('summarySbpValue');
+  const sbpNoteElement = document.getElementById('summarySbpNote');
+  if (sbpValueElement && sbpNoteElement) {
+      sbpNoteElement.value = getSbpNote(sbpValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  populateField('summaryDbpValue', 'dbp_mmhg');
+  const dbpValueElement = document.getElementById('summaryDbpValue');
+  const dbpNoteElement = document.getElementById('summaryDbpNote');
+  if (dbpValueElement && dbpNoteElement) {
+      dbpNoteElement.value = getDbpNote(dbpValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  populateField('summaryFssValue', 'total_strength_score');
+  const fssValueElement = document.getElementById('summaryFssValue');
+  const fssNoteElement = document.getElementById('summaryFssNote');
+  if (fssValueElement && fssNoteElement) {
+      fssNoteElement.value = getFssNote(fssValueElement.value);
+  } else { /* ... console warnings ... */ }
+
+  // Summary RMR: Prioritize Measured over Predicted & Calculate Note
+  const measuredRMRStr = localStorage.getItem('measured_rmr');
+  const predictedRMRStr = localStorage.getItem('rmr');
   const summaryRmrElement = document.getElementById('summaryRmrValue');
+  const rmrNoteElement = document.getElementById('summaryRmrNote');
+  let rmrPercentDiff = NaN;
+
+  const measuredRMR = parseFloat(String(measuredRMRStr).replace(/[^0-9.]/g, ''));
+  const predictedRMR = parseFloat(String(predictedRMRStr).replace(/[^0-9.]/g, ''));
+
   if (summaryRmrElement) {
-      const rmrValue = (measuredRMR && String(measuredRMR).trim() !== '')
-          ? String(measuredRMR).replace(/ kcal\/day/gi, '').trim()
-          : (predictedRMR ? String(predictedRMR).replace(/ kcal\/day/gi, '').trim() : 'N/A');
+      const rmrValue = (measuredRMRStr && String(measuredRMRStr).trim() !== '' && !isNaN(measuredRMR))
+          ? measuredRMR.toFixed(0) // Use cleaned measured value if available and valid
+          : (predictedRMRStr && !isNaN(predictedRMR) ? predictedRMR.toFixed(0) : 'N/A'); // Use cleaned predicted if available and valid
       summaryRmrElement.value = rmrValue;
   }
 
+  if (!isNaN(measuredRMR) && !isNaN(predictedRMR) && predictedRMR !== 0) {
+      rmrPercentDiff = ((measuredRMR - predictedRMR) / predictedRMR) * 100;
+  }
+
+  if (rmrNoteElement) {
+      rmrNoteElement.value = getRmrNote(rmrPercentDiff); // Pass the calculated difference
+  } else { /* ... console warnings ... */ }
+
+
   // Summary VO2 Max, METs, Percentile, and Note
-  const gender = localStorage.getItem('gender');
-  const ageStr = localStorage.getItem('age');
   const unifiedVO2Max = localStorage.getItem('unified_vo2max');
   const vo2ValueClean = unifiedVO2Max ? String(unifiedVO2Max).replace(/ ml\/kg\/min/gi, '').trim() : '';
   const vo2ValueNum = parseFloat(vo2ValueClean);
-  const ageNum = parseInt(ageStr);
-  const vo2MetsNum = !isNaN(vo2ValueNum) ? vo2ValueNum / 3.5 : NaN; // vo2MetsNum is now defined
+  const vo2MetsNum = !isNaN(vo2ValueNum) ? vo2ValueNum / 3.5 : NaN;
+  let percentile = 'N/A'; // Initialize percentile
+  let percentileDisplay = 'N/A'; // For display (%ile suffix)
+  let vo2CategoryNote = 'N/A'; // For the summary table note
 
   if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
-      populateField('summaryVo2Value', 'unified_vo2max'); // Populates the value field
-      populateField('tableVo2Value', 'unified_vo2max');   // Populates table value
-
-      const metsValue = (vo2ValueNum / 3.5).toFixed(1);
+      populateField('summaryVo2Value', 'unified_vo2max');
+      populateField('tableVo2Value', 'unified_vo2max');
+      const metsValue = vo2MetsNum.toFixed(1);
       const metsElement = document.getElementById('tableVo2Mets');
       if (metsElement) metsElement.value = metsValue;
 
-      // Calculate percentile only if age and gender are valid
-      let percentile = 'N/A';
-      let percentileNote = 'N/A';
       if (gender && !isNaN(ageNum)) {
-         percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum);
+         percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum); // Calculate raw percentile
          if (percentile === ">99.9") {
-             percentileNote = ">99.9%ile";
+             percentileDisplay = ">99.9%ile";
          } else if (percentile !== 'N/A') {
-             percentileNote = `${percentile}%ile`;
+             percentileDisplay = `${percentile}%ile`;
          }
-      } else {
-          console.warn("Cannot calculate VO2 percentile due to missing/invalid gender or age.");
-      }
+         vo2CategoryNote = getVo2Note(percentile); // Get category note based on raw percentile
+      } else { console.warn("Cannot calculate VO2 percentile/note due to missing/invalid gender or age."); }
 
       const percentileElement = document.getElementById('tableVo2Percentile');
-      if (percentileElement) percentileElement.value = percentile;
+      if (percentileElement) percentileElement.value = percentile; // Store raw percentile value
       const noteElement = document.getElementById('summaryVo2Note');
-      if (noteElement) noteElement.value = percentileNote;
+      if (noteElement) noteElement.value = vo2CategoryNote; // Use the category note
 
   } else {
-      // Set all VO2 related fields to N/A if base value is missing/invalid
       ['summaryVo2Value', 'tableVo2Value', 'tableVo2Mets', 'tableVo2Percentile', 'summaryVo2Note'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = 'N/A';
       });
-       if (!unifiedVO2Max) console.warn("VO2 Max data ('unified_vo2max') not found in localStorage.");
-       else console.warn(`Invalid VO2 Max value found: "${unifiedVO2Max}"`);
+      /* ... console warnings ... */
   }
 
-  // Heart Rate Recovery calculation
-  const endingHRStr = localStorage.getItem('hr_bpm'); // Assuming this is peak HR during test
-  const postHRStr = localStorage.getItem('post_heart_rate'); // HR after 1 min recovery
+  // Heart Rate Recovery calculation and Note
+  const endingHRStr = localStorage.getItem('hr_bpm');
+  const postHRStr = localStorage.getItem('post_heart_rate');
   const endingHR = parseFloat(endingHRStr);
   const postHR = parseFloat(postHRStr);
   const hrrElement = document.getElementById('summaryHrrValue');
+  const hrrNoteElement = document.getElementById('summaryHrrNote');
+  let hrrValue = NaN;
+
   if (hrrElement) {
       if (!isNaN(endingHR) && !isNaN(postHR)) {
-          hrrElement.value = (endingHR - postHR).toFixed(0);
-          // Note logic could be added here based on the calculated HRR value
-          // populateField('summaryHrrNote', calculatedNoteKey);
-      } else {
-          hrrElement.value = 'N/A';
-          // populateField('summaryHrrNote', 'defaultOrNAKey');
-      }
+          hrrValue = endingHR - postHR;
+          hrrElement.value = hrrValue.toFixed(0);
+      } else { hrrElement.value = 'N/A'; }
   }
 
-  // Summary Notes (These likely depend on logic based on the values - using placeholder keys)
-  // Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
-  // OR implement logic here to determine the note based on the value and populate.
-  populateField('summaryBmiNote', 'bmi_note_key', { defaultValue: 'N/A' });
-  populateField('summaryFmiNote', 'fmi_note_key', { defaultValue: 'N/A' });
-  populateField('summaryFfmiNote', 'ffmi_note_key', { defaultValue: 'N/A' });
-  populateField('summaryGripNote', 'grip_note_key', { defaultValue: 'N/A' });
-  populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' });
-  populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // Note based on measured/predicted?
-  populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' });
-  populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' });
-  populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' });
+  if (hrrNoteElement) {
+      hrrNoteElement.value = getHrrNote(hrrValue); // Pass calculated HRR value
+  } else { /* ... console warnings ... */ }
 
-  // Page 3: BMI Graph Input
-  // Hidden input for potential backend use
+
+  // Remove Placeholder Summary Notes handled above
+  // populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' });
+  // populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' });
+  // populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' });
+  // populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' });
+  // populateField('summaryHrrNote', 'hrr_note_key', { defaultValue: 'N/A' }); // Assuming it exists in HTML now
+
+  // --- Populate Graph Inputs & Other Tables ---
+  populateField('bmi-input', 'bmi');
   populateField('graphBmi', 'bmi');
-  // Visible input for user feedback / potential editing
-  const bmiForChartInput = document.getElementById('bmi-input'); // Assuming this ID exists
-  if (bmiForChartInput) {
-      populateField('bmi-input', 'bmi');
-  }
-
-  // Page 4: FMI/FFMI Graph Inputs (Hidden)
   populateField('graphFmi', 'fat_mass_index');
   populateField('graphFfmi', 'fat_free_mass_index');
-
-  // Page 5: BP Graph Inputs (Hidden)
   populateField('graphSbp', 'sbp_mmhg');
   populateField('graphDbp', 'dbp_mmhg');
-
-  // Page 6: RHR Graph Input (Hidden)
   populateField('graphRhr', 'resting_hr');
-
-  // Page 7: RMR Graph & Table
-  // Use measured if available, otherwise predicted, for the graph input
-  const rmrGraphValue = (measuredRMR && String(measuredRMR).trim() !== '') ? measuredRMR : predictedRMR;
-  const graphRmrMeasuredElement = document.getElementById('graphRmrMeasured');
-  if (graphRmrMeasuredElement) {
-       graphRmrMeasuredElement.value = rmrGraphValue ? String(rmrGraphValue).replace(/ kcal\/day/gi, '').trim() : 'N/A';
-  }
-  populateField('tableRmrPredicted', 'rmr'); // Predicted RMR
-  populateField('tableRmrMeasured', 'measured_rmr'); // Measured RMR
-  populateField('tableRmrFatPercent', 'fat_calories_percent');
-  populateField('tableRmrCarbPercent', 'carb_calories_percent');
-  populateField('tableTargetLossCons', 'weight_loss_conservative');
-  populateField('tableTargetLossAggr', 'weight_loss_aggressive');
-  populateField('tableTargetGainCons', 'weight_gain_conservative');
-  populateField('tableTargetGainAggr', 'weight_gain_aggressive');
-
-  // *** ADD THIS LINE ***
-  updateRMRComparisonVisualization(); // Call the function to update the RMR bar
-
-  // Page 8: VO2 Max Graph & Table (Values populated earlier in VO2 section)
-
-  // Page 9: Grip Strength Graph Inputs (Hidden)
-  populateField('graphGripRight', 'grip_strength_right');
-  populateField('graphGripLeft', 'grip_strength_left');
+  populateField('graphRmrMeasured', 'measured_rmr'); // For display below RMR viz
+  populateField('tableRmrPredicted', 'rmr');
+  populateField('tableRmrMeasured', 'measured_rmr');
+  populateField('tableRmrFatPercent', 'rmr_fat_percent');
+  populateField('tableRmrCarbPercent', 'rmr_carb_percent');
+  populateField('tableTargetLossCons', 'target_loss_cons');
+  populateField('tableTargetLossAggr', 'target_loss_aggr');
+  populateField('tableTargetGainCons', 'target_gain_cons');
+  populateField('tableTargetGainAggr', 'target_gain_aggr'); // Added Aggressive Gain
+  populateField('graphGripRight', 'grip_strength_r');
+  populateField('graphGripLeft', 'grip_strength_l');
   populateField('graphGripAvg', 'grip_strength_avg');
-
-  // Page 10: Functional Strength Scores Graph Inputs (Hidden)
-  populateField('graphUpperScore', 'upper_strength_score');
-  populateField('graphLowerScore', 'lower_strength_score');
+  populateField('graphUpperScore', 'upper_body_strength_score');
+  populateField('graphLowerScore', 'lower_body_strength_score');
   populateField('graphCoreScore', 'core_strength_score');
   populateField('graphTotalScore', 'total_strength_score');
+  populateField('repmax10Bench', 'bench_press_10rm');
+  populateField('repmax10Pulldown', 'pulldown_10rm');
+  populateField('repmax10Deadlift', 'deadlift_10rm');
+  populateField('nutritionProteinTarget', 'protein_assumption');
+  populateField('nutritionFatTarget', 'fat_assumption');
+  populateField('nutritionEnergy', 'energy_target');
+  populateField('nutritionProtein', 'protein_target');
+  populateField('nutritionCarbs', 'carb_target');
+  populateField('nutritionFat', 'fat_target');
+  populateField('nutritionFiber', 'fiber_target');
+  populateField('nutritionFluid', 'fluid_target');
 
-  // Page 11: Rep Max Table
-  const bench10rmStr = localStorage.getItem('bench_10rm');
-  const pulldown10rmStr = localStorage.getItem('pulldown_10rm');
-  const deadlift10rmStr = localStorage.getItem('dl_10rm');
+  // --- Calculate and Populate Predicted Rep Maxes ---
+  const bench10RM = localStorage.getItem('bench_press_10rm');
+  const pulldown10RM = localStorage.getItem('pulldown_10rm');
+  const deadlift10RM = localStorage.getItem('deadlift_10rm');
 
-  // Calculate rep maxes (function handles NaN/missing input)
-  const benchRepMaxes = calculateRepMaxes(bench10rmStr);
-  const pulldownRepMaxes = calculateRepMaxes(pulldown10rmStr);
-  const deadliftRepMaxes = calculateRepMaxes(deadlift10rmStr);
+  const benchMaxes = calculateRepMaxes(bench10RM);
+  const pulldownMaxes = calculateRepMaxes(pulldown10RM);
+  const deadliftMaxes = calculateRepMaxes(deadlift10RM);
 
-  const repMaxTable = document.querySelector('.page:nth-of-type(11) .table-wrapper table'); // Adjust selector if needed
+  const repMaxTable = document.querySelector('.page:has(#repmax10Bench) table'); // Find the rep max table
   if (repMaxTable) {
-      // Start from row 1 to skip header row (index 0)
+      const rows = repMaxTable.querySelectorAll('tr');
+      // Start from row 1 (index 1) to skip header, go up to row 15 (index 15)
       for (let i = 1; i <= 15; i++) {
-          const row = repMaxTable.rows[i];
-          if (row && row.cells.length >= 4) { // Check row and cell count
-              const benchInput = row.cells[1].querySelector('input');
-              const pulldownInput = row.cells[2].querySelector('input');
-              const deadliftInput = row.cells[3].querySelector('input');
-
-              if (benchInput) benchInput.value = benchRepMaxes[i - 1]; // Array is 0-indexed
-              if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i - 1];
-              if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i - 1];
-          } else if (row) {
-               console.warn(`Rep Max Table: Row ${i} does not have enough cells or is missing.`);
+          if (rows[i]) { // Check if row exists
+              const cells = rows[i].querySelectorAll('td input');
+              if (cells.length === 3) { // Expecting 3 input cells per row
+                  cells[0].value = benchMaxes[i - 1];    // Array is 0-indexed
+                  cells[1].value = pulldownMaxes[i - 1];
+                  cells[2].value = deadliftMaxes[i - 1];
+              }
           }
       }
-      // Specifically populate the 10RM input fields from original localStorage data
-      populateField('repmax10Bench', 'bench_10rm');
-      populateField('repmax10Pulldown', 'pulldown_10rm');
-      populateField('repmax10Deadlift', 'dl_10rm');
-  } else {
-      console.warn("Rep Max Table not found using the provided selector.");
   }
-
-  // Page 12: Nutrition Targets Table
-  populateField('nutritionEnergy', 'target_energy');
-  populateField('nutritionProtein', 'protein_grams');
-  populateField('nutritionCarbs', 'carb_grams');
-  populateField('nutritionFat', 'fat_grams');
-  populateField('nutritionFiber', 'fiber_grams');
-  populateField('nutritionFluid', 'fluid_total');
-
-  // Populate dietary assumptions with defaults
-  const proteinValue = localStorage.getItem('protein') || '1.2'; // Default g/kg
-  const proteinTargetEl = document.getElementById('nutritionProteinTarget');
-  if (proteinTargetEl) proteinTargetEl.value = proteinValue;
-
-  const fatValueStr = localStorage.getItem('fat') || '0.3'; // Default % as decimal
-  const fatValue = parseFloat(fatValueStr);
-  const fatPercentage = !isNaN(fatValue) ? (fatValue * 100).toFixed(0) : '30'; // Default %
-  const fatTargetEl = document.getElementById('nutritionFatTarget');
-  if (fatTargetEl) fatTargetEl.value = fatPercentage;
 
 
   // --- Initialize Charts ---
-  console.log("Initializing charts...");
+  const bmiValue = parseFloat(localStorage.getItem('bmi'));
+  const fmiValue = parseFloat(localStorage.getItem('fat_mass_index'));
+  const ffmiValue = parseFloat(localStorage.getItem('fat_free_mass_index'));
+  const sbpValue = parseFloat(localStorage.getItem('sbp_mmhg'));
+  const dbpValue = parseFloat(localStorage.getItem('dbp_mmhg'));
+  const rhrValue = parseFloat(localStorage.getItem('resting_hr'));
+  const gripAvgValue = parseFloat(localStorage.getItem('grip_strength_avg'));
 
   // BMI Charts
-  let bmiCharts = []; // Initialize array to hold chart instances and their functions
-  const savedBmi = parseFloat(localStorage.getItem('bmi'));
-  const mortChartAllEl = document.getElementById('mortChartAll');
-  const mortChartCommEl = document.getElementById('mortChartComm');
-  const mortChartNcdEl = document.getElementById('mortChartNcd');
-
-  if (mortChartAllEl && mortChartCommEl && mortChartNcdEl) {
-      const chartAll = buildBmiChart('mortChartAll', hrAll, 'crimson', savedBmi);
-      const chartComm = buildBmiChart('mortChartComm', hrCD, 'royalblue', savedBmi);
-      const chartNcd = buildBmiChart('mortChartNcd', hrNCD, 'seagreen', savedBmi);
-
-      if (chartAll) bmiCharts.push({ chart: chartAll, fn: hrAll });
-      if (chartComm) bmiCharts.push({ chart: chartComm, fn: hrCD });
-      if (chartNcd) bmiCharts.push({ chart: chartNcd, fn: hrNCD });
-
-      // Initial update with the saved BMI value
-      updateBmiCharts(bmiCharts, savedBmi); // Function handles NaN/invalid BMI
-
-      // Optional: Add listener to update charts if the visible BMI input changes
-      if (bmiForChartInput) {
-           bmiForChartInput.addEventListener('input', (e) => {
-               const newBmi = parseFloat(e.target.value);
-               updateBmiCharts(bmiCharts, newBmi);
-           });
-      }
-
-  } else {
-      console.warn("One or more BMI chart canvas elements not found. BMI charts not initialized.");
-  }
+  const bmiCharts = [
+      { chart: buildBmiChart('mortChartAll', hrAll, 'crimson', bmiValue), fn: hrAll },
+      { chart: buildBmiChart('mortChartComm', hrCD, 'royalblue', bmiValue), fn: hrCD },
+      { chart: buildBmiChart('mortChartNcd', hrNCD, 'seagreen', bmiValue), fn: hrNCD }
+  ];
+  updateBmiCharts(bmiCharts, bmiValue); // Initial update
 
   // FMI/FFMI Charts
-  const xsFMI = Array.from({ length: 201 }, (_, i) => i * 0.1);
-  const xsFFMI = Array.from({ length: 161 }, (_, i) => 12 + i * 0.1);
-  const fmiCurve = xsFMI.map(x => ({ x: x, y: hrFMI(x) }));
-  const ffmiCurve = xsFFMI.map(x => ({ x: x, y: hrFFMI(x) }));
-  const fmiChartElement = document.getElementById('fmiChart');
-  const ffmiChartElement = document.getElementById('ffmiChart');
-  let fmiChart = null;
-  let ffmiChart = null;
-
-  if (fmiChartElement && ffmiChartElement) {
-      fmiChart = buildFmiffmiChart(fmiChartElement, fmiCurve, 'FMI HR', 'crimson', 0, 20);
-      ffmiChart = buildFmiffmiChart(ffmiChartElement, ffmiCurve, 'FFMI HR', 'teal', 12, 28); // Typo fixed: ffmiCurve used
-
-      const userFMI = parseFloat(localStorage.getItem('fat_mass_index'));
-      const userFFMI = parseFloat(localStorage.getItem('fat_free_mass_index'));
-
-      updateFmiffmiChart(fmiChart, userFMI, hrFMI);
-      updateFmiffmiChart(ffmiChart, userFFMI, hrFFMI);
-  } else {
-      console.warn("FMI or FFMI chart canvas element not found. Charts not initialized.");
-  }
+  const fmiData = Array.from({ length: 201 }, (_, i) => ({ x: i * 0.1, y: hrFMI(i * 0.1) }));
+  const ffmiData = Array.from({ length: 161 }, (_, i) => ({ x: 12 + i * 0.1, y: hrFFMI(12 + i * 0.1) }));
+  const fmiChart = buildFmiffmiChart(document.getElementById('fmiChart'), fmiData, 'FMI HR', '#ff7f0e', 0, 20);
+  const ffmiChart = buildFmiffmiChart(document.getElementById('ffmiChart'), ffmiData, 'FFMI HR', '#1f77b4', 12, 28);
+  if (fmiChart) updateFmiffmiChart(fmiChart, fmiValue, hrFMI);
+  if (ffmiChart) updateFmiffmiChart(ffmiChart, ffmiValue, hrFFMI);
 
   // BP & RHR Charts
-  const rhrData = genData([30, 120], 0.5, rrRHR_J);
-  const sbpData = genData([90, 200], 0.5, sbpEquation);
-  const dbpData = genData([50, 120], 0.5, dbpEquation);
-  const userRHR = parseFloat(localStorage.getItem('resting_hr'));
-  const userSBP = parseFloat(localStorage.getItem('sbp_mmhg'));
-  const userDBP = parseFloat(localStorage.getItem('dbp_mmhg'));
-  const sbpChartEl = document.getElementById('sbpChart');
-  const dbpChartEl = document.getElementById('dbpChart');
-  const rhrChartEl = document.getElementById('rhrChart');
-
-  if (sbpChartEl) createRiskCurveChart(sbpChartEl.getContext('2d'), 'Systolic BP (mmHg)', sbpData, '#d9534f', userSBP, 110, 180); else console.warn("SBP chart canvas not found.");
-  if (dbpChartEl) createRiskCurveChart(dbpChartEl.getContext('2d'), 'Diastolic BP (mmHg)', dbpData, '#5cb85c', userDBP, 65, 110); else console.warn("DBP chart canvas not found.");
-  if (rhrChartEl) createRiskCurveChart(rhrChartEl.getContext('2d'), 'Resting Heart Rate (bpm)', rhrData, '#428bca', userRHR, 40, 110); else console.warn("RHR chart canvas not found.");
-
+  const sbpData = genData([100, 180], 1, sbpEquation);
+  const dbpData = genData([60, 110], 1, dbpEquation);
+  const rhrData = genData([40, 100], 1, rrRHR_J);
+  createRiskCurveChart(document.getElementById('sbpChart'), 'Systolic BP (mmHg)', sbpData, '#d62728', sbpValue, 100, 180);
+  createRiskCurveChart(document.getElementById('dbpChart'), 'Diastolic BP (mmHg)', dbpData, '#9467bd', dbpValue, 60, 110);
+  createRiskCurveChart(document.getElementById('rhrChart'), 'Resting Heart Rate (bpm)', rhrData, '#2ca02c', rhrValue, 40, 100);
 
   // Grip Strength Chart
-  const gripAge = parseInt(ageStr); // Attempt to parse
-  const isAgeValid = ageStr && !isNaN(gripAge); // Check if age exists and is a valid number
+  const gripData = genData([0, 60], 0.5, g => rrGrip(g, gender, ageNum)); // Generate data using user's gender/age
+  createRiskCurveChart(document.getElementById('gripChart'), 'Grip Strength (kg)', gripData, '#8c564b', gripAvgValue, 0, 60, 0.4, 3.0, 'linear'); // Use linear scale for grip
 
-  const gripChartEl = document.getElementById('gripChart');
-  const gripContainer = gripChartEl ? gripChartEl.closest('.graph-container') : null; // Find the container
-
-  if (gripChartEl && gripContainer) {
-      if (isAgeValid) {
-          // Age is valid, proceed with chart creation
-          console.log(`Initializing Grip Strength chart for age: ${gripAge}`);
-          const gripSex = (localStorage.getItem('gender') || 'MALE').toUpperCase().startsWith('F') ? 'F' : 'M';
-          const userGripAvg = parseFloat(localStorage.getItem('grip_strength_avg'));
-          const xs_grip = Array.from({ length: 111 }, (_, i) => 10 + i); // Grip range 10-120
-
-          // *** Use the rrGrip function defined above ***
-          const gripCurve = xs_grip.map(x => ({ x: x, y: rrGrip(x, gripSex, gripAge) }));
-
-          let gripScatterDataset = [];
-          if (!isNaN(userGripAvg)) {
-              // *** Use the rrGrip function defined above for the user point ***
-              const userRisk = rrGrip(userGripAvg, gripSex, gripAge);
-              if (!isNaN(userRisk)) { // Check if risk calculation was successful
-                  gripScatterDataset.push({
-                      type: 'scatter',
-                      label: 'User Avg Grip',
-                      data: [{ x: userGripAvg, y: userRisk }],
-                      pointRadius: 8, pointStyle: 'rectRot', backgroundColor: 'rgba(0,0,0,0.8)', borderColor: '#fff', borderWidth: 2
-                  });
-              } else {
-                  console.warn(`Could not calculate risk for user grip average: ${userGripAvg}`);
-              }
-          }
-
-          new Chart(gripChartEl, {
-              type: 'line',
-              data: {
-                  datasets: [
-                      { label: 'Grip Strength RR', data: gripCurve, borderColor: '#0074D9', borderWidth: 2, tension: 0.5, pointRadius: 0, spanGaps: true },
-                      { label: 'Reference RR=1.0', data: xs_grip.map(x => ({ x: x, y: 1 })), borderColor: '#666', borderDash: [6, 4], pointRadius: 0 },
-                      ...gripScatterDataset
-                  ]
-              },
-              options: {
-                  responsive: true, maintainAspectRatio: false, animation: false,
-                  plugins: { scatterOnTop: true, legend: { display: false } },
-                  scales: {
-                      x: { type: 'linear', min: 10, max: 65, title: { display: true, text: 'Grip strength (kg)' } },
-                      // Use the FLOOR constant defined above for the minimum y-axis value
-                      y: { type: 'linear', min: FLOOR - 0.05, max: 3.0, title: { display: true, text: 'Relative risk (All-Cause Mortality)' } }
-                  }
-              }
-          });
-      } else {
-          // Age is missing or invalid, display message instead of chart
-          console.warn("Grip Strength chart not generated: Age data missing or invalid.");
-          gripChartEl.style.display = 'none'; // Hide the canvas element
-          const messageElement = document.createElement('p');
-          messageElement.textContent = 'Age data is missing or invalid. Grip strength chart requires age to be calculated.';
-          messageElement.style.textAlign = 'center';
-          messageElement.style.padding = '20px';
-          messageElement.style.color = '#cc0000'; // Warning color
-          const canvasContainer = gripChartEl.parentElement;
-          if (canvasContainer) {
-              canvasContainer.appendChild(messageElement);
-          } else {
-              gripContainer.appendChild(messageElement);
-          }
-      }
-  } else {
-      if (!gripChartEl) console.warn("Grip Strength chart canvas element 'gripChart' not found.");
-      if (!gripContainer) console.warn("Could not find '.graph-container' for Grip Strength chart.");
-  }
-
-  // Functional Strength Score Chart
-  const strengthChartEl = document.getElementById('strengthChart');
-  if (strengthChartEl) {
-      // Destroy existing chart instance if it exists (useful for hot-reloading environments)
-      let existingChart = Chart.getChart(strengthChartEl);
-      if (existingChart) {
-          console.log("Destroying existing Functional Strength chart instance.");
-          existingChart.destroy();
-      }
-
-      const totalStrengthScoreStr = localStorage.getItem('total_strength_score');
-      const totalStrengthScore = parseFloat(totalStrengthScoreStr);
-
-      // Parameters for the normal distribution
-      const μ = 500; const σ = 150;
-      const chartDataPoints = [];
-      for (let x = 0; x <= 1000; x += 5) { // Increased step for fewer points
-          const y = (1 / (σ * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - μ) / σ, 2));
-          chartDataPoints.push({ x: x, y: y });
-      }
-
-      const ctx = strengthChartEl.getContext('2d');
-      let annotationOptions = {};
-
-      // Check if annotation plugin is loaded and registered
-      const annotationPlugin = Chart.registry.plugins.get('annotation');
-      if (!annotationPlugin) {
-           console.warn("Chart.js Annotation plugin not found or not registered. Score line will not be displayed.");
-      } else if (!isNaN(totalStrengthScore)) {
-           console.log(`Adding annotation line for FSS score: ${totalStrengthScore}`);
-           annotationOptions = { // Assign to the outer variable
-              annotations: {
-                  scoreLine: {
-                      type: 'line',
-                      xMin: totalStrengthScore,
-                      xMax: totalStrengthScore,
-                      borderColor: 'rgba(6, 0, 95, 0.8)', // Dark Blue, semi-transparent
-                      borderWidth: 3,
-                      label: {
-                          content: `Your Score: ${totalStrengthScore.toFixed(0)}`,
-                          enabled: true,
-                          position: 'start',
-                          backgroundColor: 'rgba(0,0,0,0.6)',
-                          color: 'white',
-                          font: { size: 10 },
-                          yAdjust: -10 // Adjust label position slightly above the line
-                      }
-                  }
-              }
-          };
-      } else {
-           console.warn("Total strength score not found or invalid. Annotation line not added.");
-      }
-
-      console.log("Creating new Functional Strength chart instance.");
-      new Chart(ctx, {
-          type: 'line',
+  // Functional Strength Score Chart (Example using Bar chart)
+  const upperScore = parseFloat(localStorage.getItem('upper_body_strength_score')) || 0;
+  const lowerScore = parseFloat(localStorage.getItem('lower_body_strength_score')) || 0;
+  const coreScore = parseFloat(localStorage.getItem('core_strength_score')) || 0;
+  const totalScore = parseFloat(localStorage.getItem('total_strength_score')) || 0;
+  const strengthCtx = document.getElementById('strengthChart');
+  if (strengthCtx) {
+      new Chart(strengthCtx, {
+          type: 'bar',
           data: {
+              labels: ['Upper Body', 'Lower Body', 'Core', 'Total'],
               datasets: [{
-                  label: 'Expected Distribution',
-                  data: chartDataPoints,
-                  borderColor: '#c19962', // Gold/brown color
-                  borderWidth: 3,
-                  pointRadius: 0,
-                  tension: 0.4,
-                  fill: { // Fill area under the curve
-                     target: 'origin',
-                     above: 'rgba(193, 153, 98, 0.2)', // Light gold/brown fill
-                  }
+                  label: 'Strength Score',
+                  data: [upperScore, lowerScore, coreScore, totalScore],
+                  backgroundColor: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'],
+                  borderWidth: 1
               }]
           },
           options: {
-              responsive: true, maintainAspectRatio: false, animation: false,
-              scales: {
-                  x: { type: 'linear', min: 0, max: 1000, title: { display: true, text: 'Functional Strength Score', font: { size: 14 } }, ticks: { stepSize: 100 } },
-                  y: { display: false, min: 0 } // Hide Y-axis
-              },
-              plugins: {
-                  legend: { display: false },
-                  tooltip: { enabled: false },
-                  // Conditionally add annotation plugin options only if plugin is loaded
-                  ...(annotationPlugin && { annotation: annotationOptions })
-              }
+              indexAxis: 'y', // Horizontal bars
+              responsive: true, maintainAspectRatio: false,
+              scales: { x: { beginAtZero: true, max: Math.max(350, totalScore * 1.1) } }, // Adjust max based on total
+              plugins: { legend: { display: false } }
           }
       });
-
-  } else {
-      console.warn("Functional Strength chart canvas element 'strengthChart' not found.");
   }
 
-  // Add this code in the DOMContentLoaded event listener, after other charts init
-  // but before the closing "Report initialization complete." console.log
-
-  // Initialize VO2 Max Chart
-  const vo2ChartElement = document.getElementById('vo2CategoryChart');
-  if (vo2ChartElement) {
-    const ctx = vo2ChartElement.getContext('2d');
-    if (ctx && gender && !isNaN(ageNum) && !isNaN(vo2MetsNum)) {
-      console.log(`Initializing VO2 Max chart for ${gender}, age ${ageNum}, VO2 METs ${vo2MetsNum.toFixed(1)}`);
-      createOrUpdateVo2CategoryChart(ctx, gender, ageNum, vo2MetsNum);
-    } else {
-      console.warn("Cannot initialize VO2 Max chart: Missing or invalid data", {
-        hasContext: !!ctx,
-        gender,
-        age: ageNum,
-        vo2Mets: vo2MetsNum
-      });
-      // Display an error message on the canvas if possible
-      if (ctx) {
-        ctx.font = "16px Arial";
-        ctx.fillStyle = "red";
-        ctx.textAlign = "center";
-        ctx.fillText("VO₂ Max chart requires gender, age, and VO₂ data.", 
-                    vo2ChartElement.width / 2, 
-                    vo2ChartElement.height / 2);
-      }
-    }
+  // VO2 Category Chart
+  const vo2Canvas = document.getElementById('vo2CategoryChart');
+  if (vo2Canvas && typeof createVo2CategoryChart === 'function') {
+      createVo2CategoryChart(vo2Canvas, gender, ageNum, vo2ValueNum);
+  } else if (!vo2Canvas) {
+      console.warn("Canvas element 'vo2CategoryChart' not found.");
   } else {
-    console.warn("VO2 Max chart canvas element 'vo2CategoryChart' not found.");
+      console.warn("Function 'createVo2CategoryChart' not found (ensure vo2chart.js is loaded).");
   }
 
-  // --- Add Event Listener for PDF Button ---
-  // Find the button by its actual onclick attribute or add an ID
-  const pdfButton = document.querySelector('button[onclick="generatePDF()"]');
-  if (pdfButton) {
-      // The onclick attribute already handles the call, no extra listener needed
-      // If you prefer an ID: give the button id="generatePdfButton" and uncomment below
-      // pdfButton.addEventListener('click', generatePDF);
-      console.log("PDF Generation button found.");
-  } else {
-      console.warn("PDF Generation button not found. PDF generation must be triggered manually or via existing onclick.");
-  }
+  // Update RMR Visualization
+  updateRMRComparisonVisualization();
 
   console.log("Report initialization complete.");
 
 }); // --- End of DOMContentLoaded Listener ---
+
+
+/**
+ * Determines the BMI category note based on the BMI value.
+ * @param {number|string} bmiValue - The Body Mass Index value.
+ * @returns {string} - The corresponding BMI category note or 'N/A'.
+ */
+function getBmiNote(bmiValue) {
+    const bmi = parseFloat(bmiValue);
+    if (isNaN(bmi)) {
+        return 'N/A';
+    }
+
+    if (bmi < 18.5) return "Underweight";
+    if (bmi <= 24.9) return "Considered Healthy";
+    if (bmi <= 29.9) return "Considered Overweight";
+    if (bmi <= 34.9) return "Class 1 Obesity";
+    if (bmi <= 39.9) return "Class 2 Obesity";
+    if (bmi >= 40.0) return "Class 3 Obesity";
+
+    return 'N/A'; // Should not be reached if BMI is a valid number
+}
+
+/**
+ * Determines the FMI category note based on the FMI value.
+ * @param {number|string} fmiValue - The Fat Mass Index value.
+ * @returns {string} - The corresponding FMI category note or 'N/A'.
+ */
+function getFmiNote(fmiValue) {
+    const fmi = parseFloat(fmiValue);
+    if (isNaN(fmi)) {
+        return 'N/A';
+    }
+
+    if (fmi <= 2.9) return "Very Lean";
+    if (fmi <= 5.0) return "Lean";
+    if (fmi <= 7.6) return "Considered Healthy";
+    if (fmi <= 9.1) return "Slightly Overfat";
+    if (fmi <= 13.1) return "Overfat";
+    if (fmi >= 13.2) return "Significantly Overfat";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the FFMI category note based on the FFMI value.
+ * @param {number|string} ffmiValue - The Fat-Free Mass Index value.
+ * @returns {string} - The corresponding FFMI category note or 'N/A'.
+ */
+function getFfmiNote(ffmiValue) {
+    const ffmi = parseFloat(ffmiValue);
+    if (isNaN(ffmi)) {
+        return 'N/A';
+    }
+
+    if (ffmi <= 14.9) return "Significantly Undermuscled";
+    if (ffmi <= 18.0) return "Undermuscled";
+    if (ffmi <= 22.0) return "Considered Healthy";
+    if (ffmi <= 24.0) return "Muscular";
+    if (ffmi >= 24.1) return "High";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Grip Strength category note based on the calculated relative risk.
+ * Lower relative risk indicates stronger grip relative to peers.
+ * @param {number|string} gripRelativeRisk - The calculated relative risk from rrGrip function.
+ * @returns {string} - The corresponding Grip Strength category note or 'N/A'.
+ */
+function getGripNote(gripRelativeRisk) {
+    const rr = parseFloat(gripRelativeRisk);
+    if (isNaN(rr)) {
+        return 'N/A';
+    }
+
+    if (rr >= 1.5) return "Weak";
+    if (rr >= 1.0) return "Weaker"; // Between 1.0 and 1.49
+    if (rr >= 0.8) return "Decent"; // Between 0.8 and 0.99
+    if (rr >= 0.6) return "Fairly Strong"; // Between 0.6 and 0.79
+    if (rr < 0.6) return "Strong"; // Below 0.6
+
+    return 'N/A'; // Should only be reached if rr is NaN initially
+}
+
+/**
+ * Determines the Functional Strength Score category note based on the total score.
+ * @param {number|string} fssValue - The Total Functional Strength Score.
+ * @returns {string} - The corresponding FSS category note or 'N/A'.
+ */
+function getFssNote(fssValue) {
+    const fss = parseFloat(fssValue);
+    if (isNaN(fss)) {
+        return 'N/A';
+    }
+
+    if (fss <= 320) return "Needs significant improvement";
+    if (fss <= 499) return "Below average strength";
+    if (fss <= 669) return "Moderate strength";
+    if (fss <= 949) return "High strength capability";
+    if (fss >= 950) return "Excellent strength";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Heart Rate Recovery category note based on the HRR value.
+ * @param {number|string} hrrValue - The Heart Rate Recovery value (beats dropped in 1 min).
+ * @returns {string} - The corresponding HRR category note or 'N/A'.
+ */
+function getHrrNote(hrrValue) {
+    const hrr = parseFloat(hrrValue);
+    if (isNaN(hrr)) {
+        return 'N/A';
+    }
+
+    if (hrr <= 19) return "Poor";
+    if (hrr <= 29) return "Fair";
+    if (hrr >= 30) return "Excellent";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Resting Heart Rate category note based on the RHR value.
+ * @param {number|string} rhrValue - The Resting Heart Rate value in bpm.
+ * @returns {string} - The corresponding RHR category note or 'N/A'.
+ */
+function getRhrNote(rhrValue) {
+    const rhr = parseFloat(rhrValue);
+    if (isNaN(rhr)) {
+        return 'N/A';
+    }
+
+    if (rhr <= 69) return "Low risk";
+    if (rhr <= 89) return "Slightly elevated risk";
+    if (rhr >= 90) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Systolic Blood Pressure category note based on the SBP value.
+ * @param {number|string} sbpValue - The Systolic Blood Pressure value in mmHg.
+ * @returns {string} - The corresponding SBP category note or 'N/A'.
+ */
+function getSbpNote(sbpValue) {
+    const sbp = parseFloat(sbpValue);
+    if (isNaN(sbp)) {
+        return 'N/A';
+    }
+
+    if (sbp <= 124) return "Low risk";
+    if (sbp <= 144) return "Elevated risk";
+    if (sbp >= 145) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Diastolic Blood Pressure category note based on the DBP value.
+ * @param {number|string} dbpValue - The Diastolic Blood Pressure value in mmHg.
+ * @returns {string} - The corresponding DBP category note or 'N/A'.
+ */
+function getDbpNote(dbpValue) {
+    const dbp = parseFloat(dbpValue);
+    if (isNaN(dbp)) {
+        return 'N/A';
+    }
+
+    if (dbp <= 84) return "Low risk";
+    if (dbp <= 89) return "Elevated risk";
+    if (dbp >= 90) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the VO₂ Max category note based on the percentile value.
+ * @param {number|string} percentileValue - The VO₂ Max percentile (0-100 or '>99.9').
+ * @returns {string} - The corresponding VO₂ Max category note or 'N/A'.
+ */
+function getVo2Note(percentileValue) {
+    if (percentileValue === '>99.9') return "Elite"; // Handle special case first
+
+    const percentile = parseFloat(percentileValue);
+    if (isNaN(percentile)) {
+        return 'N/A';
+    }
+
+    if (percentile < 25.0) return "Low";
+    if (percentile < 50.0) return "Below average";
+    if (percentile < 75.0) return "Above average";
+    if (percentile < 97.7) return "High";
+    if (percentile >= 97.7) return "Elite"; // Covers 97.7 to 99.9
+
+    return 'N/A';
+}
+
+/**
+ * Determines the RMR category note based on the percentage difference between measured and predicted RMR.
+ * @param {number|string} percentDifference - The percentage difference ((measured - predicted) / predicted * 100).
+ * @returns {string} - The corresponding RMR category note or 'N/A'.
+ */
+function getRmrNote(percentDifference) {
+    const diff = parseFloat(percentDifference);
+    if (isNaN(diff)) {
+        return 'N/A';
+    }
+
+    if (diff < -30) return "Much Lower than Predicted"; // Less than or equal to -30 technically, but < -30 covers it
+    if (diff < -15) return "Lower than Predicted"; // Between -30 and -15
+    if (diff <= 14.9) return "Normal Range"; // Between -15 and 14.9
+    if (diff < 30) return "Higher than Predicted"; // Between 15 and 29.9
+    if (diff >= 30) return "Much Higher than Predicted";
+
+    return 'N/A';
+}
