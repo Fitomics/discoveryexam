@@ -596,14 +596,18 @@ function calculateVo2Percentile(gender, age, vo2Value) {
         console.warn("Element with ID 'summaryBmiNote' not found.");
     }
 
-
+    const fmiValue = localStorage.getItem('fat_mass_index'); // Get FMI value
     populateField('summaryFmiValue', 'fat_mass_index');
-  
-  
-  
-  
-  
-  
+
+    // Calculate and populate FMI Note
+    const fmiNote = getFmiNote(fmiValue);
+    const summaryFmiNoteElement = document.getElementById('summaryFmiNote');
+    if (summaryFmiNoteElement) {
+        summaryFmiNoteElement.value = fmiNote;
+    } else {
+        console.warn("Element with ID 'summaryFmiNote' not found.");
+    }
+
     populateField('summaryFfmiValue', 'fat_free_mass_index');
   
   
@@ -752,7 +756,6 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     // Summary Notes (These likely depend on logic based on the values - using placeholder keys)
     // Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
     // OR implement logic here to determine the note based on the value and populate.
-    populateField('summaryFmiNote', 'fmi_note_key', { defaultValue: 'N/A' });
     populateField('summaryFfmiNote', 'ffmi_note_key', { defaultValue: 'N/A' });
     populateField('summaryGripNote', 'grip_note_key', { defaultValue: 'N/A' });
     populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' });
@@ -1191,4 +1194,25 @@ function getBmiNote(bmiValue) {
     if (bmi >= 40.0) return "Class 3 Obesity";
 
     return 'N/A'; // Should not be reached if BMI is a valid number
+}
+
+/**
+ * Determines the FMI category note based on the FMI value.
+ * @param {number|string} fmiValue - The Fat Mass Index value.
+ * @returns {string} - The corresponding FMI category note or 'N/A'.
+ */
+function getFmiNote(fmiValue) {
+    const fmi = parseFloat(fmiValue);
+    if (isNaN(fmi)) {
+        return 'N/A';
+    }
+
+    if (fmi <= 2.9) return "Very Lean";
+    if (fmi <= 5.0) return "Lean";
+    if (fmi <= 7.6) return "Considered Healthy";
+    if (fmi <= 9.1) return "Slightly Overfat";
+    if (fmi <= 13.1) return "Overfat";
+    if (fmi >= 13.2) return "Significantly Overfat";
+
+    return 'N/A';
 }
