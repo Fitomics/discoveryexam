@@ -584,13 +584,19 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   
   
     // Page 2: Summary Table (Value Fields)
+    const bmiValue = localStorage.getItem('bmi'); // Get BMI value
     populateField('summaryBmiValue', 'bmi');
-  
-  
-  
-  
-  
-  
+
+    // Calculate and populate BMI Note
+    const bmiNote = getBmiNote(bmiValue);
+    const summaryBmiNoteElement = document.getElementById('summaryBmiNote');
+    if (summaryBmiNoteElement) {
+        summaryBmiNoteElement.value = bmiNote;
+    } else {
+        console.warn("Element with ID 'summaryBmiNote' not found.");
+    }
+
+
     populateField('summaryFmiValue', 'fat_mass_index');
   
   
@@ -746,7 +752,6 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     // Summary Notes (These likely depend on logic based on the values - using placeholder keys)
     // Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
     // OR implement logic here to determine the note based on the value and populate.
-    populateField('summaryBmiNote', 'bmi_note_key', { defaultValue: 'N/A' });
     populateField('summaryFmiNote', 'fmi_note_key', { defaultValue: 'N/A' });
     populateField('summaryFfmiNote', 'ffmi_note_key', { defaultValue: 'N/A' });
     populateField('summaryGripNote', 'grip_note_key', { defaultValue: 'N/A' });
@@ -1166,3 +1171,24 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     console.log("Report initialization complete.");
   
   }); // --- End of DOMContentLoaded Listener ---
+  
+  /**
+ * Determines the BMI category note based on the BMI value.
+ * @param {number|string} bmiValue - The Body Mass Index value.
+ * @returns {string} - The corresponding BMI category note or 'N/A'.
+ */
+function getBmiNote(bmiValue) {
+    const bmi = parseFloat(bmiValue);
+    if (isNaN(bmi)) {
+        return 'N/A';
+    }
+
+    if (bmi < 18.5) return "Underweight";
+    if (bmi <= 24.9) return "Considered Healthy";
+    if (bmi <= 29.9) return "Considered Overweight";
+    if (bmi <= 34.9) return "Class 1 Obesity";
+    if (bmi <= 39.9) return "Class 2 Obesity";
+    if (bmi >= 40.0) return "Class 3 Obesity";
+
+    return 'N/A'; // Should not be reached if BMI is a valid number
+}
