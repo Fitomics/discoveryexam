@@ -567,9 +567,9 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   // ==========================================================================
   document.addEventListener('DOMContentLoaded', () => {
     console.log("DOM fully loaded and parsed. Initializing report data and charts...");
-  
+
     // --- Populate Form Fields ---
-  
+
     // Page 1: Meta Info
     const firstName = localStorage.getItem('first_name') || '';
     const lastName = localStorage.getItem('last_name') || '';
@@ -579,10 +579,14 @@ function calculateVo2Percentile(gender, age, vo2Value) {
         clientNameElement.textContent = `${firstName} ${lastName}`.trim() || 'N/A';
     }
     populateField('examDate', 'exam_date', { formatter: formatDate });
-  
-  
-  
-  
+
+
+    // --- Get Common Values Needed Early ---
+    const gender = localStorage.getItem('gender'); // <-- MOVE HERE
+    const ageStr = localStorage.getItem('age');     // <-- MOVE HERE
+    const ageNum = parseInt(ageStr);             // <-- MOVE HERE & INITIALIZE
+
+
     // Page 2: Summary Table (Value Fields)
     const bmiValue = localStorage.getItem('bmi'); // Get BMI value
     populateField('summaryBmiValue', 'bmi');
@@ -609,161 +613,191 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     }
 
     populateField('summaryFfmiValue', 'fat_free_mass_index');
-  
-  
-  
-  
-  
-  
-    populateField('summaryGripValue', 'grip_strength_avg');
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    populateField('summaryRhrValue', 'resting_hr');
-  
-  
-  
-  
-  
-  
-    populateField('summarySbpValue', 'sbp_mmhg');
-  
-  
-  
-  
-  
-  
-    populateField('summaryDbpValue', 'dbp_mmhg');
-  
-  
-  
-  
-  
-  
-    populateField('summaryFssValue', 'total_strength_score');
-  
-  
-  
-  
-  
-  
-    // Summary RMR: Prioritize Measured over Predicted
-    const measuredRMR = localStorage.getItem('measured_rmr');
-    const predictedRMR = localStorage.getItem('rmr');
-    const summaryRmrElement = document.getElementById('summaryRmrValue');
-  
-  
-  
-  
-  
-  
-    if (summaryRmrElement) {
-        const rmrValue = (measuredRMR && String(measuredRMR).trim() !== '')
-            ? String(measuredRMR).replace(/ kcal\/day/gi, '').trim()
-            : (predictedRMR ? String(predictedRMR).replace(/ kcal\/day/gi, '').trim() : 'N/A');
-        summaryRmrElement.value = rmrValue;
-    }
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    // Summary VO2 Max, METs, Percentile, and Note
-    const gender = localStorage.getItem('gender');
-    const ageStr = localStorage.getItem('age');
-    const unifiedVO2Max = localStorage.getItem('unified_vo2max');
-    const vo2ValueClean = unifiedVO2Max ? String(unifiedVO2Max).replace(/ ml\/kg\/min/gi, '').trim() : '';
-    const vo2ValueNum = parseFloat(vo2ValueClean);
-    const ageNum = parseInt(ageStr);
-    const vo2MetsNum = !isNaN(vo2ValueNum) ? vo2ValueNum / 3.5 : NaN; // vo2MetsNum is now defined
-  
-  
-  
-    if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
-        populateField('summaryVo2Value', 'unified_vo2max'); // Populates the value field
-        populateField('tableVo2Value', 'unified_vo2max');   // Populates table value
-  
-        const metsValue = (vo2ValueNum / 3.5).toFixed(1);
-        const metsElement = document.getElementById('tableVo2Mets');
-        if (metsElement) metsElement.value = metsValue;
-  
-        // Calculate percentile only if age and gender are valid
-        let percentile = 'N/A';
-        let percentileNote = 'N/A';
-        if (gender && !isNaN(ageNum)) {
-           percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum);
-           if (percentile === ">99.9") {
-               percentileNote = ">99.9%ile";
-           } else if (percentile !== 'N/A') {
-               percentileNote = `${percentile}%ile`;
-           }
-        } else {
-            console.warn("Cannot calculate VO2 percentile due to missing/invalid gender or age.");
-        }
-  
-        const percentileElement = document.getElementById('tableVo2Percentile');
-        if (percentileElement) percentileElement.value = percentile;
-        const noteElement = document.getElementById('summaryVo2Note');
-        if (noteElement) noteElement.value = percentileNote;
-  
+    const ffmiValueElement = document.getElementById('summaryFfmiValue');
+    const ffmiNoteElement = document.getElementById('summaryFfmiNote');
+    if (ffmiValueElement && ffmiNoteElement) {
+        ffmiNoteElement.value = getFfmiNote(ffmiValueElement.value);
     } else {
-        // Set all VO2 related fields to N/A if base value is missing/invalid
-        ['summaryVo2Value', 'tableVo2Value', 'tableVo2Mets', 'tableVo2Percentile', 'summaryVo2Note'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.value = 'N/A';
-        });
-         if (!unifiedVO2Max) console.warn("VO2 Max data ('unified_vo2max') not found in localStorage.");
-         else console.warn(`Invalid VO2 Max value found: "${unifiedVO2Max}"`);
+        console.warn("Element with ID 'summaryFmiNote' not found.");
     }
-  
-    // Heart Rate Recovery calculation
-    const endingHRStr = localStorage.getItem('hr_bpm'); // Assuming this is peak HR during test
-    const postHRStr = localStorage.getItem('post_heart_rate'); // HR after 1 min recovery
-    const endingHR = parseFloat(endingHRStr);
-    const postHR = parseFloat(postHRStr);
-    const hrrElement = document.getElementById('summaryHrrValue');
-  
-  
-  
-    if (hrrElement) {
-        if (!isNaN(endingHR) && !isNaN(postHR)) {
-            hrrElement.value = (endingHR - postHR).toFixed(0);
-            // Note logic could be added here based on the calculated HRR value
-            // populateField('summaryHrrNote', calculatedNoteKey);
+
+    
+    // Populate Grip Value
+    const gripAvgValueStr = localStorage.getItem('grip_strength_avg');
+    populateField('summaryGripValue', 'grip_strength_avg');
+
+    // Now 'gender' and 'ageNum' are defined before this log
+    console.log("Before Grip Note Calc:", { gender, ageNum, gripAvgValueStr });
+
+    // Calculate and populate Grip Note
+    let gripNote = 'N/A';
+    const gripAvgValue = parseFloat(gripAvgValueStr);
+    let gripRelativeRisk = NaN;
+
+    // Now 'gender' and 'ageNum' are available here
+    if (gender && !isNaN(ageNum) && !isNaN(gripAvgValue)) {
+        try {
+            gripRelativeRisk = rrGrip(gripAvgValue, gender, ageNum);
+            gripNote = getGripNote(gripRelativeRisk);
+            console.log("Grip Calc Success:", { gripRelativeRisk, gripNote });
+        } catch (error) {
+            console.error("Error during rrGrip or getGripNote:", error);
+            gripNote = 'Error';
+        }
+    } else {
+        console.warn("Cannot calculate Grip Note due to missing/invalid gender, age, or grip value.");
+        gripNote = 'N/A';
+    }
+    const summaryGripNoteElement = document.getElementById('summaryGripNote');
+    if (summaryGripNoteElement) {
+        summaryGripNoteElement.value = gripNote;
+    } else {
+        console.warn("Element with ID 'summaryGripNote' not found.");
+    }
+
+    console.log("After Grip Note Calc");
+
+
+    // Heart Rate Recovery calculation and population
+    const peakHrStr = localStorage.getItem('peak_hr'); // Assuming 'peak_hr' is the key
+    const hr1minRecStr = localStorage.getItem('hr_1min_recovery'); // Assuming 'hr_1min_recovery' is the key
+    const peakHr = parseFloat(peakHrStr);
+    const hr1minRec = parseFloat(hr1minRecStr);
+    let hrrValue = 'N/A';
+    let hrrNote = 'N/A';
+
+    if (!isNaN(peakHr) && !isNaN(hr1minRec)) {
+        hrrValue = peakHr - hr1minRec;
+        hrrNote = getHrrNote(hrrValue);
+        // Populate the HRR value field
+        const summaryHrrValueElement = document.getElementById('summaryHrrValue');
+        if (summaryHrrValueElement) {
+            summaryHrrValueElement.value = hrrValue;
         } else {
-            hrrElement.value = 'N/A';
-            // populateField('summaryHrrNote', 'defaultOrNAKey');
+            console.warn("Element with ID 'summaryHrrValue' not found.");
+        }
+    } else {
+        console.warn("Cannot calculate HRR due to missing/invalid peak HR or 1-min recovery HR.");
+        // Keep hrrValue and hrrNote as 'N/A'
+        // Optionally populate the value field with 'N/A' if needed
+         const summaryHrrValueElement = document.getElementById('summaryHrrValue');
+        if (summaryHrrValueElement) {
+            summaryHrrValueElement.value = 'N/A';
         }
     }
-  
-    // Summary Notes (These likely depend on logic based on the values - using placeholder keys)
-    // Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
-    // OR implement logic here to determine the note based on the value and populate.
-    populateField('summaryFfmiNote', 'ffmi_note_key', { defaultValue: 'N/A' });
-    populateField('summaryGripNote', 'grip_note_key', { defaultValue: 'N/A' });
-    populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' });
-    populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // Note based on measured/predicted?
-    populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' });
-    populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' });
-    populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' });
-  
+
+    // Populate the HRR note field
+    const summaryHrrNoteElement = document.getElementById('summaryHrrNote');
+    if (summaryHrrNoteElement) {
+        summaryHrrNoteElement.value = hrrNote;
+    } else {
+        console.warn("Element with ID 'summaryHrrNote' not found.");
+    }
+
+
+    populateField('summaryRhrValue', 'resting_hr');
+
+    // Calculate and populate RHR Note
+    const rhrValueStr = localStorage.getItem('resting_hr');
+    const rhrNote = getRhrNote(rhrValueStr); // Use the new function
+    const summaryRhrNoteElement = document.getElementById('summaryRhrNote');
+    if (summaryRhrNoteElement) {
+        summaryRhrNoteElement.value = rhrNote;
+    } else {
+        console.warn("Element with ID 'summaryRhrNote' not found.");
+    }
+
+    populateField('summarySbpValue', 'sbp_mmhg');
+
+    populateField('summaryDbpValue', 'dbp_mmhg');
+
+    populateField('summaryFssValue', 'total_strength_score');
+
+
+// Summary RMR: Prioritize Measured over Predicted
+const measuredRMR = localStorage.getItem('measured_rmr');
+const predictedRMR = localStorage.getItem('rmr');
+const summaryRmrElement = document.getElementById('summaryRmrValue');
+
+
+
+
+
+
+if (summaryRmrElement) {
+    const rmrValue = (measuredRMR && String(measuredRMR).trim() !== '')
+        ? String(measuredRMR).replace(/ kcal\/day/gi, '').trim()
+        : (predictedRMR ? String(predictedRMR).replace(/ kcal\/day/gi, '').trim() : 'N/A');
+    summaryRmrElement.value = rmrValue;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Summary VO2 Max, METs, Percentile, and Note
+const unifiedVO2Max = localStorage.getItem('unified_vo2max');
+const vo2ValueClean = unifiedVO2Max ? String(unifiedVO2Max).replace(/ ml\/kg\/min/gi, '').trim() : '';
+const vo2ValueNum = parseFloat(vo2ValueClean);
+const vo2MetsNum = !isNaN(vo2ValueNum) ? vo2ValueNum / 3.5 : NaN; // vo2MetsNum is now defined
+
+
+
+if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
+    populateField('summaryVo2Value', 'unified_vo2max'); // Populates the value field
+    populateField('tableVo2Value', 'unified_vo2max');   // Populates table value
+
+    const metsValue = (vo2ValueNum / 3.5).toFixed(1);
+    const metsElement = document.getElementById('tableVo2Mets');
+    if (metsElement) metsElement.value = metsValue;
+
+    // Calculate percentile only if age and gender are valid
+    let percentile = 'N/A';
+    let percentileNote = 'N/A';
+    if (gender && !isNaN(ageNum)) {
+       percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum);
+       if (percentile === ">99.9") {
+           percentileNote = ">99.9%ile";
+       } else if (percentile !== 'N/A') {
+           percentileNote = `${percentile}%ile`;
+       }
+    } else {
+        console.warn("Cannot calculate VO2 percentile due to missing/invalid gender or age.");
+    }
+
+    const percentileElement = document.getElementById('tableVo2Percentile');
+    if (percentileElement) percentileElement.value = percentile;
+    const noteElement = document.getElementById('summaryVo2Note');
+    if (noteElement) noteElement.value = percentileNote;
+
+} else {
+    // Set all VO2 related fields to N/A if base value is missing/invalid
+    ['summaryVo2Value', 'tableVo2Value', 'tableVo2Mets', 'tableVo2Percentile', 'summaryVo2Note'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = 'N/A';
+    });
+     if (!unifiedVO2Max) console.warn("VO2 Max data ('unified_vo2max') not found in localStorage.");
+     else console.warn(`Invalid VO2 Max value found: "${unifiedVO2Max}"`);
+}
+
+// Summary Notes (These likely depend on logic based on the values - using placeholder keys)
+// Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
+// OR implement logic here to determine the note based on the value and populate.
+// populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
+populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // Note based on measured/predicted?
+populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' });
+populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' });
+populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' });
+
     // Page 3: BMI Graph Input
     // Hidden input for potential backend use
     populateField('graphBmi', 'bmi');
@@ -886,13 +920,7 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   
     // --- Initialize Charts ---
     console.log("Initializing charts...");
-  
-  
-  
-  
-  
-  
-  
+    
     // BMI Charts
     let bmiCharts = []; // Initialize array to hold chart instances and their functions
     const savedBmi = parseFloat(localStorage.getItem('bmi'));
@@ -1213,6 +1241,82 @@ function getFmiNote(fmiValue) {
     if (fmi <= 9.1) return "Slightly Overfat";
     if (fmi <= 13.1) return "Overfat";
     if (fmi >= 13.2) return "Significantly Overfat";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the FFMI category note based on the FFMI value.
+ * @param {number|string} ffmiValue - The Fat-Free Mass Index value.
+ * @returns {string} - The corresponding FFMI category note or 'N/A'.
+ */
+function getFfmiNote(ffmiValue) {
+    const ffmi = parseFloat(ffmiValue);
+    if (isNaN(ffmi)) {
+        return 'N/A';
+    }
+
+    if (ffmi <= 14.9) return "Significantly Undermuscled";
+    if (ffmi <= 18.0) return "Undermuscled";
+    if (ffmi <= 22.0) return "Considered Healthy";
+    if (ffmi <= 24.0) return "Muscular";
+    if (ffmi >= 24.1) return "High";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Grip Strength category note based on the calculated relative risk.
+ * Lower relative risk indicates stronger grip relative to peers.
+ * @param {number|string} gripRelativeRisk - The calculated relative risk from rrGrip function.
+ * @returns {string} - The corresponding Grip Strength category note or 'N/A'.
+ */
+function getGripNote(gripRelativeRisk) {
+    const rr = parseFloat(gripRelativeRisk);
+    if (isNaN(rr)) {
+        return 'N/A';
+    }
+
+    if (rr >= 1.5) return "Weak";
+    if (rr >= 1.0) return "Weaker"; // Between 1.0 and 1.49
+    if (rr >= 0.8) return "Decent"; // Between 0.8 and 0.99
+    if (rr >= 0.6) return "Fairly Strong"; // Between 0.6 and 0.79
+    if (rr < 0.6) return "Strong"; // Below 0.6
+
+    return 'N/A'; // Should only be reached if rr is NaN initially
+}
+
+/**
+ * Determines the Heart Rate Recovery category note based on the HRR value.
+ * @param {number|string} hrrValue - The Heart Rate Recovery value (beats dropped in 1 min).
+ * @returns {string} - The corresponding HRR category note or 'N/A'.
+ */
+function getHrrNote(hrrValue) {
+    const hrr = parseFloat(hrrValue);
+    if (isNaN(hrr)) {
+        return 'N/A';
+    }
+
+    if (hrr <= 19) return "Poor";
+    if (hrr <= 29) return "Fair";
+    if (hrr >= 30) return "Excellent";
+
+    return 'N/A';
+}
+/**
+ * Determines the Resting Heart Rate category note based on the RHR value.
+ * @param {number|string} rhrValue - The Resting Heart Rate value in bpm.
+ * @returns {string} - The corresponding RHR category note or 'N/A'.
+ */
+function getRhrNote(rhrValue) {
+    const rhr = parseFloat(rhrValue);
+    if (isNaN(rhr)) {
+        return 'N/A';
+    }
+
+    if (rhr <= 69) return "Low risk";
+    if (rhr <= 89) return "Slightly elevated risk";
+    if (rhr >= 90) return "High risk";
 
     return 'N/A';
 }
