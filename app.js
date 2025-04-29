@@ -192,7 +192,7 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     }
   
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size (612 x 792 pt)
+    const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size (612 x 792 pt)   
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
   
@@ -733,35 +733,51 @@ function calculateVo2Percentile(gender, age, vo2Value) {
 
     populateField('summaryFssValue', 'total_strength_score');
 
+    // Calculate and populate FSS Note
+    const fssValueStr = localStorage.getItem('total_strength_score');
+    const fssNote = getFssNote(fssValueStr);
+    const summaryFssNoteElement = document.getElementById('summaryFssNote');
+    if (summaryFssNoteElement) {
+        summaryFssNoteElement.value = fssNote;
+    } else {
+        console.warn("Element with ID 'summaryFssNote' not found.");
+    }
+
 
 // Summary RMR: Prioritize Measured over Predicted
-const measuredRMR = localStorage.getItem('measured_rmr');
-const predictedRMR = localStorage.getItem('rmr');
+const measuredRMRStr = localStorage.getItem('measured_rmr');
+const predictedRMRStr = localStorage.getItem('rmr');
 const summaryRmrElement = document.getElementById('summaryRmrValue');
+let rmrNote = 'N/A'; // Initialize RMR note
 
-
-
-
-
+// Clean and parse RMR values
+const measuredRMR = parseFloat(String(measuredRMRStr).replace(/[^0-9.]/g, ''));
+const predictedRMR = parseFloat(String(predictedRMRStr).replace(/[^0-9.]/g, ''));
 
 if (summaryRmrElement) {
-    const rmrValue = (measuredRMR && String(measuredRMR).trim() !== '')
-        ? String(measuredRMR).replace(/ kcal\/day/gi, '').trim()
-        : (predictedRMR ? String(predictedRMR).replace(/ kcal\/day/gi, '').trim() : 'N/A');
+    const rmrValue = (measuredRMRStr && String(measuredRMRStr).trim() !== '')
+        ? String(measuredRMRStr).replace(/ kcal\/day/gi, '').trim()
+        : (predictedRMRStr ? String(predictedRMRStr).replace(/ kcal\/day/gi, '').trim() : 'N/A');
     summaryRmrElement.value = rmrValue;
 }
 
+// Calculate RMR Note based on percentage difference
+if (!isNaN(measuredRMR) && !isNaN(predictedRMR) && predictedRMR !== 0) {
+    const percentDifference = ((measuredRMR - predictedRMR) / predictedRMR) * 100;
+    rmrNote = getRmrNote(percentDifference);
+    console.log("RMR Calculation:", { measuredRMR, predictedRMR, percentDifference, rmrNote });
+} else {
+    console.warn("Cannot calculate RMR Note due to missing/invalid measured or predicted RMR, or predicted RMR is zero.");
+    // Keep rmrNote as 'N/A'
+}
 
-
-
-
-
-
-
-
-
-
-
+// Populate RMR Note Field
+const summaryRmrNoteElement = document.getElementById('summaryRmrNote');
+if (summaryRmrNoteElement) {
+    summaryRmrNoteElement.value = rmrNote;
+} else {
+    console.warn("Element with ID 'summaryRmrNote' not found.");
+}
 
 
 // Summary VO2 Max, METs, Percentile, and Note
@@ -821,131 +837,119 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
 // Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
 // OR implement logic here to determine the note based on the value and populate.
 // populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // Note based on measured/predicted?
+// populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
 // populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
 // populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' });
+// populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
 
-    // Page 3: BMI Graph Input
-    // Hidden input for potential backend use
-    populateField('graphBmi', 'bmi');
-    // Visible input for user feedback / potential editing
-    const bmiForChartInput = document.getElementById('bmi-input'); // Assuming this ID exists
-    if (bmiForChartInput) {
-        populateField('bmi-input', 'bmi');
-    }
-  
-    // Page 4: FMI/FFMI Graph Inputs (Hidden)
-  
-  
-    populateField('graphFmi', 'fat_mass_index');
-    populateField('graphFfmi', 'fat_free_mass_index');
-  
-    // Page 5: BP Graph Inputs (Hidden)
-    populateField('graphSbp', 'sbp_mmhg');
-    populateField('graphDbp', 'dbp_mmhg');
-  
-    // Page 6: RHR Graph Input (Hidden)
-    populateField('graphRhr', 'resting_hr');
-  
-    // Page 7: RMR Graph & Table
-    // Use measured if available, otherwise predicted, for the graph input
-    const rmrGraphValue = (measuredRMR && String(measuredRMR).trim() !== '') ? measuredRMR : predictedRMR;
-    const graphRmrMeasuredElement = document.getElementById('graphRmrMeasured');
-    if (graphRmrMeasuredElement) {
-         graphRmrMeasuredElement.value = rmrGraphValue ? String(rmrGraphValue).replace(/ kcal\/day/gi, '').trim() : 'N/A';
-    }
-    populateField('tableRmrPredicted', 'rmr'); // Predicted RMR
-    populateField('tableRmrMeasured', 'measured_rmr'); // Measured RMR
-    populateField('tableRmrFatPercent', 'fat_calories_percent');
-    populateField('tableRmrCarbPercent', 'carb_calories_percent');
-    populateField('tableTargetLossCons', 'weight_loss_conservative');
-    populateField('tableTargetLossAggr', 'weight_loss_aggressive');
-    populateField('tableTargetGainCons', 'weight_gain_conservative');
-    populateField('tableTargetGainAggr', 'weight_gain_aggressive');
-  
-    // *** ADD THIS LINE ***
-    updateRMRComparisonVisualization(); // Call the function to update the RMR bar
-  
-    // Page 8: VO2 Max Graph & Table (Values populated earlier in VO2 section)
-  
-    // Page 9: Grip Strength Graph Inputs (Hidden)
-    populateField('graphGripRight', 'grip_strength_right');
-    populateField('graphGripLeft', 'grip_strength_left');
-    populateField('graphGripAvg', 'grip_strength_avg');
-  
-    // Page 10: Functional Strength Scores Graph Inputs (Hidden)
-    populateField('graphUpperScore', 'upper_strength_score');
-    populateField('graphLowerScore', 'lower_strength_score');
-    populateField('graphCoreScore', 'core_strength_score');
-    populateField('graphTotalScore', 'total_strength_score');
-  
-    // Page 11: Rep Max Table
-    const bench10rmStr = localStorage.getItem('bench_10rm');
-    const pulldown10rmStr = localStorage.getItem('pulldown_10rm');
-    const deadlift10rmStr = localStorage.getItem('dl_10rm');
-  
-    // Calculate rep maxes (function handles NaN/missing input)
-    const benchRepMaxes = calculateRepMaxes(bench10rmStr);
-    const pulldownRepMaxes = calculateRepMaxes(pulldown10rmStr);
-    const deadliftRepMaxes = calculateRepMaxes(deadlift10rmStr);
-  
-    const repMaxTable = document.querySelector('.page:nth-of-type(11) .table-wrapper table'); // Adjust selector if needed
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-    if (repMaxTable) {
-        // Start from row 1 to skip header row (index 0)
-  
-        for (let i = 1; i <= 15; i++) {
-            const row = repMaxTable.rows[i];
-            if (row && row.cells.length >= 4) { // Check row and cell count
-                const benchInput = row.cells[1].querySelector('input');
-                const pulldownInput = row.cells[2].querySelector('input');
-                const deadliftInput = row.cells[3].querySelector('input');
-  
-                if (benchInput) benchInput.value = benchRepMaxes[i - 1]; // Array is 0-indexed
-                if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i - 1];
-                if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i - 1];
-            } else if (row) {
-                 console.warn(`Rep Max Table: Row ${i} does not have enough cells or is missing.`);
-            }
+// Page 3: BMI Graph Input
+// Hidden input for potential backend use
+populateField('graphBmi', 'bmi');
+const bmiForChartInput = document.getElementById('bmi-input'); // Assuming this ID exists
+if (bmiForChartInput) {
+    populateField('bmi-input', 'bmi');
+}
+
+// Page 4: FMI/FFMI Graph Inputs (Hidden)
+populateField('graphFmi', 'fat_mass_index');
+populateField('graphFfmi', 'fat_free_mass_index');
+
+// Page 5: BP Graph Inputs (Hidden)
+populateField('graphSbp', 'sbp_mmhg');
+populateField('graphDbp', 'dbp_mmhg');
+
+// Page 6: RHR Graph Input (Hidden)
+populateField('graphRhr', 'resting_hr');
+
+// Page 7: RMR Graph & Table
+// Use measured if available, otherwise predicted, for the graph input
+const rmrGraphValue = (measuredRMR && String(measuredRMR).trim() !== '') ? measuredRMR : predictedRMR;
+const graphRmrMeasuredElement = document.getElementById('graphRmrMeasured');
+if (graphRmrMeasuredElement) {
+     graphRmrMeasuredElement.value = rmrGraphValue ? String(rmrGraphValue).replace(/ kcal\/day/gi, '').trim() : 'N/A';
+}
+populateField('tableRmrPredicted', 'rmr'); // Predicted RMR
+populateField('tableRmrMeasured', 'measured_rmr'); // Measured RMR
+populateField('tableRmrFatPercent', 'fat_calories_percent');
+populateField('tableRmrCarbPercent', 'carb_calories_percent');
+populateField('tableTargetLossCons', 'weight_loss_conservative');
+populateField('tableTargetLossAggr', 'weight_loss_aggressive');
+populateField('tableTargetGainCons', 'weight_gain_conservative');
+populateField('tableTargetGainAggr', 'weight_gain_aggressive');
+
+// *** ADD THIS LINE ***
+updateRMRComparisonVisualization(); // Call the function to update the RMR bar
+
+// Page 8: VO2 Max Graph & Table (Values populated earlier in VO2 section)
+
+// Page 9: Grip Strength Graph Inputs (Hidden)
+populateField('graphGripRight', 'grip_strength_right');
+populateField('graphGripLeft', 'grip_strength_left');
+populateField('graphGripAvg', 'grip_strength_avg');
+
+// Page 10: Functional Strength Scores Graph Inputs (Hidden)
+populateField('graphUpperScore', 'upper_strength_score');
+populateField('graphLowerScore', 'lower_strength_score');
+populateField('graphCoreScore', 'core_strength_score');
+populateField('graphTotalScore', 'total_strength_score');
+
+// Page 11: Rep Max Table
+const bench10rmStr = localStorage.getItem('bench_10rm');
+const pulldown10rmStr = localStorage.getItem('pulldown_10rm');
+const deadlift10rmStr = localStorage.getItem('dl_10rm');
+
+// Calculate rep maxes (function handles NaN/missing input)
+const benchRepMaxes = calculateRepMaxes(bench10rmStr);
+const pulldownRepMaxes = calculateRepMaxes(pulldown10rmStr);
+const deadliftRepMaxes = calculateRepMaxes(deadlift10rmStr);
+
+const repMaxTable = document.querySelector('.page:nth-of-type(11) .table-wrapper table'); // Adjust selector if needed
+
+if (repMaxTable) {
+    // Start from row 1 to skip header row (index 0)
+
+    for (let i = 1; i <= 15; i++) {
+        const row = repMaxTable.rows[i];
+        if (row && row.cells.length >= 4) { // Check row and cell count
+            const benchInput = row.cells[1].querySelector('input');
+            const pulldownInput = row.cells[2].querySelector('input');
+            const deadliftInput = row.cells[3].querySelector('input');
+
+            if (benchInput) benchInput.value = benchRepMaxes[i - 1]; // Array is 0-indexed
+            if (pulldownInput) pulldownInput.value = pulldownRepMaxes[i - 1];
+            if (deadliftInput) deadliftInput.value = deadliftRepMaxes[i - 1];
+        } else if (row) {
+             console.warn(`Rep Max Table: Row ${i} does not have enough cells or is missing.`);
         }
-        // Specifically populate the 10RM input fields from original localStorage data
-        populateField('repmax10Bench', 'bench_10rm');
-        populateField('repmax10Pulldown', 'pulldown_10rm');
-        populateField('repmax10Deadlift', 'dl_10rm');
-    } else {
-        console.warn("Rep Max Table not found using the provided selector.");
     }
-  
-    // Page 12: Nutrition Targets Table
-    populateField('nutritionEnergy', 'target_energy');
-    populateField('nutritionProtein', 'protein_grams');
-    populateField('nutritionCarbs', 'carb_grams');
-    populateField('nutritionFat', 'fat_grams');
-    populateField('nutritionFiber', 'fiber_grams');
-    populateField('nutritionFluid', 'fluid_total');
-  
-    // Populate dietary assumptions with defaults
-    const proteinValue = localStorage.getItem('protein') || '1.2'; // Default g/kg
-    const proteinTargetEl = document.getElementById('nutritionProteinTarget');
-    if (proteinTargetEl) proteinTargetEl.value = proteinValue;
-  
-    const fatValueStr = localStorage.getItem('fat') || '0.3'; // Default % as decimal
-    const fatValue = parseFloat(fatValueStr);
-    const fatPercentage = !isNaN(fatValue) ? (fatValue * 100).toFixed(0) : '30'; // Default %
-    const fatTargetEl = document.getElementById('nutritionFatTarget');
-    if (fatTargetEl) fatTargetEl.value = fatPercentage;
-  
-  
+    // Specifically populate the 10RM input fields from original localStorage data
+    populateField('repmax10Bench', 'bench_10rm');
+    populateField('repmax10Pulldown', 'pulldown_10rm');
+    populateField('repmax10Deadlift', 'dl_10rm');
+} else {
+    console.warn("Rep Max Table not found using the provided selector.");
+}
+
+// Page 12: Nutrition Targets Table
+populateField('nutritionEnergy', 'target_energy');
+populateField('nutritionProtein', 'protein_grams');
+populateField('nutritionCarbs', 'carb_grams');
+populateField('nutritionFat', 'fat_grams');
+populateField('nutritionFiber', 'fiber_grams');
+populateField('nutritionFluid', 'fluid_total');
+
+// Populate dietary assumptions with defaults
+const proteinValue = localStorage.getItem('protein') || '1.2'; // Default g/kg
+const proteinTargetEl = document.getElementById('nutritionProteinTarget');
+if (proteinTargetEl) proteinTargetEl.value = proteinValue;
+
+const fatValueStr = localStorage.getItem('fat') || '0.3'; // Default % as decimal
+const fatValue = parseFloat(fatValueStr);
+const fatPercentage = !isNaN(fatValue) ? (fatValue * 100).toFixed(0) : '30'; // Default %
+const fatTargetEl = document.getElementById('nutritionFatTarget');
+if (fatTargetEl) fatTargetEl.value = fatPercentage;
+
+
     // --- Initialize Charts ---
     console.log("Initializing charts...");
     
@@ -1371,7 +1375,8 @@ function getSbpNote(sbpValue) {
 /**
  * Determines the Diastolic Blood Pressure category note based on the DBP value.
  * @param {number|string} dbpValue - The Diastolic Blood Pressure value in mmHg.
- * @returns {string} - The corresponding DBP category note or 'N/A'.
+ * @returns {string} - The corresponding DBP category note or '```javascript
+ * 'N/A'.
  */
 function getDbpNote(dbpValue) {
     const dbp = parseFloat(dbpValue);
@@ -1404,6 +1409,46 @@ function getVo2Note(percentileValue) {
     if (percentile < 75.0) return "Above average";
     if (percentile < 97.7) return "High";
     if (percentile >= 97.7) return "Elite"; // Covers 97.7 to 99.9
+
+    return 'N/A';
+}
+
+/**
+ * Determines the RMR category note based on the percentage difference between measured and predicted RMR.
+ * @param {number|string} percentDifference - The percentage difference ((measured - predicted) / predicted * 100).
+ * @returns {string} - The corresponding RMR category note or 'N/A'.
+ */
+function getRmrNote(percentDifference) {
+    const diff = parseFloat(percentDifference);
+    if (isNaN(diff)) {
+        return 'N/A';
+    }
+
+    if (diff < -30) return "Much Lower than Predicted"; // Less than or equal to -30 technically, but < -30 covers it
+    if (diff < -15) return "Lower than Predicted"; // Between -30 and -15
+    if (diff <= 14.9) return "Normal Range"; // Between -15 and 14.9
+    if (diff < 30) return "Higher than Predicted"; // Between 15 and 29.9
+    if (diff >= 30) return "Much Higher than Predicted";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Functional Strength Score category note based on the total score.
+ * @param {number|string} fssValue - The Total Functional Strength Score.
+ * @returns {string} - The corresponding FSS category note or 'N/A'.
+ */
+function getFssNote(fssValue) {
+    const fss = parseFloat(fssValue);
+    if (isNaN(fss)) {
+        return 'N/A';
+    }
+
+    if (fss <= 320) return "Needs significant improvement";
+    if (fss <= 499) return "Below average strength";
+    if (fss <= 669) return "Moderate strength";
+    if (fss <= 949) return "High strength capability";
+    if (fss >= 950) return "Excellent strength";
 
     return 'N/A';
 }
