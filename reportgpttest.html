@@ -214,14 +214,43 @@ body {
   white-space: nowrap;
 }
 
-.table-wrapper input.value-field {
-  width: 90%;
+.table-wrapper input.value-field,
+.table-wrapper textarea.value-field { /* Apply base styles to textarea too */
+  width: 90%; /* Default width */
   box-sizing: border-box;
-  background-color: #ffffff !important; /* Ensure field inside cell is also white */
+  background-color: #ffffff !important;
+  font-family: inherit; /* Use consistent font */
+  font-size: 14px; /* Match table font size */
+  color: #00263d; /* Match input text color */
+  border: 1px solid #c19962;
+  padding: 10px 16px; /* Match input padding */
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0, 38, 61, 0.05);
+  text-align: center; /* Default alignment */
+  font-weight: 600; /* Match input weight */
+  vertical-align: middle; /* Align with other inputs */
+  line-height: 1.4; /* Adjust line height */
 }
 
+/* Specific styles for the note textareas */
+.table-wrapper textarea.note-field {
+  width: 100%; /* Fill the cell width */
+  height: auto; /* Allow height to adjust based on content */
+  min-height: 40px; /* Minimum height similar to single-line inputs */
+  resize: none; /* Disable manual resizing by user */
+  overflow: hidden; /* Hide scrollbars, height will adjust */
+  white-space: normal; /* Allow text wrapping */
+  text-align: center; /* Align note text left for readability */
+  padding-top: 8px; /* Fine-tune padding */
+  padding-bottom: 8px;
+}
 
-/* --- Graph & Chart Containers --- */
+/* Adjust the 'Note' column cells in the summary table */
+.page.summary .table-wrapper td:nth-child(3) {
+  vertical-align: top; /* Align textarea to the top of the cell */
+}
+
+    /* --- Graph & Chart Containers --- */
 .graph-container {
   position: relative;
   width: 90%;
@@ -435,56 +464,56 @@ body {
           <tr>
             <td>Body Mass Index (BMI)</td>
             <td><input class="value-field" id="summaryBmiValue" readonly></td>
-            <td><input class="value-field" id="summaryBmiNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryBmiNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Fat Mass Index (FMI)</td>
             <td><input class="value-field" id="summaryFmiValue" readonly></td>
-            <td><input class="value-field" id="summaryFmiNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryFmiNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Fat‑Free Mass Index (FFMI)</td>
             <td><input class="value-field" id="summaryFfmiValue" readonly></td>
-            <td><input class="value-field" id="summaryFfmiNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryFfmiNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Grip Strength</td>
             <td><input class="value-field" id="summaryGripValue" readonly></td>
-            <td><input class="value-field" id="summaryGripNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryGripNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Heart Rate Recovery (1 min)</td>
             <td><input class="value-field" id="summaryHrrValue" readonly></td>
-            <td><input class="value-field" id="summaryHrrNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryHrrNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Resting Heart Rate</td>
             <td><input class="value-field" id="summaryRhrValue" readonly></td>
-            <td><input class="value-field" id="summaryRhrNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryRhrNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Resting Metabolic Rate</td>
             <td><input class="value-field" id="summaryRmrValue" readonly></td>
-            <td><input class="value-field" id="summaryRmrNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryRmrNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Systolic BP</td>
             <td><input class="value-field" id="summarySbpValue" readonly></td>
-            <td><input class="value-field" id="summarySbpNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summarySbpNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Diastolic BP</td>
             <td><input class="value-field" id="summaryDbpValue" readonly></td>
-            <td><input class="value-field" id="summaryDbpNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryDbpNote" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>VO₂ Max (Est.)</td> <td><input class="value-field" id="summaryVo2Value" readonly></td>
-            <td><input class="value-field" id="summaryVo2Note" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryVo2Note" readonly rows="1"></textarea></td>
           </tr>
           <tr>
             <td>Functional Strength Score</td>
             <td><input class="value-field" id="summaryFssValue" readonly></td>
-            <td><input class="value-field" id="summaryFssNote" readonly></td>
+            <td><textarea class="value-field note-field" id="summaryFssNote" readonly rows="1"></textarea></td>
           </tr>
         </table>
       </div>

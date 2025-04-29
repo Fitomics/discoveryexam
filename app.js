@@ -833,15 +833,6 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
      else console.warn(`Invalid VO2 Max value found: "${unifiedVO2Max}"`);
 }
 
-// Summary Notes (These likely depend on logic based on the values - using placeholder keys)
-// Replace 'bmi_note_key' etc., with actual localStorage keys if notes are stored directly,
-// OR implement logic here to determine the note based on the value and populate.
-// populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-// populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-// populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-// populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-// populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
-
 // Page 3: BMI Graph Input
 // Hidden input for potential backend use
 populateField('graphBmi', 'bmi');
