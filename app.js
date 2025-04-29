@@ -709,7 +709,27 @@ function calculateVo2Percentile(gender, age, vo2Value) {
 
     populateField('summarySbpValue', 'sbp_mmhg');
 
+    // Calculate and populate SBP Note
+    const sbpValueStr = localStorage.getItem('sbp_mmhg');
+    const sbpNote = getSbpNote(sbpValueStr);
+    const summarySbpNoteElement = document.getElementById('summarySbpNote');
+    if (summarySbpNoteElement) {
+        summarySbpNoteElement.value = sbpNote;
+    } else {
+        console.warn("Element with ID 'summarySbpNote' not found.");
+    }
+
     populateField('summaryDbpValue', 'dbp_mmhg');
+
+    // Calculate and populate DBP Note
+    const dbpValueStr = localStorage.getItem('dbp_mmhg');
+    const dbpNote = getDbpNote(dbpValueStr);
+    const summaryDbpNoteElement = document.getElementById('summaryDbpNote');
+    if (summaryDbpNoteElement) {
+        summaryDbpNoteElement.value = dbpNote;
+    } else {
+        console.warn("Element with ID 'summaryDbpNote' not found.");
+    }
 
     populateField('summaryFssValue', 'total_strength_score');
 
@@ -794,8 +814,8 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
 // OR implement logic here to determine the note based on the value and populate.
 // populateField('summaryRhrNote', 'rhr_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
 populateField('summaryRmrNote', 'rmr_note_key', { defaultValue: 'N/A' }); // Note based on measured/predicted?
-populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' });
-populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' });
+// populateField('summarySbpNote', 'sbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
+// populateField('summaryDbpNote', 'dbp_note_key', { defaultValue: 'N/A' }); // REMOVED - Calculated above
 populateField('summaryFssNote', 'fss_note_key', { defaultValue: 'N/A' });
 
     // Page 3: BMI Graph Input
@@ -1303,6 +1323,7 @@ function getHrrNote(hrrValue) {
 
     return 'N/A';
 }
+
 /**
  * Determines the Resting Heart Rate category note based on the RHR value.
  * @param {number|string} rhrValue - The Resting Heart Rate value in bpm.
@@ -1317,6 +1338,42 @@ function getRhrNote(rhrValue) {
     if (rhr <= 69) return "Low risk";
     if (rhr <= 89) return "Slightly elevated risk";
     if (rhr >= 90) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Systolic Blood Pressure category note based on the SBP value.
+ * @param {number|string} sbpValue - The Systolic Blood Pressure value in mmHg.
+ * @returns {string} - The corresponding SBP category note or 'N/A'.
+ */
+function getSbpNote(sbpValue) {
+    const sbp = parseFloat(sbpValue);
+    if (isNaN(sbp)) {
+        return 'N/A';
+    }
+
+    if (sbp <= 124) return "Low risk";
+    if (sbp <= 144) return "Elevated risk";
+    if (sbp >= 145) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the Diastolic Blood Pressure category note based on the DBP value.
+ * @param {number|string} dbpValue - The Diastolic Blood Pressure value in mmHg.
+ * @returns {string} - The corresponding DBP category note or 'N/A'.
+ */
+function getDbpNote(dbpValue) {
+    const dbp = parseFloat(dbpValue);
+    if (isNaN(dbp)) {
+        return 'N/A';
+    }
+
+    if (dbp <= 84) return "Low risk";
+    if (dbp <= 89) return "Elevated risk";
+    if (dbp >= 90) return "High risk";
 
     return 'N/A';
 }
