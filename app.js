@@ -782,22 +782,30 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
 
     // Calculate percentile only if age and gender are valid
     let percentile = 'N/A';
-    let percentileNote = 'N/A';
+    let percentileNote = 'N/A'; // For the table display (%ile)
+    let vo2CategoryNote = 'N/A'; // For the summary note (Low, High, etc.)
+
     if (gender && !isNaN(ageNum)) {
-       percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum);
+       percentile = calculateVo2Percentile(gender, ageNum, vo2ValueNum); // Returns number string or '>99.9'
+       vo2CategoryNote = getVo2Note(percentile); // Calculate the category note
+
+       // Format percentile for table display
        if (percentile === ">99.9") {
            percentileNote = ">99.9%ile";
        } else if (percentile !== 'N/A') {
            percentileNote = `${percentile}%ile`;
        }
     } else {
-        console.warn("Cannot calculate VO2 percentile due to missing/invalid gender or age.");
+        console.warn("Cannot calculate VO2 percentile/note due to missing/invalid gender or age.");
     }
 
+    // Populate Percentile Table Field
     const percentileElement = document.getElementById('tableVo2Percentile');
-    if (percentileElement) percentileElement.value = percentile;
+    if (percentileElement) percentileElement.value = percentileNote; // Use the formatted %ile string
+
+    // Populate Summary Note Field
     const noteElement = document.getElementById('summaryVo2Note');
-    if (noteElement) noteElement.value = percentileNote;
+    if (noteElement) noteElement.value = vo2CategoryNote; // Use the category note (Low, High, etc.)
 
 } else {
     // Set all VO2 related fields to N/A if base value is missing/invalid
@@ -1374,6 +1382,28 @@ function getDbpNote(dbpValue) {
     if (dbp <= 84) return "Low risk";
     if (dbp <= 89) return "Elevated risk";
     if (dbp >= 90) return "High risk";
+
+    return 'N/A';
+}
+
+/**
+ * Determines the VO₂ Max category note based on the percentile value.
+ * @param {number|string} percentileValue - The VO₂ Max percentile (0-100 or '>99.9').
+ * @returns {string} - The corresponding VO₂ Max category note or 'N/A'.
+ */
+function getVo2Note(percentileValue) {
+    if (percentileValue === '>99.9') return "Elite"; // Handle special case first
+
+    const percentile = parseFloat(percentileValue);
+    if (isNaN(percentile)) {
+        return 'N/A';
+    }
+
+    if (percentile < 25.0) return "Low";
+    if (percentile < 50.0) return "Below average";
+    if (percentile < 75.0) return "Above average";
+    if (percentile < 97.7) return "High";
+    if (percentile >= 97.7) return "Elite"; // Covers 97.7 to 99.9
 
     return 'N/A';
 }
