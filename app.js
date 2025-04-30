@@ -175,8 +175,8 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   }
   
   /**
-  * Generates the PDF report from HTML elements, creating PDF pages
-  * sized to match the content of each HTML page element without scaling the content.
+  * Generates the PDF report from HTML elements, centering each element's
+  * content on a standard letter-sized page.
   */
 async function generatePDF() {
     // Ensure jsPDF and html2canvas are loaded
@@ -192,7 +192,17 @@ async function generatePDF() {
     }
 
     const { jsPDF } = window.jspdf;
-    let pdf = null; // Initialize pdf object later with the first page size
+    // Define standard PDF page size (Letter in points)
+    const PDF_PAGE_WIDTH_PT = 612; // 8.5 inches * 72 pt/inch
+    const PDF_PAGE_HEIGHT_PT = 792; // 11 inches * 72 pt/inch
+
+    // Initialize PDF with standard letter size
+    let pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'pt',
+        format: 'letter' // Use standard letter size
+    });
+    let isFirstPage = true; // Flag to track if it's the first page
 
     const pdfWrapper = document.getElementById('pdfWrapper');
     if (!pdfWrapper) {
@@ -213,22 +223,13 @@ async function generatePDF() {
     console.log(`Generating PDF with ${pages.length} pages...`);
     document.body.style.cursor = 'wait'; // Indicate processing
 
-    const HTML_RENDER_SCALE = 1.5; // Use a scale for better quality, adjust if needed
-    const PT_PER_PX = 72 / 96; // Conversion factor from pixels to points (assuming 96 DPI screen)
+    const HTML_RENDER_SCALE = 1.5; // Use a scale for better quality
+    const PT_PER_PX = 72 / 96; // Conversion factor from pixels to points
 
     try {
         for (let i = 0; i < pages.length; i++) {
             const pageElement = pages[i];
             console.log(`Processing page ${i + 1}...`);
-
-            // Temporarily make the element visible and sized correctly for capture if needed
-            // (This might not be necessary depending on your CSS, but can help ensure full capture)
-            // const originalStyle = pageElement.style.cssText;
-            // pageElement.style.position = 'absolute';
-            // pageElement.style.left = '-9999px';
-            // pageElement.style.top = 'auto';
-            // pageElement.style.display = 'block';
-            // pageElement.style.height = 'auto'; // Let content determine height
 
             let canvas;
             try {
@@ -236,56 +237,82 @@ async function generatePDF() {
                     scale: HTML_RENDER_SCALE,
                     useCORS: true,
                     logging: false,
-                    // Ensure html2canvas captures the full element size, not just viewport
                     width: pageElement.scrollWidth,
                     height: pageElement.scrollHeight,
                     windowWidth: pageElement.scrollWidth,
                     windowHeight: pageElement.scrollHeight,
+                    // Set background to white for elements without explicit background (like bmi-page)
+                    // This prevents transparency issues during capture if the element itself is transparent
+                    backgroundColor: '#ffffff',
                 });
             } catch (canvasError) {
                  console.error(`Error generating canvas for page ${i + 1}:`, canvasError);
-                 // Handle error: maybe skip page or add error text to PDF
-                 if (pdf && i > 0) { // If not the first page, add a placeholder page
-                     pdf.addPage();
+                 if (!isFirstPage) { // If not the first page, add a placeholder page
+                     pdf.addPage('letter', 'portrait'); // Add standard letter page
                      pdf.text(`Error rendering page ${i + 1}. Check console.`, 40, 40);
-                 } else if (!pdf) { // If first page failed
+                 } else { // If first page failed
                      alert(`Failed to render the first page. PDF generation aborted.`);
                      document.body.style.cursor = 'default';
-                     return;
+                     return; // Abort if first page fails
                  }
                  continue; // Skip to the next page element
-            } finally {
-                 // Restore original style if modified
-                 // pageElement.style.cssText = originalStyle;
             }
-
 
             const imgData = canvas.toDataURL('image/png');
 
-            // Calculate the page dimensions in points based on the canvas size and scale
-            // The canvas dimensions are already scaled up by HTML_RENDER_SCALE
-            // We need the original element size in pixels first: canvas.width / HTML_RENDER_SCALE
-            // Then convert original pixel size to points: (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX
-            const pageWidthPt = (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX;
-            const pageHeightPt = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
+            // Calculate the captured image dimensions in points
+            const imgWidthPt = (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX;
+            const imgHeightPt = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
 
-            console.log(`Page ${i + 1}: Canvas ${canvas.width}x${canvas.height}px (Scale: ${HTML_RENDER_SCALE}) -> PDF Page ${pageWidthPt.toFixed(1)}x${pageHeightPt.toFixed(1)}pt`);
+            console.log(`Page ${i + 1}: Canvas ${canvas.width}x${canvas.height}px -> Image ${imgWidthPt.toFixed(1)}x${imgHeightPt.toFixed(1)}pt`);
 
-            if (i === 0) {
-                // Initialize the PDF with the dimensions of the first page
-                pdf = new jsPDF({
-                    orientation: pageWidthPt > pageHeightPt ? 'landscape' : 'portrait',
-                    unit: 'pt',
-                    format: [pageWidthPt, pageHeightPt]
-                });
+            // Determine orientation based on image aspect ratio (optional, could force portrait)
+            const orientation = imgWidthPt > imgHeightPt ? 'landscape' : 'portrait';
+            const pdfPageW = orientation === 'landscape' ? PDF_PAGE_HEIGHT_PT : PDF_PAGE_WIDTH_PT;
+            const pdfPageH = orientation === 'landscape' ? PDF_PAGE_WIDTH_PT : PDF_PAGE_HEIGHT_PT;
+
+
+            if (!isFirstPage) {
+                // Add a new standard letter page with the determined orientation
+                pdf.addPage('letter', orientation);
             } else {
-                // Add a new page with the specific dimensions for this HTML element
-                pdf.addPage([pageWidthPt, pageHeightPt], pageWidthPt > pageHeightPt ? 'landscape' : 'portrait');
+                // If it's the first page, and orientation is landscape, we need to re-init or change settings
+                // For simplicity, let's assume the first page dictates orientation or we force portrait.
+                // If forcing portrait:
+                if (orientation === 'landscape') {
+                    console.warn("First page content is landscape, but forcing portrait PDF. Content might be scaled or clipped if too wide.");
+                    // Re-initialize if needed, or just proceed knowing it might not fit well.
+                    // pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' }); // Example if re-init needed
+                }
+                 isFirstPage = false; // Set flag after handling first page
             }
 
-            // Add the image to the PDF, making it fill the entire custom page size
-            // x=0, y=0, width=pageWidthPt, height=pageHeightPt
-            pdf.addImage(imgData, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
+
+            // Calculate centering coordinates (ensure non-negative)
+            let x = Math.max(0, (pdfPageW - imgWidthPt) / 2);
+            let y = Math.max(0, (pdfPageH - imgHeightPt) / 2);
+
+            // Check if image is larger than page dimensions (optional scaling)
+            let drawWidth = imgWidthPt;
+            let drawHeight = imgHeightPt;
+
+            if (imgWidthPt > pdfPageW || imgHeightPt > pdfPageH) {
+                console.warn(`Page ${i + 1}: Content (${imgWidthPt.toFixed(1)}x${imgHeightPt.toFixed(1)}pt) is larger than PDF page (${pdfPageW}x${pdfPageH}pt). Scaling down.`);
+                const widthRatio = pdfPageW / imgWidthPt;
+                const heightRatio = pdfPageH / imgHeightPt;
+                const scaleRatio = Math.min(widthRatio, heightRatio); // Scale to fit while maintaining aspect ratio
+
+                drawWidth = imgWidthPt * scaleRatio;
+                drawHeight = imgHeightPt * scaleRatio;
+
+                // Recalculate centering coordinates for the scaled image
+                x = Math.max(0, (pdfPageW - drawWidth) / 2);
+                y = Math.max(0, (pdfPageH - drawHeight) / 2);
+            }
+
+
+            // Add the image to the PDF, centered, using its calculated dimensions
+            pdf.addImage(imgData, 'PNG', x, y, drawWidth, drawHeight);
 
         } // End of loop through pages
 
@@ -297,7 +324,7 @@ async function generatePDF() {
 
         const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const filename = `Discovery_Report_${safeLastName}_${safeFirstName}_${examDateFormatted}.pdf`;
+        const filename = `Disc/Comp Exam_Report_${safeLastName}_${safeFirstName}_${examDateFormatted}.pdf`;
 
         console.log("Saving PDF as:", filename);
         pdf.save(filename);
@@ -830,7 +857,7 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
        if (percentile === ">99.9") {
            percentileNote = ">99.9%ile";
        } else if (percentile !== 'N/A') {
-           percentileNote = `${percentile}%ile`;
+           percentileNote = `${percentile}`;
        }
     } else {
         console.warn("Cannot calculate VO2 percentile/note due to missing/invalid gender or age.");
@@ -1387,9 +1414,9 @@ function getSbpNote(sbpValue) {
 /**
  * Determines the Diastolic Blood Pressure category note based on the DBP value.
  * @param {number|string} dbpValue - The Diastolic Blood Pressure value in mmHg.
- * @returns {string} - The corresponding DBP category note or '```javascript
- * 'N/A'.
+ * @returns {string} - The corresponding DBP category note or 'N/A'.
  */
+
 function getDbpNote(dbpValue) {
     const dbp = parseFloat(dbpValue);
     if (isNaN(dbp)) {

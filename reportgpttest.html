@@ -69,7 +69,7 @@ body {
   font-weight: 700;
   text-align: center;
   text-shadow: 0 1px 2px rgba(0, 38, 61, 0.15);
-  margin-bottom: 50px;
+  margin-bottom: 10px;
   margin-top: 0;
 }
 
@@ -100,8 +100,14 @@ body {
   text-shadow: 0 1px 2px rgba(0, 38, 61, 0.15);
   padding: 12px 20px;
   border-radius: 0; /* Remove rounding since background is gone */
-  margin-bottom: 50px;
+  margin-top: 35px; /* Default top margin */
+  margin-bottom: 5px;
   background: none; /* ← Remove background */
+}
+
+/* Reduce top margin specifically for the title on the summary page */
+.page.summary .title-text {
+  margin-top: 10px;
 }
 
 #clientName, #examDate {
@@ -468,7 +474,7 @@ body {
 
   <div id="pdfWrapper">
  <div class="page simple">
-  <div class="title-text">Discovery Exam Report</div>
+  <div class="title-text">Comprehensive Exam Report</div>
   <div class="subtitle-text" id="clientName" readonly></div>
   <div class="subtitle-text" id="examDate" readonly></div>
 </div>
@@ -700,7 +706,7 @@ body {
           <table>
             <tr><td>Estimated VO₂ Max (ml/kg/min)</td><td><input class="value-field" id="tableVo2Value" readonly><span class="unit-label"></span></td></tr>
             <tr><td>Estimated VO₂ Max (METS)</td><td><input class="value-field" id="tableVo2Mets" readonly><span class="unit-label"></span></td></tr>
-            <tr><td>Percentile</td><td><input class="value-field" id="tableVo2Percentile" readonly><span class="unit-label">%</span></td></tr>
+            <tr><td>Percentile</td><td><input class="value-field" id="tableVo2Percentile" readonly><span class="unit-label"></span></td></tr>
           </table>
         </div>
       </div>
