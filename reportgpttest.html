@@ -35,15 +35,21 @@ body {
   height: auto;
   margin: 30px auto;
   background-image: url('newbackground.png');
-  background-color: transparent;
-  background-size: cover;
-  background-position: center top;
+  background-color: white;
+  /* Change background-size to force stretching */
+  background-size: 100% 100%; /* Stretch to fill width and height */
+  background-position: center top; /* Position remains the same */
   background-repeat: no-repeat;
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0, 38, 61, 0.08);
-  border: 1px solid #e4ac61;
-  padding: 80px 60px 100px 60px;
+  border: 0px solid #ffffff;
+  padding: 40px 40px 40px 40px;
   box-sizing: border-box;
+}
+
+/* Remove background image ONLY for the BMI page */
+.page.bmi-page {
+  background-image: none;
 }
 
     .page.simple {
@@ -199,7 +205,7 @@ body {
 .table-wrapper td {
   padding: 8px 10px;
   border: 1px solid #c19962;
-  text-align: center;
+  text-align: center; /* Ensure all table cells default to center alignment */
   vertical-align: middle;
   background-color: #ffffff !important; /* Force white background on all cells */
 }
@@ -214,6 +220,7 @@ body {
   white-space: nowrap;
 }
 
+/* Ensure input fields within tables are centered and align vertically */
 .table-wrapper input.value-field,
 .table-wrapper textarea.value-field { /* Apply base styles to textarea too */
   width: 90%; /* Default width */
@@ -226,11 +233,21 @@ body {
   padding: 10px 16px; /* Match input padding */
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0, 38, 61, 0.05);
-  text-align: center; /* Default alignment */
+  text-align: center; /* Center text WITHIN the input */
   font-weight: 600; /* Match input weight */
-  vertical-align: middle; /* Align with other inputs */
-  line-height: 1.4; /* Adjust line height */
+  vertical-align: middle; /* Align input box vertically */
+  display: inline-block; /* Needed for vertical-align to work reliably with span */
+  margin: 0 3px; /* Add slight spacing around input */
 }
+
+/* Ensure unit labels align vertically with inputs */
+.table-wrapper .unit-label {
+  display: inline-block; /* Needed for vertical-align */
+  vertical-align: middle; /* Align span vertically with input */
+  font-size: 14px;
+  color: #555;
+}
+
 
 /* Specific styles for the note textareas */
 .table-wrapper textarea.note-field {
@@ -240,9 +257,11 @@ body {
   resize: none; /* Disable manual resizing by user */
   overflow: hidden; /* Hide scrollbars, height will adjust */
   white-space: normal; /* Allow text wrapping */
-  text-align: center; /* Align note text left for readability */
+  text-align: center; /* Align note text center */
   padding-top: 8px; /* Fine-tune padding */
   padding-bottom: 8px;
+  display: block; /* Make textarea block to fill width */
+  margin: 0 auto; /* Center block element */
 }
 
 /* Adjust the 'Note' column cells in the summary table */
@@ -343,13 +362,15 @@ body {
     }
 
     /* Specific styles for BMI charts */
-    #bmi-charts-grid .chart-card {
-      flex-basis: 500px; /* Increase width further */
-    }
+#bmi-charts-grid .chart-card {
+  flex-basis: calc(50% - 12px); /* Adjusted for 24px gap */
+  max-width: calc(50% - 12px); /* Adjusted for 24px gap */
+  padding: 15px;
+}
 
-    #bmi-charts-grid .chart-container {
-      height: 300px; /* Limit image height */
-    }
+#bmi-charts-grid .chart-container {
+  height: 200px; /* Keep reduced height */
+}
 
 /* RMR Comparison Visualization Styles */
 .rmr-comparison {
@@ -519,7 +540,7 @@ body {
       </div>
     </div>
 
-    <div class="page">
+    <div class="page bmi-page"> <!-- Add class "bmi-page" here -->
       <div class="title-text">Body Mass Index</div>
       <div class="graph-container">
         <div class="charts-grid" id="bmi-charts-grid"> <!-- Add ID -->

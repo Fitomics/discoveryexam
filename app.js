@@ -175,111 +175,133 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   }
   
   /**
-  * Generates the PDF report from HTML elements.
+  * Generates the PDF report from HTML elements, creating PDF pages
+  * sized to match the content of each HTML page element without scaling the content.
   */
-  async function generatePDF() {
-    // Ensure jsPDF is loaded
+async function generatePDF() {
+    // Ensure jsPDF and html2canvas are loaded
     if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
         console.error("jsPDF library is not loaded.");
         alert("Error: PDF generation library not loaded.");
         return;
     }
-     // Ensure html2canvas is loaded
     if (typeof html2canvas === 'undefined') {
         console.error("html2canvas library is not loaded.");
         alert("Error: PDF generation library (html2canvas) not loaded.");
         return;
     }
-  
+
     const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('portrait', 'pt', 'letter'); // Letter size (612 x 792 pt)   
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-  
+    let pdf = null; // Initialize pdf object later with the first page size
+
     const pdfWrapper = document.getElementById('pdfWrapper');
     if (!pdfWrapper) {
         console.error("Element with ID 'pdfWrapper' not found.");
         alert("Error: Cannot find the content wrapper for PDF generation.");
         return;
     }
-  
+
     // Get only direct children with the 'page' class
     const pages = Array.from(pdfWrapper.children).filter(el => el.classList.contains('page'));
-  
+
     if (pages.length === 0) {
         console.warn("No elements with class 'page' found inside 'pdfWrapper'.");
         alert("Warning: No pages found to generate PDF.");
         return;
     }
-  
+
     console.log(`Generating PDF with ${pages.length} pages...`);
     document.body.style.cursor = 'wait'; // Indicate processing
-  
+
+    const HTML_RENDER_SCALE = 1.5; // Use a scale for better quality, adjust if needed
+    const PT_PER_PX = 72 / 96; // Conversion factor from pixels to points (assuming 96 DPI screen)
+
     try {
         for (let i = 0; i < pages.length; i++) {
             const pageElement = pages[i];
             console.log(`Processing page ${i + 1}...`);
-  
+
+            // Temporarily make the element visible and sized correctly for capture if needed
+            // (This might not be necessary depending on your CSS, but can help ensure full capture)
+            // const originalStyle = pageElement.style.cssText;
+            // pageElement.style.position = 'absolute';
+            // pageElement.style.left = '-9999px';
+            // pageElement.style.top = 'auto';
+            // pageElement.style.display = 'block';
+            // pageElement.style.height = 'auto'; // Let content determine height
+
+            let canvas;
             try {
-                const canvas = await html2canvas(pageElement, {
-                    scale: 2, // Increase resolution for better quality
-                    useCORS: true, // Attempt to load cross-origin images
-                    logging: false, // Reduce console noise
-                    width: pageElement.offsetWidth,
-                    height: pageElement.offsetHeight,
-                    // Ensure charts are rendered before capturing
-                    onclone: (clonedDoc) => {
-                        // Might need specific logic here if charts render very asynchronously
-                        // e.g., wait for chart animations to complete if necessary.
-                    }
+                 canvas = await html2canvas(pageElement, {
+                    scale: HTML_RENDER_SCALE,
+                    useCORS: true,
+                    logging: false,
+                    // Ensure html2canvas captures the full element size, not just viewport
+                    width: pageElement.scrollWidth,
+                    height: pageElement.scrollHeight,
+                    windowWidth: pageElement.scrollWidth,
+                    windowHeight: pageElement.scrollHeight,
                 });
-  
-                const imgData = canvas.toDataURL('image/png');
-                const imgProps = pdf.getImageProperties(imgData);
-  
-                // Calculate image dimensions to fit PDF page width, maintaining aspect ratio
-                const imgWidth = pdfWidth;
-                const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
-                let pageHeightRequired = imgHeight;
-                let yPosition = 0;
-  
-                // Add the image
-                pdf.addImage(imgData, 'PNG', 0, yPosition, imgWidth, imgHeight);
-  
-                // Add a new page if this isn't the last element
-                if (i < pages.length - 1) {
-                    console.log(`Adding new page after page ${i + 1}`);
-                    pdf.addPage();
-                }
-  
-            } catch (error) {
-                console.error(`Error processing page ${i + 1}:`, error);
-                // Add error text to the PDF page instead of the image
-                pdf.setTextColor(255, 0, 0); // Red text
-                pdf.setFontSize(12);
-                pdf.text(`Error rendering page ${i + 1}. Check console logs.`, 40, 40);
-                pdf.setTextColor(0, 0, 0); // Reset text color
-                if (i < pages.length - 1) {
-                    pdf.addPage(); // Still add a new page for the next attempt
-                }
-                // Optionally continue to the next page or break the loop
-                // continue;
+            } catch (canvasError) {
+                 console.error(`Error generating canvas for page ${i + 1}:`, canvasError);
+                 // Handle error: maybe skip page or add error text to PDF
+                 if (pdf && i > 0) { // If not the first page, add a placeholder page
+                     pdf.addPage();
+                     pdf.text(`Error rendering page ${i + 1}. Check console.`, 40, 40);
+                 } else if (!pdf) { // If first page failed
+                     alert(`Failed to render the first page. PDF generation aborted.`);
+                     document.body.style.cursor = 'default';
+                     return;
+                 }
+                 continue; // Skip to the next page element
+            } finally {
+                 // Restore original style if modified
+                 // pageElement.style.cssText = originalStyle;
             }
-        }
-  
+
+
+            const imgData = canvas.toDataURL('image/png');
+
+            // Calculate the page dimensions in points based on the canvas size and scale
+            // The canvas dimensions are already scaled up by HTML_RENDER_SCALE
+            // We need the original element size in pixels first: canvas.width / HTML_RENDER_SCALE
+            // Then convert original pixel size to points: (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX
+            const pageWidthPt = (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX;
+            const pageHeightPt = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
+
+            console.log(`Page ${i + 1}: Canvas ${canvas.width}x${canvas.height}px (Scale: ${HTML_RENDER_SCALE}) -> PDF Page ${pageWidthPt.toFixed(1)}x${pageHeightPt.toFixed(1)}pt`);
+
+            if (i === 0) {
+                // Initialize the PDF with the dimensions of the first page
+                pdf = new jsPDF({
+                    orientation: pageWidthPt > pageHeightPt ? 'landscape' : 'portrait',
+                    unit: 'pt',
+                    format: [pageWidthPt, pageHeightPt]
+                });
+            } else {
+                // Add a new page with the specific dimensions for this HTML element
+                pdf.addPage([pageWidthPt, pageHeightPt], pageWidthPt > pageHeightPt ? 'landscape' : 'portrait');
+            }
+
+            // Add the image to the PDF, making it fill the entire custom page size
+            // x=0, y=0, width=pageWidthPt, height=pageHeightPt
+            pdf.addImage(imgData, 'PNG', 0, 0, pageWidthPt, pageHeightPt);
+
+        } // End of loop through pages
+
         // Get filename components safely
         const firstName = localStorage.getItem('first_name') || 'Client';
         const lastName = localStorage.getItem('last_name') || 'Report';
         const examDateRaw = localStorage.getItem('exam_date'); // YYYY-MM-DD
         const examDateFormatted = examDateRaw ? examDateRaw.replace(/-/g, '') : new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  
+
         const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const filename = `Discovery_Report_${safeLastName}_${safeFirstName}_${examDateFormatted}.pdf`;
-  
+
         console.log("Saving PDF as:", filename);
         pdf.save(filename);
-  
+
     } catch (globalError) {
         console.error("An unexpected error occurred during PDF generation:", globalError);
         alert("An error occurred during PDF generation. Please check the console.");
@@ -287,8 +309,7 @@ function calculateVo2Percentile(gender, age, vo2Value) {
         document.body.style.cursor = 'default'; // Reset cursor regardless of success/failure
         console.log("PDF generation process finished.");
     }
-  }
-  
+}  
   
   // --- Charting Logic ---
   
@@ -1356,7 +1377,7 @@ function getSbpNote(sbpValue) {
         return 'N/A';
     }
 
-    if (sbp <= 124) return "Low risk";
+    if(sbp <= 124) return "Low risk";
     if (sbp <= 144) return "Elevated risk";
     if (sbp >= 145) return "High risk";
 
