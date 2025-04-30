@@ -855,7 +855,7 @@ if (vo2ValueClean && !isNaN(vo2ValueNum) && vo2ValueNum > 0) {
 
        // Format percentile for table display
        if (percentile === ">99.9") {
-           percentileNote = ">99.9%ile";
+           percentileNote = ">99.9";
        } else if (percentile !== 'N/A') {
            percentileNote = `${percentile}`;
        }
