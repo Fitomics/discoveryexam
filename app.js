@@ -194,7 +194,12 @@ function calculateVo2Percentile(gender, age, vo2Value) {
     const PT_PER_PX        = 72 / 96;        // 1px = 0.75pt
   
     // 1. init PDF
-    let pdf = new jsPDF({ unit: "pt", format: "letter", orientation: "portrait" });
+    let pdf = new jsPDF({ 
+        unit: "pt", 
+        format: "letter", 
+        orientation: "portrait"/*, 
+        compress: true*/ });
+
     let isFirst = true;
   
     // 2. grab your pages
@@ -240,7 +245,7 @@ function calculateVo2Percentile(gender, age, vo2Value) {
         }
   
         // 5. convert to image + measure in points
-        const imgData = canvas.toDataURL("image/png");
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
         const imgWpt  = (canvas.width  / HTML_RENDER_SCALE) * PT_PER_PX;
         const imgHpt  = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
         const orientation = imgWpt > imgHpt ? "landscape" : "portrait";
