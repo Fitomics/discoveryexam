@@ -178,165 +178,120 @@ function calculateVo2Percentile(gender, age, vo2Value) {
   * Generates the PDF report from HTML elements, centering each element's
   * content on a standard letter-sized page.
   */
-async function generatePDF() {
-    // Ensure jsPDF and html2canvas are loaded
-    if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
-        console.error("jsPDF library is not loaded.");
-        alert("Error: PDF generation library not loaded.");
-        return;
+  async function generatePDF() {
+    // 0. sanity-check libs
+    if (!window.jspdf?.jsPDF) {
+      alert("Error: jsPDF not loaded.");
+      return;
     }
-    if (typeof html2canvas === 'undefined') {
-        console.error("html2canvas library is not loaded.");
-        alert("Error: PDF generation library (html2canvas) not loaded.");
-        return;
+    if (typeof html2canvas === "undefined") {
+      alert("Error: html2canvas not loaded.");
+      return;
     }
-
+  
     const { jsPDF } = window.jspdf;
-    // Define standard PDF page size (Letter in points)
-    const PDF_PAGE_WIDTH_PT = 612; // 8.5 inches * 72 pt/inch
-    const PDF_PAGE_HEIGHT_PT = 792; // 11 inches * 72 pt/inch
-
-    // Initialize PDF with standard letter size
-    let pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'pt',
-        format: 'letter' // Use standard letter size
-    });
-    let isFirstPage = true; // Flag to track if it's the first page
-
-    const pdfWrapper = document.getElementById('pdfWrapper');
-    if (!pdfWrapper) {
-        console.error("Element with ID 'pdfWrapper' not found.");
-        alert("Error: Cannot find the content wrapper for PDF generation.");
-        return;
+    const HTML_RENDER_SCALE = 1.5;
+    const PT_PER_PX        = 72 / 96;        // 1px = 0.75pt
+  
+    // 1. init PDF
+    let pdf = new jsPDF({ unit: "pt", format: "letter", orientation: "portrait" });
+    let isFirst = true;
+  
+    // 2. grab your pages
+    const pdfWrapper = document.getElementById("pdfWrapper");
+    const pages      = Array.from(pdfWrapper.querySelectorAll(".page"));
+    if (!pages.length) {
+      alert("No .page elements found!");
+      return;
     }
-
-    // Get only direct children with the 'page' class
-    const pages = Array.from(pdfWrapper.children).filter(el => el.classList.contains('page'));
-
-    if (pages.length === 0) {
-        console.warn("No elements with class 'page' found inside 'pdfWrapper'.");
-        alert("Warning: No pages found to generate PDF.");
-        return;
-    }
-
-    console.log(`Generating PDF with ${pages.length} pages...`);
-    document.body.style.cursor = 'wait'; // Indicate processing
-
-    const HTML_RENDER_SCALE = 1.5; // Use a scale for better quality
-    const PT_PER_PX = 72 / 96; // Conversion factor from pixels to points
-
+  
+    document.body.style.cursor = "wait";
     try {
-        for (let i = 0; i < pages.length; i++) {
-            const pageElement = pages[i];
-            console.log(`Processing page ${i + 1}...`);
-
-            let canvas;
-            try {
-                 canvas = await html2canvas(pageElement, {
-                    scale: HTML_RENDER_SCALE,
-                    useCORS: true,
-                    logging: false,
-                    width: pageElement.scrollWidth,
-                    height: pageElement.scrollHeight,
-                    windowWidth: pageElement.scrollWidth,
-                    windowHeight: pageElement.scrollHeight,
-                    // Set background to white for elements without explicit background (like bmi-page)
-                    // This prevents transparency issues during capture if the element itself is transparent
-                    backgroundColor: '#ffffff',
-                });
-            } catch (canvasError) {
-                 console.error(`Error generating canvas for page ${i + 1}:`, canvasError);
-                 if (!isFirstPage) { // If not the first page, add a placeholder page
-                     pdf.addPage('letter', 'portrait'); // Add standard letter page
-                     pdf.text(`Error rendering page ${i + 1}. Check console.`, 40, 40);
-                 } else { // If first page failed
-                     alert(`Failed to render the first page. PDF generation aborted.`);
-                     document.body.style.cursor = 'default';
-                     return; // Abort if first page fails
-                 }
-                 continue; // Skip to the next page element
-            }
-
-            const imgData = canvas.toDataURL('image/png');
-
-            // Calculate the captured image dimensions in points
-            const imgWidthPt = (canvas.width / HTML_RENDER_SCALE) * PT_PER_PX;
-            const imgHeightPt = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
-
-            console.log(`Page ${i + 1}: Canvas ${canvas.width}x${canvas.height}px -> Image ${imgWidthPt.toFixed(1)}x${imgHeightPt.toFixed(1)}pt`);
-
-            // Determine orientation based on image aspect ratio (optional, could force portrait)
-            const orientation = imgWidthPt > imgHeightPt ? 'landscape' : 'portrait';
-            const pdfPageW = orientation === 'landscape' ? PDF_PAGE_HEIGHT_PT : PDF_PAGE_WIDTH_PT;
-            const pdfPageH = orientation === 'landscape' ? PDF_PAGE_WIDTH_PT : PDF_PAGE_HEIGHT_PT;
-
-
-            if (!isFirstPage) {
-                // Add a new standard letter page with the determined orientation
-                pdf.addPage('letter', orientation);
-            } else {
-                // If it's the first page, and orientation is landscape, we need to re-init or change settings
-                // For simplicity, let's assume the first page dictates orientation or we force portrait.
-                // If forcing portrait:
-                if (orientation === 'landscape') {
-                    console.warn("First page content is landscape, but forcing portrait PDF. Content might be scaled or clipped if too wide.");
-                    // Re-initialize if needed, or just proceed knowing it might not fit well.
-                    // pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'letter' }); // Example if re-init needed
-                }
-                 isFirstPage = false; // Set flag after handling first page
-            }
-
-
-            // Calculate centering coordinates (ensure non-negative)
-            let x = Math.max(0, (pdfPageW - imgWidthPt) / 2);
-            let y = Math.max(0, (pdfPageH - imgHeightPt) / 2);
-
-            // Check if image is larger than page dimensions (optional scaling)
-            let drawWidth = imgWidthPt;
-            let drawHeight = imgHeightPt;
-
-            if (imgWidthPt > pdfPageW || imgHeightPt > pdfPageH) {
-                console.warn(`Page ${i + 1}: Content (${imgWidthPt.toFixed(1)}x${imgHeightPt.toFixed(1)}pt) is larger than PDF page (${pdfPageW}x${pdfPageH}pt). Scaling down.`);
-                const widthRatio = pdfPageW / imgWidthPt;
-                const heightRatio = pdfPageH / imgHeightPt;
-                const scaleRatio = Math.min(widthRatio, heightRatio); // Scale to fit while maintaining aspect ratio
-
-                drawWidth = imgWidthPt * scaleRatio;
-                drawHeight = imgHeightPt * scaleRatio;
-
-                // Recalculate centering coordinates for the scaled image
-                x = Math.max(0, (pdfPageW - drawWidth) / 2);
-                y = Math.max(0, (pdfPageH - drawHeight) / 2);
-            }
-
-
-            // Add the image to the PDF, centered, using its calculated dimensions
-            pdf.addImage(imgData, 'PNG', x, y, drawWidth, drawHeight);
-
-        } // End of loop through pages
-
-        // Get filename components safely
-        const firstName = localStorage.getItem('first_name') || 'Client';
-        const lastName = localStorage.getItem('last_name') || 'Report';
-        const examDateRaw = localStorage.getItem('exam_date'); // YYYY-MM-DD
-        const examDateFormatted = examDateRaw ? examDateRaw.replace(/-/g, '') : new Date().toISOString().slice(0, 10).replace(/-/g, '');
-
-        const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const filename = `Disc/Comp Exam_Report_${safeLastName}_${safeFirstName}_${examDateFormatted}.pdf`;
-
-        console.log("Saving PDF as:", filename);
-        pdf.save(filename);
-
-    } catch (globalError) {
-        console.error("An unexpected error occurred during PDF generation:", globalError);
-        alert("An error occurred during PDF generation. Please check the console.");
+      for (let i = 0; i < pages.length; i++) {
+        const pageEl = pages[i];
+  
+        // 3. compute the on-screen bounding box + scroll offsets
+        const rect    = pageEl.getBoundingClientRect();
+        const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+  
+        // 4. render just that box to canvas
+        let canvas;
+        try {
+          canvas = await html2canvas(document.body, {
+            scale: HTML_RENDER_SCALE,
+            useCORS: true,
+            x:      rect.left + scrollX,
+            y:      rect.top  + scrollY,
+            width:  rect.width,
+            height: rect.height,
+            backgroundColor: "#ffffff"
+          });
+        } catch (err) {
+          console.error("Canvas error on page", i+1, err);
+          if (!isFirst) {
+            pdf.addPage(); 
+            pdf.text(`Error rendering page ${i+1}`, 40, 40);
+          } else {
+            alert("Failed to render first page—aborting.");
+            return;
+          }
+          continue;
+        }
+  
+        // 5. convert to image + measure in points
+        const imgData = canvas.toDataURL("image/png");
+        const imgWpt  = (canvas.width  / HTML_RENDER_SCALE) * PT_PER_PX;
+        const imgHpt  = (canvas.height / HTML_RENDER_SCALE) * PT_PER_PX;
+        const orientation = imgWpt > imgHpt ? "landscape" : "portrait";
+  
+        // 6. add or reuse page
+        if (i > 0) {
+          pdf.addPage("letter", orientation);
+        } else {
+          isFirst = false;
+        }
+  
+        // 7. get the real page dims
+        const pageW = pdf.internal.pageSize.getWidth();
+        const pageH = pdf.internal.pageSize.getHeight();
+  
+        // 8. scale down if too big
+        let drawW = imgWpt, drawH = imgHpt;
+        if (drawW > pageW || drawH > pageH) {
+          const ratio = Math.min(pageW / drawW, pageH / drawH);
+          drawW *= ratio;
+          drawH *= ratio;
+        }
+  
+        // 9. center
+        const x = (pageW - drawW) / 2;
+        const y = (pageH - drawH) / 2;
+  
+        // 10. draw it
+        pdf.addImage(imgData, "PNG", x, y, drawW, drawH);
+      }
+  
+      // 11. build filename, save
+      const fn = (localStorage.getItem("first_name") || "Client")
+                 .replace(/[^a-z0-9]/gi, "_").toLowerCase();
+      const ln = (localStorage.getItem("last_name")  || "Report")
+                 .replace(/[^a-z0-9]/gi, "_").toLowerCase();
+      const dateRaw = localStorage.getItem("exam_date") 
+                      || new Date().toISOString().slice(0,10);
+      const dateClean = dateRaw.replace(/-/g, "");
+      const filename = `Disc_Comp_Exam_${ln}_${fn}_${dateClean}.pdf`;
+  
+      pdf.save(filename);
+  
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      alert("An error occurred—see console.");
     } finally {
-        document.body.style.cursor = 'default'; // Reset cursor regardless of success/failure
-        console.log("PDF generation process finished.");
+      document.body.style.cursor = "default";
     }
-}  
+  }
+  
   
   // --- Charting Logic ---
   

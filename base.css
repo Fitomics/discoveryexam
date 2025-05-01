@@ -1,0 +1,16 @@
+/* --- Global Styles & Fonts --- */
+@import url('https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Glacial Indifference', sans-serif;
+  margin: 0;
+  padding: 20px; /* Default padding, can be overridden by .page */
+  background-color: #ffffff; /* Base background */
+  color: #00263d; /* Base text color */
+  line-height: 1.6;
+  letter-spacing: 0.3px;
+}
