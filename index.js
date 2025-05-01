@@ -850,273 +850,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-// PDF generation function (no changes needed here)
-function downloadPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  // Create a canvas to read the image data
-  const img = document.createElement('img');
-  img.onload = function() {
-    const canvas = document.createElement('canvas');
-    canvas.width = img.width;
-    canvas.height = img.height;
-    const ctx = canvas.getContext('2d');
-
-    // Draw background with reduced opacity
-    ctx.globalAlpha = 0.3; // Adjust this value between 0.1-0.5 for desired transparency
-    ctx.drawImage(img, 0, 0);
-    ctx.globalAlpha = 1.0; // Reset to default
-
-    // Get image data
-    const imgData = canvas.toDataURL('image/png');
-
-    // Add to PDF
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
-
-    // Continue with PDF generation
-    generatePDFContent(doc);
-  };
-
-  img.onerror = function() {
-    console.error('Failed to load image for PDF background');
-    generatePDFContent(doc); // Generate content even without background
-  };
-
-  // Ensure the path is correct relative to the HTML file or use an absolute URL
-  img.src = 'background.png'; // Assumes background.png is in the same folder as the HTML
-}
-
-function generatePDFContent(doc) {
-    // Ensure jsPDF and autoTable are loaded
-    if (!doc || !doc.autoTable) {
-        console.error("jsPDF or autoTable plugin not loaded correctly.");
-        alert("Error generating PDF: Required libraries not loaded.");
-        return;
-    }
-
-  // Make text content more visible with darker font
-  doc.setTextColor(0, 0, 0); // Black text
-
-  // Add title
-  doc.setFontSize(18);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Fitomics Nutrition Calculator Report', 15, 20);
-
-  // Get name and format it
-  const firstName = document.getElementById('first_name').value || '';
-  const lastName = document.getElementById('last_name').value || '';
-  const fullName = (firstName + ' ' + lastName).trim();
-  const examDateValue = document.getElementById('exam_date').value || '';
-  let displayDate = 'N/A';
-    try {
-        if (examDateValue) {
-         // Handle potential invalid date string before creating Date object
-         // A simple check for YYYY-MM-DD format
-         if (/^\d{4}-\d{2}-\d{2}$/.test(examDateValue)) {
-            displayDate = new Date(examDateValue + 'T00:00:00').toLocaleDateString(); // Add time to avoid timezone issues
-         } else {
-             displayDate = examDateValue; // Show raw value if format is unexpected
-         }
-        }
-    } catch (e) {
-        console.error("Error formatting date:", e);
-         displayDate = examDateValue || 'N/A'; // Fallback
-    }
-
-
-  // Add client name if available
-  doc.setFontSize(14);
-  doc.text(`Client: ${fullName || 'N/A'}`, 15, 30);
-
-  // Add exam date if available
-  doc.text(`Date: ${displayDate}`, 15, 37);
-
-
-  // Input Parameters Section
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Personal Information & Inputs', 15, 47); // Combined section title
-  doc.setFontSize(10);
-  doc.setFont('helvetica', 'normal');
-
-  // Adjust the starting Y position
-  const startY = 57;
-  let currentY = startY;
-  const lineHeight = 7;
-  const column1X = 15;
-  const column2X = 105; // Adjust based on page width and desired spacing
-
-  const inputs1 = [
-    ['Age:', (document.getElementById('age').value || 'N/A') + ' years'],
-    ['Gender:', document.getElementById('gender').value || 'N/A'],
-    ['Height:', (document.getElementById('height').value || 'N/A') + ' inches'],
-    ['Weight:', (document.getElementById('weight').value || 'N/A') + ' lbs'],
-    ['Body Fat:', (document.getElementById('bodyfat').value || 'N/A') + '%'],
-    ['SBP:', (document.getElementById('sbp_mmhg').value || 'N/A') + ' mmHg'],
-    ['DBP:', (document.getElementById('dbp_mmhg').value || 'N/A') + ' mmHg'],
-    ['Resting HR:', (document.getElementById('resting_hr').value || 'N/A') + ' bpm'],
-  ];
-
-  const inputs2 = [
-     ['Goal:', document.getElementById('goal').selectedOptions[0]?.text || 'N/A'], // Get text of selected option
-     ['Activity Level:', document.getElementById('activity').selectedOptions[0]?.text || 'N/A'],
-     ['Workout Calories:', (document.getElementById('workout_calories').value || 'N/A') + ' kcal/session'],
-     ['Workouts/Week:', document.getElementById('workouts_per_week').value || 'N/A'],
-     ['Measured RMR:', (document.getElementById('measured_rmr').value || 'N/A') + ' kcal'],
-     ['Protein Target:', document.getElementById('protein').selectedOptions[0]?.text || 'N/A' + ' g/kg'],
-     ['Fat Target:', document.getElementById('fat').selectedOptions[0]?.text || 'N/A' + '% calories'],
-  ];
-
-  // Draw inputs in two columns
-   inputs1.forEach((item) => {
-       doc.text(`${item[0]} ${item[1]}`, column1X, currentY);
-       currentY += lineHeight;
-   });
-
-    currentY = startY; // Reset Y for the second column
-    inputs2.forEach((item) => {
-       doc.text(`${item[0]} ${item[1]}`, column2X, currentY);
-       currentY += lineHeight;
-   });
-
-
-  // Results Section (move it down)
-  const resultsStartY = currentY + 5; // Start below the longest input column
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('Calculated Results & Recommendations', 15, resultsStartY);
-
-  // Add table for results
-  doc.autoTable({
-    startY: resultsStartY + 5, // Space after title
-    head: [['Metric', 'Value', 'Amount', 'Calories']],
-    body: [
-      ['BMI', document.getElementById('bmi').value || 'N/A', '', ''],
-      ['Fat Mass', (document.getElementById('fat_mass').value || 'N/A') + ' lbs', '', ''],
-      ['Fat-Free Mass', (document.getElementById('fat_free_mass').value || 'N/A') + ' lbs', '', ''],
-      ['Fat Mass Index', (document.getElementById('fat_mass_index').value || 'N/A') + ' kg/m²', '', ''],
-      ['Fat-Free Mass Index', (document.getElementById('fat_free_mass_index').value || 'N/A') + ' kg/m²', '', ''],
-      ['Estimated RMR', (document.getElementById('rmr').value || 'N/A') + ' kcal', '', ''],
-      ['Measured RMR', (document.getElementById('measured_rmr').value || 'N/A') + ' kcal', '', ''],
-      ['% Calories from Fat', (document.getElementById('fat_calories_percent').value || 'N/A') + '%', '', ''],
-      ['% Calories from Carbohydrate', (document.getElementById('carb_calories_percent').value || 'N/A') + '%', '', ''],
-      ['Conservative Weight Loss Target', (document.getElementById('weight_loss_conservative').value || 'N/A') + ' kcal/day', '', ''],
-      ['Aggressive Weight Loss Target', (document.getElementById('weight_loss_aggressive').value || 'N/A') + ' kcal/day', '', ''],
-      ['Conservative Weight Gain Target', (document.getElementById('weight_gain_conservative').value || 'N/A') + ' kcal/day', '', ''],
-      ['Aggressive Weight Gain Target', (document.getElementById('weight_gain_aggressive').value || 'N/A') + ' kcal/day', '', ''],
-      ['Predicted Daily Burn', (document.getElementById('predicted_daily_calorie_burn').value || 'N/A') + ' kcal', '', ''],
-      ['Target Energy', document.getElementById('target_energy').textContent || 'N/A', '', ''],
-      ['Protein', document.getElementById('protein_value').textContent || 'N/A',
-       document.getElementById('protein_grams').textContent || 'N/A',
-       document.getElementById('protein_calories').textContent || 'N/A'],
-      ['Fat', document.getElementById('fat_percentage').textContent || 'N/A',
-       document.getElementById('fat_grams').textContent || 'N/A',
-       document.getElementById('fat_calories').textContent || 'N/A'],
-      ['Carbs', document.getElementById('carb_percentage').textContent || 'N/A',
-       document.getElementById('carb_grams').textContent || 'N/A',
-       document.getElementById('carb_calories').textContent || 'N/A'],
-      ['Fiber', document.getElementById('fiber_value').textContent || 'N/A',
-       document.getElementById('fiber_grams').textContent || 'N/A', ''],
-      ['Fluid Intake', document.getElementById('fluid_ml_per_kg').textContent || 'N/A',
-       document.getElementById('fluid_total').textContent || 'N/A', '']
-    ],
-    theme: 'grid',
-    styles: { fontSize: 9, cellPadding: 2 }, // Slightly smaller font for more data
-    headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
-     columnStyles: {
-         0: { cellWidth: 60 }, // Adjust column widths as needed
-         1: { cellWidth: 'auto' },
-         2: { cellWidth: 'auto' },
-         3: { cellWidth: 'auto' }
-     },
-     didDrawPage: function (data) {
-        // Footer
-        doc.setFontSize(8);
-        var pageCount = doc.internal.getNumberOfPages();
-        doc.text(`Page ${data.pageNumber} of ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-        doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, doc.internal.pageSize.width - data.settings.margin.right - 70, doc.internal.pageSize.height - 10);
-     }
-  });
-
-  // Add a new page for Physical Assessment if needed
-  const physicalAssessmentStartY = doc.autoTable.previous.finalY + 10; // Position after the first table
-   if (physicalAssessmentStartY > doc.internal.pageSize.height - 40) { // Check if space is tight
-       doc.addPage();
-        // If new page, add background again? (Optional, complex)
-        // Add header on new page? (Optional)
-        // doc.text('Physical Assessment Data', 15, 20); // Example header
-       // Reset start Y for the new page
-       // physicalAssessmentStartY = 30; // Or appropriate top margin
-   }
-
-
-   doc.setFontSize(14);
-   doc.setFont('helvetica', 'bold');
-   doc.text('Physical Assessment Data', 15, physicalAssessmentStartY);
-
-
-  // Add table for Physical Assessment Data
-   doc.autoTable({
-        startY: physicalAssessmentStartY + 5,
-        head: [['Measurement', 'Value']],
-        body: [
-            ['Grip Strength Left', (document.getElementById('grip_strength_left').value || 'N/A') + ' kg'],
-            ['Grip Strength Right', (document.getElementById('grip_strength_right').value || 'N/A') + ' kg'],
-            ['Grip Strength Avg', (document.getElementById('grip_strength_avg').value || 'N/A') + ' kg'],
-            ['10RM - Bench', (document.getElementById('bench_10rm').value || 'N/A') + ' lbs'],
-            ['10RM - Chop', (document.getElementById('chop_10rm').value || 'N/A') + ' lbs'],
-            ['10RM - Pulldown', (document.getElementById('pulldown_10rm').value || 'N/A') + ' lbs'],
-            ['10RM - DL', (document.getElementById('dl_10rm').value || 'N/A') + ' lbs'],
-            ['Upper Strength Score', (document.getElementById('upper_strength_score').value || 'N/A') + ' %ile'],
-            ['Lower Strength Score', (document.getElementById('lower_strength_score').value || 'N/A') + ' %ile'],
-            ['Core Strength Score', (document.getElementById('core_strength_score').value || 'N/A') + ' %ile'],
-            ['Total Strength Score', (document.getElementById('total_strength_score').value || 'N/A') + ' %ile'],
-            ['6 min Distance', (document.getElementById('six_min_distance').value || 'N/A') + ' miles'],
-            ['Cooper VO2 Max', (document.getElementById('cooper_vo2max').value || 'N/A') + ' ml/kg/min'],
-            ['Watts at Peak', (document.getElementById('watts_peak_workload').value || 'N/A') + ' watts'],
-            ['Ending HR', (document.getElementById('hr_bpm').value || 'N/A') + ' bpm'],
-            ['1-min Post HR', (document.getElementById('post_heart_rate').value || 'N/A') + ' bpm'],
-            ['Bike/Storer VO2 Max', (document.getElementById('storer_vo2max').value || 'N/A') + ' ml/kg/min'],
-            ['Unified VO2 Max', (loadFromDatabase('unified_vo2max') || 'N/A') + ' ml/kg/min']
-        ],
-        theme: 'grid',
-        styles: { fontSize: 9, cellPadding: 2 },
-        headStyles: { fillColor: [0, 59, 89], textColor: [255, 255, 255], fontStyle: 'bold' },
-        columnStyles: {
-            0: { cellWidth: 80 }, // Adjust column widths
-            1: { cellWidth: 'auto' }
-        },
-         didDrawPage: function (data) {
-            // Footer (repeated for multi-page)
-            doc.setFontSize(8);
-            var pageCount = doc.internal.getNumberOfPages();
-            doc.text(`Page ${data.pageNumber} of ${pageCount}`, data.settings.margin.left, doc.internal.pageSize.height - 10);
-            doc.text(`Generated by Fitomics Nutrition Calculator on ${new Date().toLocaleDateString()}`, doc.internal.pageSize.width - data.settings.margin.right - 70, doc.internal.pageSize.height - 10);
-        }
-    });
-
-
-  // Save the PDF
-  const safeFirstName = firstName.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'client';
-  const safeLastName = lastName.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'report';
-  const safeDate = examDateValue.replace(/-/g, '') || todayFormatted.replace(/-/g, ''); // Ensure todayFormatted is accessible or passed
-  const filename = `Fitomics_Discovery_${safeLastName}_${safeFirstName}_${safeDate}.pdf`;
-  doc.save(filename);
-}
-
 /**
  * Manually triggers calculation and saving, providing user feedback.
  */
-function manualSave() {
-    try { // Wrap in try...catch for better error handling
-        calculateValues(); // Calculate and save all values
-
-        // Create a feedback element or use an existing one
-        let feedbackElem = document.getElementById('save-feedback');
-        if (!feedbackElem) {
+async function manualSave() { // Make the function async
+    let feedbackElem = document.getElementById('save-feedback');
+    // Initialize or get feedback element (ensure it's created if it doesn't exist)
+     if (!feedbackElem) {
           feedbackElem = document.createElement('div');
           feedbackElem.id = 'save-feedback';
           feedbackElem.style.marginTop = '10px';
@@ -1124,48 +864,68 @@ function manualSave() {
           feedbackElem.style.borderRadius = '4px';
           feedbackElem.style.textAlign = 'center';
           feedbackElem.style.transition = 'opacity 0.5s ease-in-out';
-
-          // Insert after the buttons (Ensure the selector is correct)
-          const buttonContainer = document.querySelector('.text-center.mt-3'); // Check if this class exists on the button container
+          const buttonContainer = document.querySelector('.text-center.mt-3');
           if (buttonContainer) {
               buttonContainer.appendChild(feedbackElem);
           } else {
               console.error("Button container '.text-center.mt-3' not found for feedback message.");
-              // Optionally append somewhere else as a fallback
-              document.querySelector('form').appendChild(feedbackElem);
+              document.querySelector('form').appendChild(feedbackElem); // Fallback append
           }
-        }
+     }
+     feedbackElem.style.opacity = '0'; // Hide initially
 
-        // Show success message with current timestamp
-        const now = new Date();
-        const timeString = now.toLocaleTimeString();
-        feedbackElem.textContent = `✓ All data saved successfully at ${timeString}`;
-        feedbackElem.style.backgroundColor = '#d4edda'; // Bootstrap success background
-        feedbackElem.style.color = '#155724';          // Bootstrap success text
-        feedbackElem.style.border = '1px solid #c3e6cb'; // Bootstrap success border
+    try {
+        calculateValues(); // Calculate and save all values to localStorage first
+
+        // Show saving message
+        feedbackElem.textContent = `Saving data locally...`;
+        feedbackElem.style.backgroundColor = '#e2e3e5'; // Neutral background
+        feedbackElem.style.color = '#383d41';          // Neutral text
+        feedbackElem.style.border = '1px solid #d6d8db'; // Neutral border
         feedbackElem.style.opacity = '1';
 
-        // Auto-hide the message after 5 seconds
+
+        // Now attempt to sync with the server
+        console.log("Initiating server sync...");
+        const syncResult = await syncWithServer(); // Wait for sync to complete
+
+        // Update feedback based on sync result
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+
+        if (syncResult.success) {
+            feedbackElem.textContent = `✓ Local save & server sync successful at ${timeString}`;
+            feedbackElem.style.backgroundColor = '#d4edda'; // Success background
+            feedbackElem.style.color = '#155724';          // Success text
+            feedbackElem.style.border = '1px solid #c3e6cb'; // Success border
+        } else {
+            feedbackElem.textContent = `⚠ Local save OK, but server sync failed: ${syncResult.message}. Check console. (${timeString})`;
+            feedbackElem.style.backgroundColor = '#fff3cd'; // Warning background
+            feedbackElem.style.color = '#856404';          // Warning text
+            feedbackElem.style.border = '1px solid #ffeeba'; // Warning border
+        }
+         feedbackElem.style.opacity = '1'; // Ensure it's visible
+
+
+        // Auto-hide the message after 5 seconds (or longer for warning)
         setTimeout(() => {
-          if (feedbackElem) { // Check if element still exists
+          if (feedbackElem) {
               feedbackElem.style.opacity = '0';
           }
-        }, 5000);
+        }, syncResult.success ? 5000 : 8000); // Longer timeout for warning
 
     } catch (error) {
         console.error("Error during manualSave:", error);
-        // Optionally display an error message to the user
-        let feedbackElem = document.getElementById('save-feedback');
+        // Display a general error message
          if (feedbackElem) {
-            feedbackElem.textContent = `✗ Error saving data. Check console.`;
-            feedbackElem.style.backgroundColor = '#f8d7da'; // Bootstrap danger background
-            feedbackElem.style.color = '#721c24';          // Bootstrap danger text
-            feedbackElem.style.border = '1px solid #f5c6cb'; // Bootstrap danger border
+            feedbackElem.textContent = `✗ Error during save process. Check console.`;
+            feedbackElem.style.backgroundColor = '#f8d7da'; // Danger background
+            feedbackElem.style.color = '#721c24';          // Danger text
+            feedbackElem.style.border = '1px solid #f5c6cb'; // Danger border
             feedbackElem.style.opacity = '1';
-            // Auto-hide error message too?
              setTimeout(() => {
                 if (feedbackElem) { feedbackElem.style.opacity = '0'; }
-             }, 7000); // Keep error visible slightly longer
+             }, 7000);
          }
     }
 } // <-- Add closing brace for the function
@@ -1257,3 +1017,56 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     });
 });
+async function syncWithServer() {
+    const dataToSync = {};
+    allStorageKeys.forEach(key => {
+        // *** Add this condition to skip the nutritionDb key ***
+        if (key === 'nutritionDb') {
+            return; // Skip this key
+        }
+        // ******************************************************
+
+        const value = localStorage.getItem(key);
+        // Only include keys that have a non-null value in localStorage
+        if (value !== null) {
+            dataToSync[key] = value;
+        }
+    });
+
+    // Ensure essential client identification keys are present, even if empty
+    if (!dataToSync.hasOwnProperty('first_name')) dataToSync.first_name = '';
+    if (!dataToSync.hasOwnProperty('last_name')) dataToSync.last_name = '';
+    if (!dataToSync.hasOwnProperty('exam_date')) dataToSync.exam_date = '';
+
+
+    if (Object.keys(dataToSync).length === 0) {
+        console.log("No data in localStorage to sync.");
+        return { success: true, message: "No data to sync." }; // Nothing to do
+    }
+
+    console.log("Attempting to sync data:", dataToSync); // Log data being sent
+
+    try {
+        const response = await fetch('/api/sync', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(dataToSync),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            console.error('Sync failed:', result.message || `HTTP error! status: ${response.status}`);
+            return { success: false, message: result.message || `Server error (${response.status})` };
+        }
+
+        console.log('Sync successful:', result);
+        return { success: true, message: 'Data synced with server.', result: result };
+
+    } catch (error) {
+        console.error('Error sending data to server:', error);
+        return { success: false, message: `Network error: ${error.message}` };
+    }
+}
