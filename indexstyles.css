@@ -1,0 +1,170 @@
+/* Center content and add spacing */
+  .container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 1rem;
+  }
+
+  h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+
+  h5 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+
+  /* Form "card" style */
+  form {
+    background-color: #fff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: box-shadow 0.3s ease;
+  }
+  form:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+
+  /* Grid Layout for Form Fields */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  /* Label and input group styling */
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  .form-group.full-width {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+
+  input[type="number"],
+  input[type="text"],
+  input[type="date"],
+  select {
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: 'Glacial Indifference', sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  input[type="number"]:focus,
+  input[type="text"]:focus,
+  input[type="date"]:focus,
+  select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 5px rgba(255, 204, 128, 0.5);
+    outline: none;
+  }
+
+  /* Modern Table Styling */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+  th, td {
+    border: 1px solid var(--border-color);
+    padding: 0.75rem;
+    text-align: left;
+  }
+  th {
+    background-color: var(--secondary-bg);
+  }
+
+  h2 {
+    margin-top: 1.5rem;
+    color: var(--accent-color);
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 0.5rem;
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+
+  /* Also apply to Bootstrap modal elements */
+  .modal-title, .modal-body {
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+  
+  /* Button styling */
+  .btn {
+    font-family: 'Glacial Indifference', sans-serif;
+  }
+
+  #save-feedback {
+    font-family: 'Glacial Indifference', sans-serif;
+    font-weight: 500;
+    margin-top: 12px;
+    transition: opacity 0.5s ease;
+  }
+
+  /* Add some spacing between buttons for better UX */
+  .btn + .btn {
+    margin-left: 8px;
+  }
+  
+  /* Navigation button styles */
+  .nav-button-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+  }
+
+  /* Button styling for Save/Clear buttons */
+  .btn-success {
+    background-color: #8cd98c; /* Light green */
+    border-color: #5cb85c;
+  }
+
+  .btn-success:hover {
+    background-color: #5cb85c; /* Darker green on hover */
+    border-color: #4cae4c;
+  }
+
+  .btn-danger {
+    background-color: #ff9999; /* Light red */
+    border-color: #d9534f;
+  }
+
+  .btn-danger:hover {
+    background-color: #d9534f; /* Darker red on hover */
+    border-color: #d43f3a;
+  }
+
+  /* Make the confirmation dialog more visible - optional enhancement */
+  .btn-danger:active {
+    transform: scale(0.98); /* Slight scale down effect when clicked */
+  }
+
+  /* Make the nav-button use proper background color */
+  .nav-button {
+    padding: 10px 20px;
+    background-color: var(--secondary-color); /* Using the gold color from base.css */
+    color: var(--white);
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+  }
+
+  .nav-button:hover {
+    background-color: #a98451; /* Darker gold on hover */
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }

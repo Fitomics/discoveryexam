@@ -1070,3 +1070,100 @@ async function syncWithServer() {
         return { success: false, message: `Network error: ${error.message}` };
     }
 }
+
+// Add this function to clear all manually entered data
+function clearAllData() {
+  if (confirm('Are you sure you want to clear all manually entered data? This cannot be undone.')) {
+    // Clear all input fields that are not readonly
+    document.querySelectorAll('input:not([readonly]), select').forEach(input => {
+      // Skip the buttons
+      if (input.type !== 'button' && input.type !== 'submit') {
+        // For select elements, reset to their first option
+        if (input.tagName === 'SELECT') {
+          // For gender, reset to 'male'
+          if (input.id === 'gender') {
+            input.value = 'male';
+          }
+          // For goal, reset to maintenance '1'
+          else if (input.id === 'goal') {
+            input.value = '1';
+          }
+          // For activity, reset to least active
+          else if (input.id === 'activity') {
+            input.value = '1.1';
+          }
+          // For protein, reset to 1.2
+          else if (input.id === 'protein') {
+            input.value = '1.2';
+          }
+          // For fat, reset to 30%
+          else if (input.id === 'fat') {
+            input.value = '0.3';
+          }
+          // Any other selects would reset to first option by default
+        } else {
+          // For date field, set to today
+          if (input.type === 'date' && input.id === 'exam_date') {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            input.value = `${yyyy}-${mm}-${dd}`;
+          } else {
+            // For all other input fields, clear them
+            input.value = '';
+          }
+        }
+      }
+    });
+    
+    // Clear all calculated fields
+    document.querySelectorAll('input[readonly]').forEach(input => {
+      input.value = '';
+      input.classList.remove('calc-available');
+      input.classList.add('calc-unavailable');
+    });
+    
+    // Clear all table cells with calculated values
+    document.querySelectorAll('[id^="target_energy"], [id^="protein_"], [id^="fat_"], [id^="carb_"], [id^="fiber_"], [id^="fluid_"]').forEach(cell => {
+      if (cell.tagName === 'TD') {
+        cell.textContent = '';
+        cell.classList.remove('calc-available');
+        cell.classList.add('calc-unavailable');
+      }
+    });
+    
+    // Re-run calculations to update any dependent fields
+    calculateValues();
+
+    // Show feedback
+    let feedbackElem = document.getElementById('save-feedback');
+    if (!feedbackElem) {
+      feedbackElem = document.createElement('div');
+      feedbackElem.id = 'save-feedback';
+      feedbackElem.style.marginTop = '10px';
+      feedbackElem.style.padding = '8px 15px';
+      feedbackElem.style.borderRadius = '4px';
+      feedbackElem.style.textAlign = 'center';
+      feedbackElem.style.transition = 'opacity 0.5s ease-in-out';
+      const buttonContainer = document.querySelector('.text-center.mt-3');
+      if (buttonContainer) {
+        buttonContainer.appendChild(feedbackElem);
+      } else {
+        document.querySelector('form').appendChild(feedbackElem);
+      }
+    }
+    
+    feedbackElem.textContent = 'All data has been cleared.';
+    feedbackElem.style.backgroundColor = '#cce5ff'; // Info blue background
+    feedbackElem.style.color = '#004085';          // Info blue text
+    feedbackElem.style.border = '1px solid #b8daff'; // Info blue border
+    feedbackElem.style.opacity = '1';
+    
+    setTimeout(() => {
+      if (feedbackElem) {
+        feedbackElem.style.opacity = '0';
+      }
+    }, 5000);
+  }
+}
