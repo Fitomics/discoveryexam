@@ -467,11 +467,3 @@
     justify-self: end; /* Align to the end (right) of the grid cell */
     display: inline-block;
   }
-
-/* Remove potentially conflicting styles 
-  .page .title-text:contains("Functional Strength Scores") + .graph-container div:not(.chart-container),
-  .page:has(.title-text:contains("Functional Strength Scores")) .graph-container div:not(.chart-container) {
-     width: 400px;
-    margin: 0 auto 10px auto;
-    text-align: right; 
-  }*/
