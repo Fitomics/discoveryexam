@@ -489,7 +489,7 @@
           doc.save(pdfName);
         });
 
-      // Updated function to calculate heart rate zones based on max HR only
+      // Updated function to calculate heart rate zones with distinct boundaries
       function calculateHRZones() {
         const maxHR = parseFloat(document.getElementById("max-hr").value);
 
@@ -503,24 +503,48 @@
 
         // Calculate zone boundaries using the percentages
         // Zone 1: 50-59%
-        document.getElementById("z1-lower-hr").value = Math.round(maxHR * 0.5);
-        document.getElementById("z1-upper-hr").value = Math.round(maxHR * 0.59);
+        const z1Lower = Math.round(maxHR * 0.5);
+        const z1Upper = Math.round(maxHR * 0.599);
 
         // Zone 2: 60-69%
-        document.getElementById("z2-lower-hr").value = Math.round(maxHR * 0.6);
-        document.getElementById("z2-upper-hr").value = Math.round(maxHR * 0.69);
+        const z2Lower = z1Upper + 1; // Ensure no overlap
+        const z2Upper = Math.round(maxHR * 0.699);
 
         // Zone 3: 70-79%
-        document.getElementById("z3-lower-hr").value = Math.round(maxHR * 0.7);
-        document.getElementById("z3-upper-hr").value = Math.round(maxHR * 0.79);
+        const z3Lower = z2Upper + 1; // Ensure no overlap
+        const z3Upper = Math.round(maxHR * 0.799);
 
         // Zone 4: 80-89%
-        document.getElementById("z4-lower-hr").value = Math.round(maxHR * 0.8);
-        document.getElementById("z4-upper-hr").value = Math.round(maxHR * 0.89);
+        const z4Lower = z3Upper + 1; // Ensure no overlap
+        const z4Upper = Math.round(maxHR * 0.899);
 
         // Zone 5: 90-100%
-        document.getElementById("z5-lower-hr").value = Math.round(maxHR * 0.9);
-        document.getElementById("z5-upper-hr").value = Math.round(maxHR);
+        const z5Lower = z4Upper + 1; // Ensure no overlap
+        const z5Upper = Math.round(maxHR);
+
+        // Assign values to form fields
+        document.getElementById("z1-lower-hr").value = z1Lower;
+        document.getElementById("z1-upper-hr").value = z1Upper;
+
+        document.getElementById("z2-lower-hr").value = z2Lower;
+        document.getElementById("z2-upper-hr").value = z2Upper;
+
+        document.getElementById("z3-lower-hr").value = z3Lower;
+        document.getElementById("z3-upper-hr").value = z3Upper;
+
+        document.getElementById("z4-lower-hr").value = z4Lower;
+        document.getElementById("z4-upper-hr").value = z4Upper;
+
+        document.getElementById("z5-lower-hr").value = z5Lower;
+        document.getElementById("z5-upper-hr").value = z5Upper;
+
+        console.log("Zone boundaries calculated:", {
+          "Zone 1": `${z1Lower}-${z1Upper}`,
+          "Zone 2": `${z2Lower}-${z2Upper}`,
+          "Zone 3": `${z3Lower}-${z3Upper}`,
+          "Zone 4": `${z4Lower}-${z4Upper}`,
+          "Zone 5": `${z5Lower}-${z5Upper}`,
+        });
       }
 
       // Improved event listeners for max-hr input

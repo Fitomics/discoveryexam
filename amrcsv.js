@@ -341,6 +341,76 @@ class AMRCsvHandler {
   }
 
   /**
+   * Find the maximum fat oxidation value and its corresponding HR
+   */
+  findFatMax() {
+    if (!this.csvData || this.csvData.length < 2) {
+      console.warn("Not enough CSV data to find fat max");
+      return;
+    }
+
+    const headerRow = this.csvData[0];
+
+    // Find column indices for Fat-g/min and HR
+    const fatGMinIndex = this.findColumnIndex(headerRow, ["fat-g/min"]);
+    const hrIndex = this.findColumnIndex(headerRow, ["hr", "heart", "bpm"]);
+
+    if (fatGMinIndex === -1 || hrIndex === -1) {
+      console.warn("Could not find required columns for fat max calculation");
+      return;
+    }
+
+    console.log("Finding Fat Max using columns:", {
+      "Fat-g/min": fatGMinIndex,
+      HR: hrIndex,
+    });
+
+    // Find maximum fat oxidation value and corresponding HR
+    let maxFatGMin = 0;
+    let correspondingHR = 0;
+
+    // Skip header row
+    for (let i = 1; i < this.csvData.length; i++) {
+      const row = this.csvData[i];
+
+      // Make sure row has enough cells
+      if (row.length <= Math.max(fatGMinIndex, hrIndex)) {
+        continue;
+      }
+
+      const fatValue = parseFloat(row[fatGMinIndex]);
+      const hrValue = parseFloat(row[hrIndex]);
+
+      if (isNaN(fatValue) || isNaN(hrValue)) {
+        continue;
+      }
+
+      // Update max if this value is greater
+      if (fatValue > maxFatGMin) {
+        maxFatGMin = fatValue;
+        correspondingHR = hrValue;
+      }
+    }
+
+    console.log("Found Fat Max:", {
+      "Max Fat-g/min": maxFatGMin,
+      "HR at Max Fat": correspondingHR,
+    });
+
+    // Populate form fields
+    const fatMaxGramsField = document.getElementById("fat-max-grams");
+    const fatMaxHrField = document.getElementById("fat-max-hr");
+
+    if (fatMaxGramsField && maxFatGMin > 0) {
+      fatMaxGramsField.value = maxFatGMin.toFixed(2);
+    }
+
+    if (fatMaxHrField && correspondingHR > 0) {
+      fatMaxHrField.value = Math.round(correspondingHR);
+    }
+  }
+
+  /**
    * Preview the first 10 rows of CSV data and analysis tables
    * @param {Array} data - The CSV data as 2D array
    */
@@ -439,6 +509,9 @@ class AMRCsvHandler {
 
     // Add computed columns
     this.addComputedColumns();
+
+    // Find and populate Fat Max values
+    this.findFatMax();
 
     // Calculate and populate heart rate zone metrics
     this.populateHeartRateZones();
