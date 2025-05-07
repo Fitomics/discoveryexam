@@ -467,3 +467,115 @@
     justify-self: end; /* Align to the end (right) of the grid cell */
     display: inline-block;
   }
+
+/* --- Metabolic Data Styles --- */
+#metabolic-data-section {
+  margin-top: 30px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+
+/* Match data-group with your existing container styles */
+.data-group {
+  margin-bottom: 25px;
+  background-color: #f9f9f9;
+  padding: 15px;
+  border-radius: 5px;
+  /* Integrate with existing styles */
+  box-shadow: 0 2px 5px var(--shadow-color); 
+}
+
+/* Input group styling consistent with form elements in base.css */
+.input-group {
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.input-group label {
+  min-width: 200px;
+  margin-right: 10px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.input-group input {
+  padding: 5px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  width: 100px;
+}
+
+/* Zone container styling */
+.zone-container {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+}
+
+.zone-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+.zone-inputs .input-group {
+  width: 45%;
+  min-width: 250px;
+}
+
+/* Use the button styling from base.css but add action-button class for specific buttons */
+button.action-button {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+button.action-button:hover {
+  background-color: #a98451;
+}
+
+/* Metabolic Summary Report styles */
+#metabolic-summary {
+  margin-top: 30px;
+}
+
+.report-section {
+  margin-bottom: 20px;
+}
+
+/* Zone table styling that matches other tables */
+.zone-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.zone-table th, .zone-table td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: center;
+}
+
+.zone-table th {
+  background-color: var(--secondary-light);
+  font-weight: bold;
+}
+
+.zone-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* Download PDF button styling to match other buttons */
+#download-pdf {
+  margin-top: 20px;
+  margin-bottom: 40px;
+}

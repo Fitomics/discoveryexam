@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Discovery Exam PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap"
+      rel="stylesheet"
+    />
+    <link href="base.css" rel="stylesheet" />
+    <link href="reportstyles.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  </head>
+  <body>
+    <div id="container">
+      <div id="header">
+        <h1>VO2 Max Report</h1>
+      </div>
+      <div id="content">
+        <!-- Personal Information Section -->
+        <div class="personal-info">
+          <h3>Personal Information</h3>
+          <div class="input-group">
+            <label for="test-date">Test Date:</label>
+            <input type="date" id="test-date" name="test-date">
+          </div>
+          <div class="input-group">
+            <label for="first-name">First Name:</label>
+            <input type="text" id="first-name" name="first-name" placeholder="First name">
+          </div>
+          <div class="input-group">
+            <label for="last-name">Last Name:</label>
+            <input type="text" id="last-name" name="last-name" placeholder="Last name">
+          </div>
+          <div class="input-group">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" placeholder="Age (years)" min="0" />
+          </div>
+        </div>
+
+        <!-- Metabolic Data Section -->
+        <div id="metabolic-data-section">
+          <h3>Exercise Metabolic Data</h3>
+
+          <!-- Basic VO2 Max Data -->
+          <div class="data-group">
+            <h4>VO2 Max Measurements</h4>
+            <div class="input-group">
+              <label for="vo2-mets">VO2 Max (METs):</label>
+              <input type="number" id="vo2-mets" step="0.1" min="0" />
+            </div>
+            <div class="input-group">
+              <label for="vo2-ml">VO2 Max (ml/kg/min):</label>
+              <input type="number" id="vo2-ml" step="0.1" min="0" />
+            </div>
+            <div class="input-group">
+              <label for="max-hr">Max HR:</label>
+              <input type="number" id="max-hr" step="0.1" min="0" />
+            </div>
+            <div class="input-group">
+                <label for="min-hr">Min HR:</label>
+                <input type="number" id="min-hr" step="0.1" min="0" />
+              </div>
+          </div>
+
+          <!-- Fat Max Data -->
+          <div class="data-group">
+            <h4>Fat Max</h4>
+            <div class="input-group">
+              <label for="fat-max-grams">Maximum fat oxidation (g/min):</label>
+              <input type="number" id="fat-max-grams" step="0.01" min="0" />
+            </div>
+            <div class="input-group">
+              <label for="fat-max-hr"
+                >Heart rate at max fat oxidation (bpm):</label
+              >
+              <input type="number" id="fat-max-hr" step="1" min="0" />
+            </div>
+          </div>
+
+          <!-- Heart Rate Zones -->
+          <div class="data-group">
+            <h4>Heart Rate Training Zones</h4>
+
+            <!-- Zone 1 -->
+            <div class="zone-container">
+              <h5>Zone 1 (50-59% HRmax)</h5>
+              <div class="zone-inputs">
+                <div class="input-group">
+                  <label for="z1-lower-hr">Lower HR (bpm):</label>
+                  <input type="number" id="z1-lower-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z1-upper-hr">Upper HR (bpm):</label>
+                  <input type="number" id="z1-upper-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z1-cho">% CHO:</label>
+                  <input type="number" id="z1-cho" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z1-fat">% FAT:</label>
+                  <input type="number" id="z1-fat" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z1-cal">Cal/min:</label>
+                  <input type="number" id="z1-cal" step="0.1" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Zone 2 -->
+            <div class="zone-container">
+              <h5>Zone 2 (60-69% HRmax)</h5>
+              <div class="zone-inputs">
+                <div class="input-group">
+                  <label for="z2-lower-hr">Lower HR (bpm):</label>
+                  <input type="number" id="z2-lower-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z2-upper-hr">Upper HR (bpm):</label>
+                  <input type="number" id="z2-upper-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z2-cho">% CHO:</label>
+                  <input type="number" id="z2-cho" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z2-fat">% FAT:</label>
+                  <input type="number" id="z2-fat" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z2-cal">Cal/min:</label>
+                  <input type="number" id="z2-cal" step="0.1" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Zone 3 -->
+            <div class="zone-container">
+              <h5>Zone 3 (70-79% HRmax)</h5>
+              <div class="zone-inputs">
+                <div class="input-group">
+                  <label for="z3-lower-hr">Lower HR (bpm):</label>
+                  <input type="number" id="z3-lower-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z3-upper-hr">Upper HR (bpm):</label>
+                  <input type="number" id="z3-upper-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z3-cho">% CHO:</label>
+                  <input type="number" id="z3-cho" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z3-fat">% FAT:</label>
+                  <input type="number" id="z3-fat" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z3-cal">Cal/min:</label>
+                  <input type="number" id="z3-cal" step="0.1" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Zone 4 -->
+            <div class="zone-container">
+              <h5>Zone 4 (80-89% HRmax)</h5>
+              <div class="zone-inputs">
+                <div class="input-group">
+                  <label for="z4-lower-hr">Lower HR (bpm):</label>
+                  <input type="number" id="z4-lower-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z4-upper-hr">Upper HR (bpm):</label>
+                  <input type="number" id="z4-upper-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z4-cho">% CHO:</label>
+                  <input type="number" id="z4-cho" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z4-fat">% FAT:</label>
+                  <input type="number" id="z4-fat" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z4-cal">Cal/min:</label>
+                  <input type="number" id="z4-cal" step="0.1" min="0" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Zone 5 -->
+            <div class="zone-container">
+              <h5>Zone 5 (90-100% HRmax)</h5>
+              <div class="zone-inputs">
+                <div class="input-group">
+                  <label for="z5-lower-hr">Lower HR (bpm):</label>
+                  <input type="number" id="z5-lower-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z5-upper-hr">Upper HR (bpm):</label>
+                  <input type="number" id="z5-upper-hr" step="1" min="0" />
+                </div>
+                <div class="input-group">
+                  <label for="z5-cho">% CHO:</label>
+                  <input type="number" id="z5-cho" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z5-fat">% FAT:</label>
+                  <input type="number" id="z5-fat" step="1" min="0" max="100" />
+                </div>
+                <div class="input-group">
+                  <label for="z5-cal">Cal/min:</label>
+                  <input type="number" id="z5-cal" step="0.1" min="0" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Save Button -->
+          <button id="save-metabolic-data" class="action-button">
+            Save Data
+          </button>
+
+          <!-- Summary Report Section -->
+          <div class="data-group" id="metabolic-summary">
+            <h4>Metabolic Summary Report</h4>
+            <div id="metabolic-report">
+              <!-- This will be populated with the report data -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Button to trigger PDF generation -->
+    <button id="download-pdf">Download PDF</button>
+
+    <!-- Hidden div for PDF generation -->
+    <div id="pdf-content" style="display: none"></div>
+
+    <script>
+      // Function to update table with personal information
+      function updatePersonalInfo() {
+        const testDate = document.getElementById('test-date').value;
+        const firstName = document.getElementById('first-name').value;
+        const lastName = document.getElementById('last-name').value;
+        
+        // Clear existing table data
+        const tableBody = document.querySelector('#vo2-data-table tbody');
+        tableBody.innerHTML = '';
+        
+        // Create new row with the entered data
+        if (testDate || firstName || lastName) {
+          const row = document.createElement('tr');
+          
+          const dateCell = document.createElement('td');
+          dateCell.textContent = testDate ? new Date(testDate).toLocaleDateString() : '';
+          row.appendChild(dateCell);
+          
+          const firstNameCell = document.createElement('td');
+          firstNameCell.textContent = firstName || '';
+          row.appendChild(firstNameCell);
+          
+          const lastNameCell = document.createElement('td');
+          lastNameCell.textContent = lastName || '';
+          row.appendChild(lastNameCell);
+          
+          tableBody.appendChild(row);
+        }
+      }
+      
+      // Add event listeners to personal info inputs
+      document.getElementById('test-date').addEventListener('change', updatePersonalInfo);
+      document.getElementById('first-name').addEventListener('input', updatePersonalInfo);
+      document.getElementById('last-name').addEventListener('input', updatePersonalInfo);
+
+      // Function to generate PDF
+      document
+        .getElementById("download-pdf")
+        .addEventListener("click", function () {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Add title
+          doc.setFontSize(22);
+          doc.text("Discovery Exam", 20, 20);
+          doc.text("VO2 Max Report", 20, 30);
+
+          // Add personal information
+          doc.setFontSize(14);
+          doc.text("Personal Information:", 20, 45);
+          doc.setFontSize(12);
+          
+          const testDate = document.getElementById('test-date').value 
+                          ? new Date(document.getElementById('test-date').value).toLocaleDateString() 
+                          : 'Not specified';
+          const firstName = document.getElementById('first-name').value || 'Not specified';
+          const lastName = document.getElementById('last-name').value || 'Not specified';
+          
+          doc.text(`Test Date: ${testDate}`, 30, 55);
+          doc.text(`Name: ${firstName} ${lastName}`, 30, 65);
+
+          // Add chart image
+          const canvas = document.getElementById("vo2-chart");
+          const imgData = canvas.toDataURL("image/png");
+          doc.addImage(imgData, "PNG", 15, 75, 180, 100);
+
+          // Add data table
+          doc.setFontSize(12);
+          doc.text("VO2 Max Data", 20, 185);
+          
+          // Modify the table to include personal info
+          const tableColumn = [
+            "Test Date",
+            "Name",
+            "VO2 Max (ml/kg/min)",
+            "Heart Rate (bpm)",
+          ];
+          
+          const tableRows = [
+            [
+              testDate, 
+              `${firstName} ${lastName}`, 
+              document.getElementById("vo2-ml").value || 'N/A', 
+              document.getElementById("max-hr").value || 'N/A'
+            ]
+          ];
+
+          doc.autoTable(tableColumn, tableRows, { startY: 195 });
+
+          // Add metabolic data to PDF
+          const metabolicData = collectMetabolicData();
+          if (metabolicData) {
+            doc.addPage();
+            doc.setFontSize(18);
+            doc.text("Exercise Metabolic Data", 20, 20);
+
+            // Basic VO2 Max data
+            doc.setFontSize(14);
+            doc.text("VO2 Max Measurements:", 20, 35);
+            doc.setFontSize(12);
+            doc.text(`VO2 Max (METs): ${metabolicData.vo2Mets}`, 30, 45);
+            doc.text(`VO2 Max (ml/kg/min): ${metabolicData.vo2Ml}`, 30, 55);
+
+            // Fat Max data
+            doc.setFontSize(14);
+            doc.text("Fat Max:", 20, 70);
+            doc.setFontSize(12);
+            doc.text(
+              `Maximum fat oxidation (g/min): ${metabolicData.fatMaxGrams}`,
+              30,
+              80
+            );
+            doc.text(
+              `Heart rate at max fat oxidation (bpm): ${metabolicData.fatMaxHr}`,
+              30,
+              90
+            );
+
+            // Zone data
+            doc.setFontSize(14);
+            doc.text("Heart Rate Zones:", 20, 105);
+
+            let yPosition = 115;
+            const zones = [
+              "Zone 1 (50-59%)",
+              "Zone 2 (60-69%)",
+              "Zone 3 (70-79%)",
+              "Zone 4 (80-89%)",
+              "Zone 5 (90-100%)",
+            ];
+
+            for (let i = 1; i <= 5; i++) {
+              doc.setFontSize(12);
+              doc.text(`${zones[i - 1]}:`, 30, yPosition);
+
+              yPosition += 10;
+              doc.setFontSize(10);
+              doc.text(
+                `HR: ${metabolicData["z" + i + "LowerHr"]}-${
+                  metabolicData["z" + i + "UpperHr"]
+                } bpm`,
+                40,
+                yPosition
+              );
+
+              yPosition += 7;
+              doc.text(
+                `CHO: ${metabolicData["z" + i + "Cho"]}%`,
+                40,
+                yPosition
+              );
+
+              yPosition += 7;
+              doc.text(
+                `FAT: ${metabolicData["z" + i + "Fat"]}%`,
+                40,
+                yPosition
+              );
+
+              yPosition += 7;
+              doc.text(
+                `Cal/min: ${metabolicData["z" + i + "Cal"]}`,
+                40,
+                yPosition
+              );
+
+              yPosition += 10;
+            }
+          }
+
+          // Save the PDF with the person's name if available
+          const pdfName = firstName && lastName 
+            ? `VO2_Max_Report_${lastName}_${firstName}.pdf` 
+            : "VO2_Max_Report.pdf";
+          doc.save(pdfName);
+        });
+
+      // Updated function to calculate heart rate zones based on max HR only
+      function calculateHRZones() {
+        const maxHR = parseFloat(document.getElementById("max-hr").value);
+        
+        // Only calculate if we have valid input
+        if (isNaN(maxHR) || maxHR <= 0) {
+          console.log("Invalid Max HR value");
+          return;
+        }
+        
+        console.log("Calculating HR zones based on Max HR:", maxHR);
+        
+        // Calculate zone boundaries using the percentages
+        // Zone 1: 50-59%
+        document.getElementById("z1-lower-hr").value = Math.round(maxHR * 0.50);
+        document.getElementById("z1-upper-hr").value = Math.round(maxHR * 0.59);
+        
+        // Zone 2: 60-69%
+        document.getElementById("z2-lower-hr").value = Math.round(maxHR * 0.60);
+        document.getElementById("z2-upper-hr").value = Math.round(maxHR * 0.69);
+        
+        // Zone 3: 70-79%
+        document.getElementById("z3-lower-hr").value = Math.round(maxHR * 0.70);
+        document.getElementById("z3-upper-hr").value = Math.round(maxHR * 0.79);
+        
+        // Zone 4: 80-89%
+        document.getElementById("z4-lower-hr").value = Math.round(maxHR * 0.80);
+        document.getElementById("z4-upper-hr").value = Math.round(maxHR * 0.89);
+        
+        // Zone 5: 90-100%
+        document.getElementById("z5-lower-hr").value = Math.round(maxHR * 0.90);
+        document.getElementById("z5-upper-hr").value = Math.round(maxHR);
+      }
+
+      // Improved event listeners for max-hr input
+      document.getElementById("max-hr").addEventListener("input", calculateHRZones);
+      document.getElementById("max-hr").addEventListener("change", calculateHRZones);
+      
+      // Remove the min-hr event listener since we're only using max HR for calculations
+      // document.getElementById("min-hr").addEventListener("change", calculateHRZones);
+      
+      // Add a button to recalculate zones manually
+      const recalcButton = document.createElement("button");
+      recalcButton.textContent = "Calculate HR Zones";
+      recalcButton.classList.add("action-button");
+      recalcButton.id = "calculate-zones";
+      recalcButton.addEventListener("click", function() {
+        calculateHRZones();
+        alert("Heart rate zones have been calculated!");
+      });
+      
+      // Insert the recalculate button after the heart rate inputs
+      const hrGroup = document.querySelector(".data-group:first-child");
+      hrGroup.appendChild(recalcButton);
+      
+      // Add an explanation text about the automatic calculation
+      const explainText = document.createElement("p");
+      explainText.innerHTML = "Enter Max HR value to automatically calculate training zones. <br>You can adjust the calculated values if needed.";
+      explainText.style.fontSize = "0.9em";
+      explainText.style.fontStyle = "italic";
+      explainText.style.color = "#666";
+      explainText.style.marginTop = "10px";
+      hrGroup.appendChild(explainText);
+      
+      // Call calculateHRZones once on page load if max HR is already set
+      window.addEventListener("load", function() {
+        const maxHR = document.getElementById("max-hr").value;
+        if (maxHR) {
+          calculateHRZones();
+        }
+      });
+      
+      // Function to collect all metabolic data from inputs
+      function collectMetabolicData() {
+        const data = {};
+        
+        // Add personal information
+        data.testDate = document.getElementById("test-date").value;
+        data.firstName = document.getElementById("first-name").value;
+        data.lastName = document.getElementById("last-name").value;
+
+        // Get basic VO2 values
+        data.vo2Mets = document.getElementById("vo2-mets").value;
+        data.vo2Ml = document.getElementById("vo2-ml").value;
+
+        // Get Fat Max values
+        data.fatMaxGrams = document.getElementById("fat-max-grams").value;
+        data.fatMaxHr = document.getElementById("fat-max-hr").value;
+
+        // Get zone values for each zone
+        for (let i = 1; i <= 5; i++) {
+          data[`z${i}LowerHr`] = document.getElementById(
+            `z${i}-lower-hr`
+          ).value;
+          data[`z${i}UpperHr`] = document.getElementById(
+            `z${i}-upper-hr`
+          ).value;
+          data[`z${i}Cho`] = document.getElementById(`z${i}-cho`).value;
+          data[`z${i}Fat`] = document.getElementById(`z${i}-fat`).value;
+          data[`z${i}Cal`] = document.getElementById(`z${i}-cal`).value;
+        }
+
+        return data;
+      }
+
+      // Function to generate and display metabolic report
+      function generateMetabolicReport() {
+        const data = collectMetabolicData();
+        if (!data) return;
+
+        const reportDiv = document.getElementById("metabolic-report");
+
+        // Create report HTML
+        let reportHTML = `
+        <div class="report-section">
+          <h5>VO2 Max</h5>
+          <p><strong>METs:</strong> ${data.vo2Mets} | <strong>ml/kg/min:</strong> ${data.vo2Ml}</p>
+        </div>
+        
+        <div class="report-section">
+          <h5>Fat Max</h5>
+          <p><strong>Max Fat Oxidation:</strong> ${data.fatMaxGrams} g/min at ${data.fatMaxHr} bpm</p>
+        </div>
+        
+        <div class="report-section">
+          <h5>Heart Rate Zones</h5>
+          <table class="zone-table">
+            <thead>
+              <tr>
+                <th>Zone</th>
+                <th>Heart Rate (bpm)</th>
+                <th>CHO %</th>
+                <th>FAT %</th>
+                <th>Cal/min</th>
+              </tr>
+            </thead>
+            <tbody>`;
+
+        // Add each zone to the table
+        for (let i = 1; i <= 5; i++) {
+          reportHTML += `
+              <tr>
+                <td>Zone ${i}</td>
+                <td>${data[`z${i}LowerHr`]}-${data[`z${i}UpperHr`]}</td>
+                <td>${data[`z${i}Cho`]}%</td>
+                <td>${data[`z${i}Fat`]}%</td>
+                <td>${data[`z${i}Cal`]}</td>
+              </tr>`;
+        }
+
+        reportHTML += `
+            </tbody>
+          </table>
+        </div>`;
+
+        reportDiv.innerHTML = reportHTML;
+      }
+
+      // Add event listener for save button
+      document
+        .getElementById("save-metabolic-data")
+        .addEventListener("click", function () {
+          generateMetabolicReport();
+          // You can add code to save the data to a database or local storage here
+          alert("Metabolic data saved and report updated!");
+        });
+    </script>
+  </body>
+</html>
