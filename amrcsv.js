@@ -440,6 +440,9 @@ class AMRCsvHandler {
     // Add computed columns
     this.addComputedColumns();
 
+    // Calculate and populate heart rate zone metrics
+    this.populateHeartRateZones();
+
     // Generate analysis tables
     this.generateAnalysisTables();
 
@@ -454,11 +457,154 @@ class AMRCsvHandler {
     }
 
     this.showStatus(
-      `Row #2 removed and computed columns added. ${this.csvData.length} rows remaining.`
+      `Row #2 removed, computed columns added, and zone metrics calculated. ${this.csvData.length} rows remaining.`
     );
 
     // Preview the modified data
     this.previewCSV(this.csvData);
+  }
+
+  /**
+   * Calculate and populate heart rate zone metrics from CSV data
+   */
+  populateHeartRateZones() {
+    if (!this.csvData || this.csvData.length < 2) {
+      console.warn("Not enough CSV data to calculate heart rate zone metrics");
+      return;
+    }
+
+    const headerRow = this.csvData[0];
+
+    // Find column indices for HR, CHO and FAT
+    const hrIndex = this.findColumnIndex(headerRow, ["hr", "heart", "bpm"]);
+    const choIndex = this.findColumnIndex(headerRow, ["cho", "carb"]);
+    const fatIndex = this.findColumnIndex(headerRow, ["fat", "fat%"]);
+    const calIndex = this.findColumnIndex(headerRow, [
+      "cal",
+      "kcal",
+      "calories",
+    ]);
+
+    console.log("Found column indices for zone calculations:", {
+      hrIndex,
+      choIndex,
+      fatIndex,
+      calIndex,
+    });
+
+    if (hrIndex === -1 || choIndex === -1 || fatIndex === -1) {
+      console.warn(
+        "Could not find required columns for heart rate zone calculations"
+      );
+      return;
+    }
+
+    // Get HR zone boundaries from inputs
+    const zones = [];
+    for (let i = 1; i <= 5; i++) {
+      const lowerHrInput = document.getElementById(`z${i}-lower-hr`);
+      const upperHrInput = document.getElementById(`z${i}-upper-hr`);
+
+      if (
+        !lowerHrInput ||
+        !upperHrInput ||
+        !lowerHrInput.value ||
+        !upperHrInput.value
+      ) {
+        console.warn(`Missing HR boundary values for zone ${i}`);
+        continue;
+      }
+
+      zones.push({
+        zone: i,
+        lowerHr: parseInt(lowerHrInput.value),
+        upperHr: parseInt(upperHrInput.value),
+        choValues: [],
+        fatValues: [],
+        calValues: [],
+      });
+    }
+
+    // Skip header row (index 0), process data rows
+    for (let i = 1; i < this.csvData.length; i++) {
+      const row = this.csvData[i];
+
+      if (row.length <= Math.max(hrIndex, choIndex, fatIndex)) {
+        continue; // Skip rows that don't have enough columns
+      }
+
+      const hr = parseFloat(row[hrIndex]);
+      const cho = parseFloat(row[choIndex]);
+      const fat = parseFloat(row[fatIndex]);
+      const cal = calIndex !== -1 ? parseFloat(row[calIndex]) : null;
+
+      if (isNaN(hr) || isNaN(cho) || isNaN(fat)) {
+        continue; // Skip rows with invalid values
+      }
+
+      // Find which zone this HR belongs to
+      for (const zone of zones) {
+        if (hr >= zone.lowerHr && hr <= zone.upperHr) {
+          zone.choValues.push(cho);
+          zone.fatValues.push(fat);
+          if (cal !== null && !isNaN(cal)) {
+            zone.calValues.push(cal);
+          }
+          break; // HR can only be in one zone
+        }
+      }
+    }
+
+    // Calculate averages and update form fields
+    zones.forEach((zone) => {
+      const choAvg = this.calculateAverage(zone.choValues);
+      const fatAvg = this.calculateAverage(zone.fatValues);
+      const calAvg = this.calculateAverage(zone.calValues);
+
+      const choField = document.getElementById(`z${zone.zone}-cho`);
+      const fatField = document.getElementById(`z${zone.zone}-fat`);
+      const calField = document.getElementById(`z${zone.zone}-cal`);
+
+      if (choField && !isNaN(choAvg)) {
+        choField.value = Math.round(choAvg);
+      }
+
+      if (fatField && !isNaN(fatAvg)) {
+        fatField.value = Math.round(fatAvg);
+      }
+
+      if (calField && !isNaN(calAvg)) {
+        calField.value = calAvg.toFixed(1);
+      }
+
+      console.log(`Zone ${zone.zone} calculated values:`, {
+        HR: `${zone.lowerHr}-${zone.upperHr}`,
+        CHO: Math.round(choAvg),
+        FAT: Math.round(fatAvg),
+        CAL: calAvg.toFixed(1),
+        dataPoints: zone.choValues.length,
+      });
+    });
+  }
+
+  /**
+   * Calculate average of an array of numbers
+   * @param {Array} values - Array of numbers
+   * @returns {number} The average or NaN if no valid values
+   */
+  calculateAverage(values) {
+    if (!values || values.length === 0) {
+      return NaN;
+    }
+
+    // Filter out any NaN values
+    const validValues = values.filter((val) => !isNaN(val));
+
+    if (validValues.length === 0) {
+      return NaN;
+    }
+
+    return validValues.reduce((sum, val) => sum + val, 0) / validValues.length;
   }
 
   /**
