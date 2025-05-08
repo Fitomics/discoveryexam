@@ -1,348 +1,527 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Fitomics Discovery Exam Report</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-  <script src="./index.js"></script>
-  <link href="base.css" rel="stylesheet">
-  <link href="indexstyles.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
-</head>
-<body>
-  <div class="container">
-    <!-- Navigation button at the top -->
-    <div class="nav-button-container">
-      <a href="reportgpttest.html" class="nav-button">View Report Design</a>
+  <head>
+    <title>Fitomics Discovery Exam Report</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="./index.js"></script>
+    <link href="base.css" rel="stylesheet" />
+    <link href="indexstyles.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Navigation button at the top -->
+      <div class="nav-button-container">
+        <a href="reportgpttest.html" class="nav-button">View Report Design</a>
+      </div>
+
+      <h1>Fitomics Discovery Exam Report</h1>
+      <h5>
+        Please enter data into the blue shaded fields. Red fields will populate
+        with calculated values
+      </h5>
+      <form>
+        <div class="form-group full-width">
+          <h2>Demographics and Vitals</h2>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="first_name">First Name:</label>
+            <input type="text" id="first_name" name="first_name" />
+          </div>
+          <div class="form-group">
+            <label for="last_name">Last Name:</label>
+            <input type="text" id="last_name" name="last_name" />
+          </div>
+          <div class="form-group">
+            <label for="exam_date">Date:</label>
+            <input type="date" id="exam_date" name="exam_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="age">Enter Age (Years):</label>
+            <input type="number" id="age" name="age" />
+          </div>
+          <div class="form-group">
+            <label for="gender">Select Gender:</label>
+            <select id="gender" name="gender">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="height">Enter Height (Inches):</label>
+            <input type="number" id="height" name="height" />
+          </div>
+          <div class="form-group">
+            <label for="weight">Enter Weight (Pounds):</label>
+            <input type="number" id="weight" name="weight" />
+          </div>
+          <div class="form-group">
+            <label for="bodyfat">
+              Enter Body Fat %:
+              <a
+                href="#"
+                data-bs-toggle="modal"
+                data-bs-target="#bodyFatExamplesModal"
+                >examples</a
+              >
+            </label>
+            <input type="number" id="bodyfat" name="bodyfat" />
+          </div>
+          <div class="form-group">
+            <label for="sbp_mmhg">SBP (mmHg):</label>
+            <input type="number" id="sbp_mmhg" name="sbp_mmhg" />
+          </div>
+          <div class="form-group">
+            <label for="dbp_mmhg">DBP (mmHg):</label>
+            <input type="number" id="dbp_mmhg" name="dbp_mmhg" />
+          </div>
+          <div class="form-group">
+            <label for="resting_hr">Resting Heart Rate (bpm):</label>
+            <input type="number" id="resting_hr" name="resting_hr" />
+          </div>
+          <div class="form-group">
+            <label for="goal"
+              >Goals: Fat Loss, Muscle Gain, or Maintenance:</label
+            >
+            <select id="goal" name="goal">
+              <option value="0.8">Aggressive Fat Loss</option>
+              <option value="0.9">Moderate Fat Loss</option>
+              <option value="1" selected>Maintenance</option>
+              <option value="1.1">Moderate Muscle Gain</option>
+              <option value="1.2">Aggressive Muscle Gain</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="fat_mass">Fat Mass (lbs):</label>
+            <input type="number" id="fat_mass" name="fat_mass" readonly />
+          </div>
+          <div class="form-group">
+            <label for="fat_free_mass">Fat-Free Mass (lbs):</label>
+            <input
+              type="number"
+              id="fat_free_mass"
+              name="fat_free_mass"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="fat_mass_index">Fat Mass Index (kg/m²):</label>
+            <input
+              type="number"
+              id="fat_mass_index"
+              name="fat_mass_index"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="fat_free_mass_index"
+              >Fat-Free Mass Index (kg/m²):</label
+            >
+            <input
+              type="number"
+              id="fat_free_mass_index"
+              name="fat_free_mass_index"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="bmi">Body Mass Index (kg/m²):</label>
+            <input type="number" id="bmi" name="bmi" readonly />
+          </div>
+
+          <div class="form-group full-width">
+            <h2>Activity Levels</h2>
+          </div>
+          <div class="form-group">
+            <label for="activity">Activity Level:</label>
+            <select id="activity" name="activity">
+              <option value="1.1">Little Activity (0-5000 steps)</option>
+              <option value="1.2">Lightly Active (5,000-10,000 steps)</option>
+              <option value="1.4">Active (10,000-15,000 steps)</option>
+              <option value="1.6">Very Active (>15,000 steps)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="workout_calories"
+              >Enter Average Calories Expended During a Workout:</label
+            >
+            <input
+              type="number"
+              id="workout_calories"
+              name="workout_calories"
+            />
+          </div>
+          <div class="form-group">
+            <label for="workouts_per_week"
+              >Enter Average Workouts Per Week:</label
+            >
+            <input
+              type="number"
+              id="workouts_per_week"
+              name="workouts_per_week"
+            />
+          </div>
+          <div class="form-group">
+            <label for="predicted_daily_calorie_burn"
+              >Predicted Daily Calorie Burn (kcal):</label
+            >
+            <input
+              type="number"
+              id="predicted_daily_calorie_burn"
+              name="predicted_daily_calorie_burn"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
+            <input type="text" id="rmr" readonly />
+          </div>
+          <div class="form-group">
+            <label for="measured_rmr">Measured Resting Metabolic Rate:</label>
+            <input type="number" id="measured_rmr" name="measured_rmr" />
+          </div>
+          <div class="form-group">
+            <label for="fat_calories_percent">% Calories from Fat:</label>
+            <input
+              type="number"
+              id="fat_calories_percent"
+              name="fat_calories_percent"
+            />
+          </div>
+          <div class="form-group">
+            <label for="carb_calories_percent"
+              >% Calories from Carbohydrate:</label
+            >
+            <input
+              type="number"
+              id="carb_calories_percent"
+              name="carb_calories_percent"
+            />
+          </div>
+          <div class="form-group">
+            <label for="weight_loss_conservative"
+              >Conservative Weight Loss Target (kcal/day):</label
+            >
+            <input
+              type="number"
+              id="weight_loss_conservative"
+              name="weight_loss_conservative"
+            />
+          </div>
+          <div class="form-group">
+            <label for="weight_loss_aggressive"
+              >Aggressive Weight Loss Target (kcal/day):</label
+            >
+            <input
+              type="number"
+              id="weight_loss_aggressive"
+              name="weight_loss_aggressive"
+            />
+          </div>
+          <div class="form-group">
+            <label for="weight_gain_conservative"
+              >Conservative Weight Gain Target (kcal/day):</label
+            >
+            <input
+              type="number"
+              id="weight_gain_conservative"
+              name="weight_gain_conservative"
+            />
+          </div>
+          <div class="form-group">
+            <label for="weight_gain_aggressive"
+              >Aggressive Weight Gain Target (kcal/day):</label
+            >
+            <input
+              type="number"
+              id="weight_gain_aggressive"
+              name="weight_gain_aggressive"
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <h2>Strength Measurements</h2>
+          </div>
+          <div class="form-group">
+            <label for="grip_strength_left">Grip Strength Left (kg):</label>
+            <input
+              type="number"
+              id="grip_strength_left"
+              name="grip_strength_left"
+            />
+          </div>
+          <div class="form-group">
+            <label for="grip_strength_right">Grip Strength Right (kg):</label>
+            <input
+              type="number"
+              id="grip_strength_right"
+              name="grip_strength_right"
+            />
+          </div>
+          <div class="form-group">
+            <label for="grip_strength_avg">Average Grip Strength (kg):</label>
+            <input
+              type="number"
+              id="grip_strength_avg"
+              name="grip_strength_avg"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="bench_10rm">10RM - Bench:</label>
+            <input type="number" id="bench_10rm" name="bench_10rm" />
+          </div>
+          <div class="form-group">
+            <label for="chop_10rm">10RM - Chop:</label>
+            <input type="number" id="chop_10rm" name="chop_10rm" />
+          </div>
+          <div class="form-group">
+            <label for="pulldown_10rm">10RM - Pulldown:</label>
+            <input type="number" id="pulldown_10rm" name="pulldown_10rm" />
+          </div>
+          <div class="form-group">
+            <label for="dl_10rm">10RM - DL:</label>
+            <input type="number" id="dl_10rm" name="dl_10rm" />
+          </div>
+          <div class="form-group">
+            <label for="upper_strength_score"
+              >Upper Strength Score (Percentile Rank):</label
+            >
+            <input
+              type="number"
+              id="upper_strength_score"
+              name="upper_strength_score"
+            />
+          </div>
+          <div class="form-group">
+            <label for="lower_strength_score"
+              >Lower Strength Score (Percentile Rank):</label
+            >
+            <input
+              type="number"
+              id="lower_strength_score"
+              name="lower_strength_score"
+            />
+          </div>
+          <div class="form-group">
+            <label for="core_strength_score"
+              >Core Strength Score (Percentile Rank):</label
+            >
+            <input
+              type="number"
+              id="core_strength_score"
+              name="core_strength_score"
+            />
+          </div>
+          <div class="form-group">
+            <label for="total_strength_score"
+              >Total Strength Score (Percentile Rank):</label
+            >
+            <input
+              type="number"
+              id="total_strength_score"
+              name="total_strength_score"
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <h2>Cardiovascular Measurements</h2>
+            <p>Please chose either Cooper or Storer, but not both</p>
+          </div>
+          <div class="form-group">
+            <label for="six_min_distance">6 min Distance (Miles):</label>
+            <input
+              type="number"
+              id="six_min_distance"
+              name="six_min_distance"
+            />
+          </div>
+          <div class="form-group">
+            <label for="cooper_vo2max">Cooper VO2 Max (ml/kg/min):</label>
+            <input
+              type="number"
+              id="cooper_vo2max"
+              name="cooper_vo2max"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="watts_peak_workload"
+              >Watts at Peak Workload (Storer, 1990):</label
+            >
+            <input
+              type="number"
+              id="watts_peak_workload"
+              name="watts_peak_workload"
+            />
+          </div>
+          <div class="form-group">
+            <label for="hr_bpm">Ending Heart Rate (bpm):</label>
+            <input type="number" id="hr_bpm" name="hr_bpm" />
+          </div>
+          <div class="form-group">
+            <label for="post_heart_rate">1-minute Post Heart Rate (bpm):</label>
+            <input type="number" id="post_heart_rate" name="post_heart_rate" />
+          </div>
+          <div class="form-group">
+            <label for="storer_vo2max">Bike/Storer VO2 Max (ml/kg/min):</label>
+            <input
+              type="number"
+              id="storer_vo2max"
+              name="storer_vo2max"
+              readonly
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <h2>Results:</h2>
+          </div>
+          <div class="form-group">
+            <label for="protein">Protein (grams/kilogram of FFM):</label>
+            <select id="protein" name="protein">
+              <option value="0.8">0.8</option>
+              <option value="1.0">1.0</option>
+              <option value="1.2" selected>1.2</option>
+              <option value="1.4">1.4</option>
+              <option value="1.6">1.6</option>
+              <option value="1.8">1.8</option>
+              <option value="2.0">2.0</option>
+              <option value="2.2">2.2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="fat">Fat (Percent of Calories):</label>
+            <select id="fat" name="fat">
+              <option value="0.2">20%</option>
+              <option value="0.25">25%</option>
+              <option value="0.3" selected>30%</option>
+              <option value="0.35">35%</option>
+              <option value="0.4">40%</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <table id="resultsTable">
+              <tr>
+                <th>Nutrient</th>
+                <th>Value</th>
+                <th>Calculated Amount</th>
+                <th>Calculated Calories</th>
+              </tr>
+              <tr>
+                <td>Target Energy Range (kcal)</td>
+                <td colspan="3" id="target_energy"></td>
+              </tr>
+              <tr>
+                <td>Protein</td>
+                <td id="protein_value"></td>
+                <td id="protein_grams"></td>
+                <td id="protein_calories"></td>
+              </tr>
+              <tr>
+                <td>Fat</td>
+                <td id="fat_percentage"></td>
+                <td id="fat_grams"></td>
+                <td id="fat_calories"></td>
+              </tr>
+              <tr>
+                <td>Carbs</td>
+                <td id="carb_percentage"></td>
+                <td id="carb_grams"></td>
+                <td id="carb_calories"></td>
+              </tr>
+              <tr>
+                <td>Fiber</td>
+                <td id="fiber_value"></td>
+                <td id="fiber_grams"></td>
+                <td></td>
+              </tr>
+              <tr>
+                <td>Fluid Intake</td>
+                <td id="fluid_ml_per_kg"></td>
+                <td id="fluid_total"></td>
+                <td></td>
+              </tr>
+            </table>
+            <div class="text-center mt-3">
+              <button
+                type="button"
+                onclick="manualSave()"
+                class="btn btn-success ms-2"
+              >
+                Calculate Metrics and Save All Data
+              </button>
+              <button
+                type="button"
+                onclick="clearAllData()"
+                class="btn btn-danger"
+              >
+                Clear All Data
+              </button>
+              <button
+                type="button"
+                onclick="viewReport()"
+                class="btn btn-primary"
+              >
+                View Report
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <!-- Navigation button at the bottom -->
+      <div class="nav-button-container">
+        <a href="reportgpttest.html" class="nav-button">View Report Design</a>
+      </div>
     </div>
-    
-    <h1>Fitomics Discovery Exam Report</h1>
-    <h5>Please enter data into the blue shaded fields. Red fields will populate with calculated values</h5>
-    <form>
-      <div class="form-group full-width">
-        <h2>Demographics and Vitals</h2>
-      </div>      
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="first_name">First Name:</label>
-          <input type="text" id="first_name" name="first_name">
-        </div>
-        <div class="form-group">
-          <label for="last_name">Last Name:</label>
-          <input type="text" id="last_name" name="last_name">
-        </div>
-        <div class="form-group">
-          <label for="exam_date">Date:</label>
-          <input type="date" id="exam_date" name="exam_date">
-        </div>
 
-        <div class="form-group">
-          <label for="age">Enter Age (Years):</label>
-          <input type="number" id="age" name="age">
-        </div>
-        <div class="form-group">
-          <label for="gender">Select Gender:</label>
-          <select id="gender" name="gender">
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="height">Enter Height (Inches):</label>
-          <input type="number" id="height" name="height">
-        </div>
-        <div class="form-group">
-          <label for="weight">Enter Weight (Pounds):</label>
-          <input type="number" id="weight" name="weight">
-        </div>
-        <div class="form-group">
-          <label for="bodyfat">
-            Enter Body Fat %:
-            <a href="#" data-bs-toggle="modal" data-bs-target="#bodyFatExamplesModal">examples</a>
-          </label>
-          <input type="number" id="bodyfat" name="bodyfat">
-        </div>
-        <div class="form-group">
-          <label for="sbp_mmhg">SBP (mmHg):</label>
-          <input type="number" id="sbp_mmhg" name="sbp_mmhg">
-        </div>
-        <div class="form-group">
-          <label for="dbp_mmhg">DBP (mmHg):</label>
-          <input type="number" id="dbp_mmhg" name="dbp_mmhg">
-        </div>
-        <div class="form-group">
-          <label for="resting_hr">Resting Heart Rate (bpm):</label>
-          <input type="number" id="resting_hr" name="resting_hr">
-        </div>
-        <div class="form-group">
-          <label for="goal">Goals: Fat Loss, Muscle Gain, or Maintenance:</label>
-          <select id="goal" name="goal">
-            <option value="0.8">Aggressive Fat Loss</option>
-            <option value="0.9">Moderate Fat Loss</option>
-            <option value="1" selected>Maintenance</option>
-            <option value="1.1">Moderate Muscle Gain</option>
-            <option value="1.2">Aggressive Muscle Gain</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="fat_mass">Fat Mass (lbs):</label>
-          <input type="number" id="fat_mass" name="fat_mass" readonly>
-        </div>
-        <div class="form-group">
-          <label for="fat_free_mass">Fat-Free Mass (lbs):</label>
-          <input type="number" id="fat_free_mass" name="fat_free_mass" readonly>
-        </div>
-        <div class="form-group">
-          <label for="fat_mass_index">Fat Mass Index (kg/m²):</label>
-          <input type="number" id="fat_mass_index" name="fat_mass_index" readonly>
-        </div>
-        <div class="form-group">
-          <label for="fat_free_mass_index">Fat-Free Mass Index (kg/m²):</label>
-          <input type="number" id="fat_free_mass_index" name="fat_free_mass_index" readonly>
-        </div>
-        <div class="form-group">
-          <label for="bmi">Body Mass Index (kg/m²):</label>
-          <input type="number" id="bmi" name="bmi" readonly>
-        </div>
-
-        <div class="form-group full-width">
-          <h2>Activity Levels</h2>
-        </div>
-        <div class="form-group">
-          <label for="activity">Activity Level:</label>
-          <select id="activity" name="activity">
-            <option value="1.1">Little Activity (0-5000 steps)</option>
-            <option value="1.2">Lightly Active (5,000-10,000 steps)</option>
-            <option value="1.4">Active (10,000-15,000 steps)</option>
-            <option value="1.6">Very Active (>15,000 steps)</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="workout_calories">Enter Average Calories Expended During a Workout:</label>
-          <input type="number" id="workout_calories" name="workout_calories">
-        </div>
-        <div class="form-group">
-          <label for="workouts_per_week">Enter Average Workouts Per Week:</label>
-          <input type="number" id="workouts_per_week" name="workouts_per_week">
-        </div>
-        <div class="form-group">
-          <label for="predicted_daily_calorie_burn">Predicted Daily Calorie Burn (kcal):</label>
-          <input type="number" id="predicted_daily_calorie_burn" name="predicted_daily_calorie_burn" readonly>
-        </div>
-        <div class="form-group">
-          <label for="rmr">Estimated Resting Metabolic Rate (RMR):</label>
-          <input type="text" id="rmr" readonly>
-        </div>
-        <div class="form-group">
-          <label for="measured_rmr">Measured Resting Metabolic Rate:</label>
-          <input type="number" id="measured_rmr" name="measured_rmr">
-        </div>
-        <div class="form-group">
-          <label for="fat_calories_percent">% Calories from Fat:</label>
-          <input type="number" id="fat_calories_percent" name="fat_calories_percent">
-        </div>
-        <div class="form-group">
-          <label for="carb_calories_percent">% Calories from Carbohydrate:</label>
-          <input type="number" id="carb_calories_percent" name="carb_calories_percent">
-        </div>
-        <div class="form-group">
-          <label for="weight_loss_conservative">Conservative Weight Loss Target (kcal/day):</label>
-          <input type="number" id="weight_loss_conservative" name="weight_loss_conservative">
-        </div>
-        <div class="form-group">
-          <label for="weight_loss_aggressive">Aggressive Weight Loss Target (kcal/day):</label>
-          <input type="number" id="weight_loss_aggressive" name="weight_loss_aggressive">
-        </div>
-        <div class="form-group">
-          <label for="weight_gain_conservative">Conservative Weight Gain Target (kcal/day):</label>
-          <input type="number" id="weight_gain_conservative" name="weight_gain_conservative">
-        </div>
-        <div class="form-group">
-          <label for="weight_gain_aggressive">Aggressive Weight Gain Target (kcal/day):</label>
-          <input type="number" id="weight_gain_aggressive" name="weight_gain_aggressive">
-        </div>
-
-        <div class="form-group full-width">
-          <h2>Strength Measurements</h2>
-        </div>
-        <div class="form-group">
-          <label for="grip_strength_left">Grip Strength Left (kg):</label>
-          <input type="number" id="grip_strength_left" name="grip_strength_left">
-        </div>
-        <div class="form-group">
-          <label for="grip_strength_right">Grip Strength Right (kg):</label>
-          <input type="number" id="grip_strength_right" name="grip_strength_right">
-        </div>
-        <div class="form-group">
-          <label for="grip_strength_avg">Average Grip Strength (kg):</label>
-          <input type="number" id="grip_strength_avg" name="grip_strength_avg" readonly>
-        </div>
-        <div class="form-group">
-          <label for="bench_10rm">10RM - Bench:</label>
-          <input type="number" id="bench_10rm" name="bench_10rm">
-        </div>
-        <div class="form-group">
-          <label for="chop_10rm">10RM - Chop:</label>
-          <input type="number" id="chop_10rm" name="chop_10rm">
-        </div>
-        <div class="form-group">
-          <label for="pulldown_10rm">10RM - Pulldown:</label>
-          <input type="number" id="pulldown_10rm" name="pulldown_10rm">
-        </div>
-        <div class="form-group">
-          <label for="dl_10rm">10RM - DL:</label>
-          <input type="number" id="dl_10rm" name="dl_10rm">
-        </div>
-        <div class="form-group">
-          <label for="upper_strength_score">Upper Strength Score (Percentile Rank):</label>
-          <input type="number" id="upper_strength_score" name="upper_strength_score">
-        </div>
-        <div class="form-group">
-          <label for="lower_strength_score">Lower Strength Score (Percentile Rank):</label>
-          <input type="number" id="lower_strength_score" name="lower_strength_score">
-        </div>
-        <div class="form-group">
-          <label for="core_strength_score">Core Strength Score (Percentile Rank):</label>
-          <input type="number" id="core_strength_score" name="core_strength_score">
-        </div>
-        <div class="form-group">
-          <label for="total_strength_score">Total Strength Score (Percentile Rank):</label>
-          <input type="number" id="total_strength_score" name="total_strength_score">
-        </div>
-
-        <div class="form-group full-width">
-          <h2>Cardiovascular Measurements</h2><p>Please chose either Cooper or Storer, but not both</p>
-        </div>
-        <div class="form-group">
-          <label for="six_min_distance">6 min Distance (Miles):</label>
-          <input type="number" id="six_min_distance" name="six_min_distance">
-        </div>
-        <div class="form-group">
-          <label for="cooper_vo2max">Cooper VO2 Max (ml/kg/min):</label>
-          <input type="number" id="cooper_vo2max" name="cooper_vo2max" readonly>
-        </div>
-        <div class="form-group">
-          <label for="watts_peak_workload">Watts at Peak Workload (Storer, 1990):</label>
-          <input type="number" id="watts_peak_workload" name="watts_peak_workload">
-        </div>
-        <div class="form-group">
-          <label for="hr_bpm">Ending Heart Rate (bpm):</label>
-          <input type="number" id="hr_bpm" name="hr_bpm">
-        </div>
-        <div class="form-group">
-          <label for="post_heart_rate">1-minute Post Heart Rate (bpm):</label>
-          <input type="number" id="post_heart_rate" name="post_heart_rate">
-        </div>
-        <div class="form-group">
-          <label for="storer_vo2max">Bike/Storer VO2 Max (ml/kg/min):</label>
-          <input type="number" id="storer_vo2max" name="storer_vo2max" readonly>
-        </div>
-
-        <div class="form-group full-width">
-          <h2>Results:</h2>
-        </div>
-        <div class="form-group">
-          <label for="protein">Protein (grams/kilogram of FFM):</label>
-          <select id="protein" name="protein">
-            <option value="0.8">0.8</option>
-            <option value="1.0">1.0</option>
-            <option value="1.2" selected>1.2</option>
-            <option value="1.4">1.4</option>
-            <option value="1.6">1.6</option>
-            <option value="1.8">1.8</option>
-            <option value="2.0">2.0</option>
-            <option value="2.2">2.2</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="fat">Fat (Percent of Calories):</label>
-          <select id="fat" name="fat">
-            <option value="0.2">20%</option>
-            <option value="0.25">25%</option>
-            <option value="0.3" selected>30%</option>
-            <option value="0.35">35%</option>
-            <option value="0.4">40%</option>
-          </select>
-        </div>
-        <div class="form-group full-width">
-          <table id="resultsTable">
-            <tr>
-              <th>Nutrient</th>
-              <th>Value</th>
-              <th>Calculated Amount</th>
-              <th>Calculated Calories</th>
-            </tr>
-            <tr>
-              <td>Target Energy Range (kcal)</td>
-              <td colspan="3" id="target_energy"></td>
-            </tr>
-            <tr>
-              <td>Protein</td>
-              <td id="protein_value"></td>
-              <td id="protein_grams"></td>
-              <td id="protein_calories"></td>
-            </tr>
-            <tr>
-              <td>Fat</td>
-              <td id="fat_percentage"></td>
-              <td id="fat_grams"></td>
-              <td id="fat_calories"></td>
-            </tr>
-            <tr>
-              <td>Carbs</td>
-              <td id="carb_percentage"></td>
-              <td id="carb_grams"></td>
-              <td id="carb_calories"></td>
-            </tr>
-            <tr>
-              <td>Fiber</td>
-              <td id="fiber_value"></td>
-              <td id="fiber_grams"></td>
-              <td></td>
-            </tr>
-            <tr>
-              <td>Fluid Intake</td>
-              <td id="fluid_ml_per_kg"></td>
-              <td id="fluid_total"></td>
-              <td></td>
-            </tr>
-          </table>
-          <div class="text-center mt-3">
-            <button type="button" onclick="clearAllData()" class="btn btn-danger me-2">
-              Clear All Data
-            </button>
-            <button type="button" onclick="manualSave()" class="btn btn-success ms-2">
-              Save All Data
+    <div
+      class="modal fade"
+      id="bodyFatExamplesModal"
+      tabindex="-1"
+      aria-labelledby="bodyFatExamplesModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="bodyFatExamplesModalLabel">
+              Body Fat Percentage Examples
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <img
+              src="https://miro.medium.com/v2/resize:fit:688/1*WrEPOwKEPmpwfS5zMdbKmQ.jpeg"
+              alt="Body Fat Percentage Examples"
+              class="img-fluid"
+            />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
             </button>
           </div>
         </div>
       </div>
-    </form>
-    
-    <!-- Navigation button at the bottom -->
-    <div class="nav-button-container">
-      <a href="reportgpttest.html" class="nav-button">View Report Design</a>
     </div>
-  </div>
-
-  <div class="modal fade" id="bodyFatExamplesModal" tabindex="-1" aria-labelledby="bodyFatExamplesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="bodyFatExamplesModalLabel">Body Fat Percentage Examples</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <img src="https://miro.medium.com/v2/resize:fit:688/1*WrEPOwKEPmpwfS5zMdbKmQ.jpeg" alt="Body Fat Percentage Examples" class="img-fluid">
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</body>
+  </body>
 </html>

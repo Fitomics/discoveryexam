@@ -5,6 +5,8 @@
     <title>Discovery Exam PDF</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
     <link
       href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap"
       rel="stylesheet"
@@ -13,6 +15,8 @@
     <link href="reportstyles.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script src="vo2data.js"></script>
+    <script src="vo2chart.js"></script>
     <script src="amrcsv.js"></script>
   </head>
   <body>
@@ -55,6 +59,13 @@
               placeholder="Age (years)"
               min="0"
             />
+          </div>
+          <div class="input-group">
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender">
+              <option value="MALE">Male</option>
+              <option value="FEMALE">Female</option>
+            </select>
           </div>
           <!-- New weight fields -->
           <div class="input-group">
@@ -267,6 +278,13 @@
           <button id="save-metabolic-data" class="action-button">
             Save Data
           </button>
+          <button
+            id="show-amr-vo2-report"
+            class="action-button"
+            style="margin-left: 10px"
+          >
+            Show VO₂ Max Report
+          </button>
 
           <!-- Summary Report Section -->
           <div class="data-group" id="metabolic-summary">
@@ -292,6 +310,60 @@
       </div>
     </div>
 
+    <!-- New VO₂ Max Report Section -->
+    <div
+      id="amrVo2MaxReportPage"
+      class="page"
+      style="
+        display: none;
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      "
+    >
+      <div class="title-text">VO₂ Max Report (from AMR Data)</div>
+      <div class="graph-container">
+        <div class="chart-container" style="height: 300px; margin-bottom: 20px">
+          <canvas id="amrVo2CategoryChart"></canvas>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <tr>
+              <td>Estimated VO₂ Max (ml/kg/min)</td>
+              <td>
+                <input
+                  class="value-field"
+                  id="amrTableVo2Value"
+                  readonly
+                /><span class="unit-label"></span>
+              </td>
+            </tr>
+            <tr>
+              <td>Estimated VO₂ Max (METS)</td>
+              <td>
+                <input class="value-field" id="amrTableVo2Mets" readonly /><span
+                  class="unit-label"
+                ></span>
+              </td>
+            </tr>
+            <tr>
+              <td>Percentile</td>
+              <td>
+                <input
+                  class="value-field"
+                  id="amrTableVo2Percentile"
+                  readonly
+                /><span class="unit-label"></span>
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+    <!-- End of New VO₂ Max Report Section -->
+
     <!-- Button to trigger PDF generation -->
     <button id="download-pdf">Download PDF</button>
 
@@ -307,27 +379,24 @@
 
         // Clear existing table data
         const tableBody = document.querySelector("#vo2-data-table tbody");
-        tableBody.innerHTML = "";
+        if (tableBody) {
+          tableBody.innerHTML = "";
 
-        // Create new row with the entered data
-        if (testDate || firstName || lastName) {
-          const row = document.createElement("tr");
-
-          const dateCell = document.createElement("td");
-          dateCell.textContent = testDate
-            ? new Date(testDate).toLocaleDateString()
-            : "";
-          row.appendChild(dateCell);
-
-          const firstNameCell = document.createElement("td");
-          firstNameCell.textContent = firstName || "";
-          row.appendChild(firstNameCell);
-
-          const lastNameCell = document.createElement("td");
-          lastNameCell.textContent = lastName || "";
-          row.appendChild(lastNameCell);
-
-          tableBody.appendChild(row);
+          if (testDate || firstName || lastName) {
+            const row = document.createElement("tr");
+            const dateCell = document.createElement("td");
+            dateCell.textContent = testDate
+              ? new Date(testDate).toLocaleDateString()
+              : "";
+            row.appendChild(dateCell);
+            const firstNameCell = document.createElement("td");
+            firstNameCell.textContent = firstName || "";
+            row.appendChild(firstNameCell);
+            const lastNameCell = document.createElement("td");
+            lastNameCell.textContent = lastName || "";
+            row.appendChild(lastNameCell);
+            tableBody.appendChild(row);
+          }
         }
       }
 
@@ -342,199 +411,334 @@
         .getElementById("last-name")
         .addEventListener("input", updatePersonalInfo);
 
+      // Helper function to get HR zone percentages
+      function getZonePercentage(zoneNumber) {
+        const percentages = ["50-59", "60-69", "70-79", "80-89", "90-100"];
+        return percentages[zoneNumber - 1] || "";
+      }
+
       // Function to generate PDF
       document
         .getElementById("download-pdf")
-        .addEventListener("click", function () {
+        .addEventListener("click", async function () {
+          // Added async for potential future use, not strictly needed now
           const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
+          const doc = new jsPDF({ unit: "pt", format: "letter" }); // Using points for easier sizing
 
-          // Add title
-          doc.setFontSize(22);
-          doc.text("Discovery Exam", 20, 20);
-          doc.text("VO2 Max Report", 20, 30);
+          // --- Page 1: Title Page ---
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(24);
+          doc.text("Discovery Exam", doc.internal.pageSize.getWidth() / 2, 60, {
+            align: "center",
+          });
+          doc.setFontSize(20);
+          doc.text("VO₂ Max Report", doc.internal.pageSize.getWidth() / 2, 90, {
+            align: "center",
+          });
 
-          // Add personal information
-          doc.setFontSize(14);
-          doc.text("Personal Information:", 20, 45);
+          doc.setFont("helvetica", "normal");
           doc.setFontSize(12);
-
-          const testDate = document.getElementById("test-date").value
-            ? new Date(
-                document.getElementById("test-date").value
-              ).toLocaleDateString()
+          const testDateInput = document.getElementById("test-date").value;
+          const formattedTestDate = testDateInput
+            ? new Date(testDateInput + "T00:00:00").toLocaleDateString() // Ensure local date interpretation
             : "Not specified";
           const firstName =
-            document.getElementById("first-name").value || "Not specified";
-          const lastName =
-            document.getElementById("last-name").value || "Not specified";
+            document.getElementById("first-name").value || "N/A";
+          const lastName = document.getElementById("last-name").value || "N/A";
+          const clientName =
+            firstName === "N/A" && lastName === "N/A"
+              ? "N/A"
+              : `${firstName} ${lastName}`;
 
-          doc.text(`Test Date: ${testDate}`, 30, 55);
-          doc.text(`Name: ${firstName} ${lastName}`, 30, 65);
+          doc.text(`Client Name: ${clientName}`, 40, 150);
+          doc.text(`Exam Date: ${formattedTestDate}`, 40, 170);
 
-          // Add chart image
-          const canvas = document.getElementById("vo2-chart");
-          const imgData = canvas.toDataURL("image/png");
-          doc.addImage(imgData, "PNG", 15, 75, 180, 100);
+          // --- Page 2: VO₂ Max Chart & Data ---
+          doc.addPage();
+          let yPosition = 60; // Start yPosition for content on new pages
 
-          // Add data table
-          doc.setFontSize(12);
-          doc.text("VO2 Max Data", 20, 185);
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text("VO₂ Max", doc.internal.pageSize.getWidth() / 2, yPosition, {
+            align: "center",
+          });
+          yPosition += 30;
 
-          // Modify the table to include personal info
-          const tableColumn = [
-            "Test Date",
-            "Name",
-            "VO2 Max (ml/kg/min)",
-            "Heart Rate (bpm)",
+          const canvas = document.getElementById("amrVo2CategoryChart");
+          // Check if the chart section is visible and canvas exists
+          const chartPage = document.getElementById("amrVo2MaxReportPage");
+          if (
+            canvas &&
+            chartPage &&
+            chartPage.style.display !== "none" &&
+            typeof canvas.toDataURL === "function"
+          ) {
+            try {
+              const imgData = canvas.toDataURL("image/png", 1.0); // Quality 1.0
+              // Calculate aspect ratio to fit width
+              const canvasWidth = canvas.width;
+              const canvasHeight = canvas.height;
+              const pageWidth = doc.internal.pageSize.getWidth() - 80; // 40pt margin each side
+              const imgHeight = (canvasHeight * pageWidth) / canvasWidth;
+              const imgWidth = pageWidth;
+
+              // Center the image
+              const xOffset = (doc.internal.pageSize.getWidth() - imgWidth) / 2;
+              doc.addImage(
+                imgData,
+                "PNG",
+                xOffset,
+                yPosition,
+                imgWidth,
+                imgHeight
+              );
+              yPosition += imgHeight + 20;
+            } catch (e) {
+              console.error("Error adding chart image to PDF:", e);
+              doc.setFont("helvetica", "italic");
+              doc.setFontSize(10);
+              doc.text("VO₂ Max Chart could not be rendered.", 40, yPosition);
+              yPosition += 20;
+            }
+          } else {
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(10);
+            doc.text(
+              "VO₂ Max Chart not generated or section not shown. Please click 'Show VO₂ Max Report' first.",
+              doc.internal.pageSize.getWidth() / 2,
+              yPosition,
+              {
+                align: "center",
+                maxWidth: doc.internal.pageSize.getWidth() - 80,
+              }
+            );
+            yPosition += 40;
+          }
+          doc.setFont("helvetica", "normal"); // Reset font style
+
+          const vo2Ml =
+            document.getElementById("amrTableVo2Value").value || "N/A";
+          const vo2Mets =
+            document.getElementById("amrTableVo2Mets").value || "N/A";
+          const percentile =
+            document.getElementById("amrTableVo2Percentile").value || "N/A";
+
+          const vo2TableColumns = ["Metric", "Value"];
+          const vo2TableRows = [
+            ["Estimated VO₂ Max (ml/kg/min)", vo2Ml],
+            ["Estimated VO₂ Max (METS)", vo2Mets],
+            ["Percentile", percentile],
           ];
+          doc.autoTable({
+            head: [vo2TableColumns],
+            body: vo2TableRows,
+            startY: yPosition,
+            theme: "grid",
+            headStyles: {
+              fillColor: [220, 220, 220],
+              textColor: [0, 0, 0],
+              fontStyle: "bold",
+            },
+            margin: { left: 40, right: 40 },
+            tableWidth: "auto", // Let the table decide its width based on content
+            styles: { cellPadding: 5, fontSize: 10 },
+            columnStyles: {
+              0: { cellWidth: "auto" }, // Metric column
+              1: { cellWidth: 100, halign: "center" }, // Value column
+            },
+          });
+          yPosition = doc.lastAutoTable.finalY + 20;
 
-          const tableRows = [
-            [
-              testDate,
-              `${firstName} ${lastName}`,
-              document.getElementById("vo2-ml").value || "N/A",
-              document.getElementById("max-hr").value || "N/A",
-            ],
-          ];
+          // --- Page 3: Heart Rate Zones ---
+          doc.addPage();
+          yPosition = 60;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text(
+            "Heart Rate Zones",
+            doc.internal.pageSize.getWidth() / 2,
+            yPosition,
+            { align: "center" }
+          );
+          yPosition += 30;
+          doc.setFont("helvetica", "normal");
 
-          doc.autoTable(tableColumn, tableRows, { startY: 195 });
-
-          // Add metabolic data to PDF
-          const metabolicData = collectMetabolicData();
+          const metabolicData = collectMetabolicData(); // Assuming this function is available and collects HR zone data
           if (metabolicData) {
-            doc.addPage();
-            doc.setFontSize(18);
-            doc.text("Exercise Metabolic Data", 20, 20);
-
-            // Basic VO2 Max data
-            doc.setFontSize(14);
-            doc.text("VO2 Max Measurements:", 20, 35);
-            doc.setFontSize(12);
-            doc.text(`VO2 Max (METs): ${metabolicData.vo2Mets}`, 30, 45);
-            doc.text(`VO2 Max (ml/kg/min): ${metabolicData.vo2Ml}`, 30, 55);
-
-            // Fat Max data
-            doc.setFontSize(14);
-            doc.text("Fat Max:", 20, 70);
-            doc.setFontSize(12);
-            doc.text(
-              `Maximum fat oxidation (g/min): ${metabolicData.fatMaxGrams}`,
-              30,
-              80
-            );
-            doc.text(
-              `Heart rate at max fat oxidation (bpm): ${metabolicData.fatMaxHr}`,
-              30,
-              90
-            );
-
-            // Zone data
-            doc.setFontSize(14);
-            doc.text("Heart Rate Zones:", 20, 105);
-
-            let yPosition = 115;
-            const zones = [
-              "Zone 1 (50-59%)",
-              "Zone 2 (60-69%)",
-              "Zone 3 (70-79%)",
-              "Zone 4 (80-89%)",
-              "Zone 5 (90-100%)",
-            ];
-
             for (let i = 1; i <= 5; i++) {
               doc.setFontSize(12);
-              doc.text(`${zones[i - 1]}:`, 30, yPosition);
-
-              yPosition += 10;
+              doc.setFont("helvetica", "bold");
+              doc.text(
+                `Zone ${i} (${getZonePercentage(i)}% HRmax):`,
+                40,
+                yPosition
+              );
+              yPosition += 20;
+              doc.setFont("helvetica", "normal");
               doc.setFontSize(10);
               doc.text(
-                `HR: ${metabolicData["z" + i + "LowerHr"]}-${
-                  metabolicData["z" + i + "UpperHr"]
+                `HR: ${metabolicData["z" + i + "LowerHr"] || "N/A"}-${
+                  metabolicData["z" + i + "UpperHr"] || "N/A"
                 } bpm`,
-                40,
+                60,
                 yPosition
               );
-
-              yPosition += 7;
+              yPosition += 15;
               doc.text(
-                `CHO: ${metabolicData["z" + i + "Cho"]}%`,
-                40,
+                `CHO: ${metabolicData["z" + i + "Cho"] || "N/A"}%`,
+                60,
                 yPosition
               );
-
-              yPosition += 7;
+              yPosition += 15;
               doc.text(
-                `FAT: ${metabolicData["z" + i + "Fat"]}%`,
-                40,
+                `FAT: ${metabolicData["z" + i + "Fat"] || "N/A"}%`,
+                60,
                 yPosition
               );
-
-              yPosition += 7;
+              yPosition += 15;
               doc.text(
-                `Cal/min: ${metabolicData["z" + i + "Cal"]}`,
-                40,
+                `Cal/min: ${metabolicData["z" + i + "Cal"] || "N/A"}`,
+                60,
                 yPosition
               );
-
-              yPosition += 10;
+              yPosition += 25; // Space before next zone
+              if (yPosition > doc.internal.pageSize.getHeight() - 60 && i < 5) {
+                // Check for page break
+                doc.addPage();
+                yPosition = 60;
+              }
             }
+          } else {
+            doc.text("Heart rate zone data not available.", 40, yPosition);
           }
 
-          // Save the PDF with the person's name if available
-          const pdfName =
-            firstName && lastName
+          // --- Page 4: Fat Oxidation & Weight-Based VO₂ Analysis ---
+          doc.addPage();
+          yPosition = 60;
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text(
+            "Fat Oxidation Analysis (Top 5)",
+            doc.internal.pageSize.getWidth() / 2,
+            yPosition,
+            { align: "center" }
+          );
+          yPosition += 20;
+          doc.setFont("helvetica", "normal");
+
+          if (
+            window.AMRCsvHandler &&
+            window.AMRCsvHandler.analysisData &&
+            window.AMRCsvHandler.analysisData.topFat
+          ) {
+            const fatColumns = ["Time (s)", "HR (bpm)", "Fat (g/min)"];
+            const fatRows = window.AMRCsvHandler.analysisData.topFat.map(
+              (r) => [r.Time || "N/A", r.HR || "N/A", r["Fat-g/min"] || "N/A"]
+            );
+            doc.autoTable({
+              head: [fatColumns],
+              body: fatRows,
+              startY: yPosition,
+              theme: "grid",
+              headStyles: {
+                fillColor: [220, 220, 220],
+                textColor: [0, 0, 0],
+                fontStyle: "bold",
+              },
+              margin: { left: 40, right: 40 },
+              styles: { cellPadding: 5, fontSize: 10 },
+            });
+            yPosition = doc.lastAutoTable.finalY + 30;
+          } else {
+            doc.text("Fat Oxidation data not available.", 40, yPosition);
+            yPosition += 20;
+          }
+
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(18);
+          doc.text(
+            "Weight-Based VO₂ Analysis (Top 5)",
+            doc.internal.pageSize.getWidth() / 2,
+            yPosition,
+            { align: "center" }
+          );
+          yPosition += 20;
+          doc.setFont("helvetica", "normal");
+
+          if (
+            window.AMRCsvHandler &&
+            window.AMRCsvHandler.analysisData &&
+            window.AMRCsvHandler.analysisData.topVo2
+          ) {
+            const vo2AnalysisColumns = [
+              "Time (s)",
+              "HR (bpm)",
+              "VO₂ (ml/kg/min)",
+            ];
+            const vo2AnalysisRows =
+              window.AMRCsvHandler.analysisData.topVo2.map((r) => [
+                r.Time || "N/A",
+                r.HR || "N/A",
+                r["VO2/kg"] ? parseFloat(r["VO2/kg"]).toFixed(1) : "N/A",
+              ]);
+            doc.autoTable({
+              head: [vo2AnalysisColumns],
+              body: vo2AnalysisRows,
+              startY: yPosition,
+              theme: "grid",
+              headStyles: {
+                fillColor: [220, 220, 220],
+                textColor: [0, 0, 0],
+                fontStyle: "bold",
+              },
+              margin: { left: 40, right: 40 },
+              styles: { cellPadding: 5, fontSize: 10 },
+            });
+          } else {
+            doc.text("Weight-Based VO₂ data not available.", 40, yPosition);
+          }
+
+          // --- Save PDF ---
+          const pdfFileName =
+            clientName !== "N/A"
               ? `VO2_Max_Report_${lastName}_${firstName}.pdf`
               : "VO2_Max_Report.pdf";
-          doc.save(pdfName);
+          doc.save(pdfFileName);
         });
 
-      // Updated function to calculate heart rate zones with distinct boundaries
       function calculateHRZones() {
-        const maxHR = parseFloat(document.getElementById("max-hr").value);
-
-        // Only calculate if we have valid input
-        if (isNaN(maxHR) || maxHR <= 0) {
-          console.log("Invalid Max HR value");
+        const maxHRInput = document.getElementById("max-hr");
+        if (!maxHRInput) {
+          console.warn("Max HR input field not found.");
           return;
         }
+        const maxHR = parseFloat(maxHRInput.value);
 
+        if (isNaN(maxHR) || maxHR <= 0) {
+          console.log("Invalid Max HR value for zone calculation.");
+          return;
+        }
         console.log("Calculating HR zones based on Max HR:", maxHR);
 
-        // Calculate zone boundaries using the percentages
-        // Zone 1: 50-59%
         const z1Lower = Math.round(maxHR * 0.5);
         const z1Upper = Math.round(maxHR * 0.599);
-
-        // Zone 2: 60-69%
-        const z2Lower = z1Upper + 1; // Ensure no overlap
+        const z2Lower = z1Upper + 1;
         const z2Upper = Math.round(maxHR * 0.699);
-
-        // Zone 3: 70-79%
-        const z3Lower = z2Upper + 1; // Ensure no overlap
+        const z3Lower = z2Upper + 1;
         const z3Upper = Math.round(maxHR * 0.799);
-
-        // Zone 4: 80-89%
-        const z4Lower = z3Upper + 1; // Ensure no overlap
+        const z4Lower = z3Upper + 1;
         const z4Upper = Math.round(maxHR * 0.899);
-
-        // Zone 5: 90-100%
-        const z5Lower = z4Upper + 1; // Ensure no overlap
+        const z5Lower = z4Upper + 1;
         const z5Upper = Math.round(maxHR);
 
-        // Assign values to form fields
         document.getElementById("z1-lower-hr").value = z1Lower;
         document.getElementById("z1-upper-hr").value = z1Upper;
-
         document.getElementById("z2-lower-hr").value = z2Lower;
         document.getElementById("z2-upper-hr").value = z2Upper;
-
         document.getElementById("z3-lower-hr").value = z3Lower;
         document.getElementById("z3-upper-hr").value = z3Upper;
-
         document.getElementById("z4-lower-hr").value = z4Lower;
         document.getElementById("z4-upper-hr").value = z4Upper;
-
         document.getElementById("z5-lower-hr").value = z5Lower;
         document.getElementById("z5-upper-hr").value = z5Upper;
 
@@ -547,67 +751,15 @@
         });
       }
 
-      // Improved event listeners for max-hr input
-      document
-        .getElementById("max-hr")
-        .addEventListener("input", calculateHRZones);
-      document
-        .getElementById("max-hr")
-        .addEventListener("change", calculateHRZones);
-
-      // Remove the min-hr event listener since we're only using max HR for calculations
-      // document.getElementById("min-hr").addEventListener("change", calculateHRZones);
-
-      // Add a button to recalculate zones manually
-      const recalcButton = document.createElement("button");
-      recalcButton.textContent = "Calculate HR Zones";
-      recalcButton.classList.add("action-button");
-      recalcButton.id = "calculate-zones";
-      recalcButton.addEventListener("click", function () {
-        calculateHRZones();
-        alert("Heart rate zones have been calculated!");
-      });
-
-      // Insert the recalculate button after the heart rate inputs
-      const hrGroup = document.querySelector(".data-group:first-child");
-      hrGroup.appendChild(recalcButton);
-
-      // Add an explanation text about the automatic calculation
-      const explainText = document.createElement("p");
-      explainText.innerHTML =
-        "Enter Max HR value to automatically calculate training zones. <br>You can adjust the calculated values if needed.";
-      explainText.style.fontSize = "0.9em";
-      explainText.style.fontStyle = "italic";
-      explainText.style.color = "#666";
-      explainText.style.marginTop = "10px";
-      hrGroup.appendChild(explainText);
-
-      // Call calculateHRZones once on page load if max HR is already set
-      window.addEventListener("load", function () {
-        const maxHR = document.getElementById("max-hr").value;
-        if (maxHR) {
-          calculateHRZones();
-        }
-      });
-
-      // Function to collect all metabolic data from inputs
       function collectMetabolicData() {
         const data = {};
-
-        // Add personal information
         data.testDate = document.getElementById("test-date").value;
         data.firstName = document.getElementById("first-name").value;
         data.lastName = document.getElementById("last-name").value;
-
-        // Get basic VO2 values
         data.vo2Mets = document.getElementById("vo2-mets").value;
         data.vo2Ml = document.getElementById("vo2-ml").value;
-
-        // Get Fat Max values
         data.fatMaxGrams = document.getElementById("fat-max-grams").value;
         data.fatMaxHr = document.getElementById("fat-max-hr").value;
-
-        // Get zone values for each zone
         for (let i = 1; i <= 5; i++) {
           data[`z${i}LowerHr`] = document.getElementById(
             `z${i}-lower-hr`
@@ -619,107 +771,358 @@
           data[`z${i}Fat`] = document.getElementById(`z${i}-fat`).value;
           data[`z${i}Cal`] = document.getElementById(`z${i}-cal`).value;
         }
-
         return data;
       }
 
-      // Function to generate and display metabolic report
       function generateMetabolicReport() {
         const data = collectMetabolicData();
         if (!data) return;
-
         const reportDiv = document.getElementById("metabolic-report");
-
-        // Create report HTML
         let reportHTML = `
         <div class="report-section">
           <h5>VO2 Max</h5>
           <p><strong>METs:</strong> ${data.vo2Mets} | <strong>ml/kg/min:</strong> ${data.vo2Ml}</p>
         </div>
-        
         <div class="report-section">
           <h5>Fat Max</h5>
           <p><strong>Max Fat Oxidation:</strong> ${data.fatMaxGrams} g/min at ${data.fatMaxHr} bpm</p>
         </div>
-        
         <div class="report-section">
           <h5>Heart Rate Zones</h5>
           <table class="zone-table">
-            <thead>
-              <tr>
-                <th>Zone</th>
-                <th>Heart Rate (bpm)</th>
-                <th>CHO %</th>
-                <th>FAT %</th>
-                <th>Cal/min</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Zone</th><th>Heart Rate (bpm)</th><th>CHO %</th><th>FAT %</th><th>Cal/min</th></tr></thead>
             <tbody>`;
-
-        // Add each zone to the table
         for (let i = 1; i <= 5; i++) {
           reportHTML += `
-              <tr>
-                <td>Zone ${i}</td>
-                <td>${data[`z${i}LowerHr`]}-${data[`z${i}UpperHr`]}</td>
-                <td>${data[`z${i}Cho`]}%</td>
-                <td>${data[`z${i}Fat`]}%</td>
-                <td>${data[`z${i}Cal`]}</td>
-              </tr>`;
+              <tr><td>Zone ${i}</td><td>${data[`z${i}LowerHr`]}-${
+            data[`z${i}UpperHr`]
+          }</td><td>${data[`z${i}Cho`]}%</td><td>${data[`z${i}Fat`]}%</td><td>${
+            data[`z${i}Cal`]
+          }</td></tr>`;
         }
-
-        reportHTML += `
-            </tbody>
-          </table>
-        </div>`;
-
+        reportHTML += `</tbody></table></div>`;
         reportDiv.innerHTML = reportHTML;
       }
 
-      // Add event listener for save button
       document
         .getElementById("save-metabolic-data")
         .addEventListener("click", function () {
           generateMetabolicReport();
-          // You can add code to save the data to a database or local storage here
           alert("Metabolic data saved and report updated!");
         });
 
-      // Initialize the CSV handler when the page loads
-      document.addEventListener("DOMContentLoaded", function () {
-        // Initialize weight kg if lbs is already filled
-        calculateWeightKg();
-
-        // Set up event listener for weight-lbs changes
-        document
-          .getElementById("weight-lbs")
-          .addEventListener("change", calculateWeightKg);
-
-        // Initialize the CSV handler
-        window.AMRCsvHandler.init();
-      });
-
-      // Function to calculate weight in kilograms based on pounds
       function calculateWeightKg() {
-        const weightLbs = parseFloat(
-          document.getElementById("weight-lbs").value
-        );
+        const weightLbsInput = document.getElementById("weight-lbs");
+        const weightKgInput = document.getElementById("weight-kg");
+        if (!weightLbsInput || !weightKgInput) return;
+
+        const weightLbs = parseFloat(weightLbsInput.value);
         if (!isNaN(weightLbs) && weightLbs > 0) {
           const weightKg = weightLbs / 2.204;
-          document.getElementById("weight-kg").value = weightKg.toFixed(2);
+          weightKgInput.value = weightKg.toFixed(2);
         } else {
-          document.getElementById("weight-kg").value = "";
+          weightKgInput.value = "";
         }
       }
 
-      // Function to calculate weight-based VO2
       function calculateWeightBasedVO2(vo2Value) {
-        const weightKg = parseFloat(document.getElementById("weight-kg").value);
+        const weightKgInput = document.getElementById("weight-kg");
+        if (!weightKgInput) return vo2Value;
+        const weightKg = parseFloat(weightKgInput.value);
         if (!isNaN(weightKg) && weightKg > 0) {
           return vo2Value / weightKg;
         }
-        return vo2Value; // Return original value if weight is not valid
+        return vo2Value;
       }
+
+      function calculateVo2Percentile(gender, age, vo2Value) {
+        if (
+          !gender ||
+          !age ||
+          !vo2Value ||
+          isNaN(parseFloat(vo2Value)) ||
+          isNaN(parseInt(age))
+        ) {
+          console.warn("calculateVo2Percentile: Missing or invalid input", {
+            gender,
+            age,
+            vo2Value,
+          });
+          return "N/A";
+        }
+        gender = String(gender).toUpperCase();
+        age = parseInt(age);
+        vo2Value = parseFloat(vo2Value);
+        const vo2ValueMets = vo2Value / 3.5;
+        const percentileTable = [
+          {
+            gender: "FEMALE",
+            ageLow: 18,
+            ageHigh: 19,
+            intercept: -38.39370468,
+            slope: 8.408706891,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 20,
+            ageHigh: 29,
+            intercept: -30.77369941,
+            slope: 8.710278691,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 30,
+            ageHigh: 39,
+            intercept: -31.6543755,
+            slope: 9.256543442,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 40,
+            ageHigh: 49,
+            intercept: -31.79589193,
+            slope: 9.657290896,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 50,
+            ageHigh: 59,
+            intercept: -30.18427375,
+            slope: 10.01526944,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 60,
+            ageHigh: 69,
+            intercept: -31.79829302,
+            slope: 11.91748344,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 70,
+            ageHigh: 79,
+            intercept: -30.41205179,
+            slope: 13.75099602,
+          },
+          {
+            gender: "FEMALE",
+            ageLow: 80,
+            ageHigh: 89,
+            intercept: -33.57744583,
+            slope: 16.0898446,
+          },
+          {
+            gender: "MALE",
+            ageLow: 18,
+            ageHigh: 19,
+            intercept: -36.26322582,
+            slope: 7.433576287,
+          },
+          {
+            gender: "MALE",
+            ageLow: 20,
+            ageHigh: 29,
+            intercept: -36.33493979,
+            slope: 7.793652529,
+          },
+          {
+            gender: "MALE",
+            ageLow: 30,
+            ageHigh: 39,
+            intercept: -38.26153919,
+            slope: 8.37609897,
+          },
+          {
+            gender: "MALE",
+            ageLow: 40,
+            ageHigh: 49,
+            intercept: -38.95930276,
+            slope: 8.659028352,
+          },
+          {
+            gender: "MALE",
+            ageLow: 50,
+            ageHigh: 59,
+            intercept: -33.05833684,
+            slope: 8.969738411,
+          },
+          {
+            gender: "MALE",
+            ageLow: 60,
+            ageHigh: 69,
+            intercept: -30.50893082,
+            slope: 9.931446541,
+          },
+          {
+            gender: "MALE",
+            ageLow: 70,
+            ageHigh: 79,
+            intercept: -30.23581148,
+            slope: 11.60411056,
+          },
+          {
+            gender: "MALE",
+            ageLow: 80,
+            ageHigh: 89,
+            intercept: -30.85004941,
+            slope: 13.4229249,
+          },
+        ];
+        const row = percentileTable.find(
+          (r) => r.gender === gender && age >= r.ageLow && age <= r.ageHigh
+        );
+        if (!row) {
+          console.warn(
+            `calculateVo2Percentile: No matching row found for gender ${gender} and age ${age}`
+          );
+          return "N/A";
+        }
+        const percentile = row.intercept + row.slope * vo2ValueMets;
+        if (isNaN(percentile)) return "N/A";
+        else if (percentile >= 100) return ">99.9";
+        else if (percentile <= 0) return "<0.1";
+        return percentile.toFixed(1);
+      }
+
+      function displayVo2MaxAmrReport() {
+        const vo2MlField = document.getElementById("vo2-ml");
+        const ageField = document.getElementById("age");
+        const genderField = document.getElementById("gender");
+        const vo2MetsField = document.getElementById("vo2-mets");
+
+        if (!vo2MlField || !ageField || !genderField || !vo2MetsField) {
+          alert(
+            "One or more required fields for VO2 Max report are missing from the page."
+          );
+          return;
+        }
+
+        const vo2Ml = parseFloat(vo2MlField.value);
+        const age = parseInt(ageField.value);
+        const gender = genderField.value;
+
+        if (isNaN(vo2Ml) || vo2Ml <= 0) {
+          alert(
+            "VO₂ Max (ml/kg/min) data is not available or invalid. Please process a CSV or enter data manually."
+          );
+          return;
+        }
+        if (isNaN(age) || age <= 0) {
+          alert("Age is not available or invalid. Please enter age.");
+          return;
+        }
+        if (!gender) {
+          alert("Gender is not selected. Please select a gender.");
+          return;
+        }
+
+        const vo2Mets = vo2Ml / 3.5;
+        document.getElementById("amrTableVo2Value").value = vo2Ml.toFixed(1);
+        document.getElementById("amrTableVo2Mets").value = vo2Mets.toFixed(1);
+        vo2MetsField.value = vo2Mets.toFixed(1);
+        const percentile = calculateVo2Percentile(gender, age, vo2Ml);
+        document.getElementById("amrTableVo2Percentile").value = percentile;
+
+        if (typeof createOrUpdateVo2CategoryChart === "function") {
+          const canvasElement = document.getElementById("amrVo2CategoryChart");
+          if (canvasElement) {
+            const ctx = canvasElement.getContext("2d");
+            createOrUpdateVo2CategoryChart(ctx, gender, age, vo2Mets);
+          } else {
+            console.error("Canvas element 'amrVo2CategoryChart' not found.");
+            alert("Error: Chart canvas not available.");
+          }
+        } else {
+          console.error(
+            "createOrUpdateVo2CategoryChart function is not defined."
+          );
+          alert("Error: Charting function not available.");
+        }
+        document.getElementById("amrVo2MaxReportPage").style.display = "block";
+        alert("VO₂ Max Report section generated!");
+      }
+
+      // Initialize the CSV handler and other DOM-dependent scripts when the page loads
+      document.addEventListener("DOMContentLoaded", function () {
+        // Initialize weight kg if lbs is already filled
+        const weightLbsInput = document.getElementById("weight-lbs");
+        if (weightLbsInput) {
+          calculateWeightKg(); // Initial calculation
+          weightLbsInput.addEventListener("change", calculateWeightKg); // Listener for changes
+        }
+
+        // Initialize the CSV handler
+        if (
+          window.AMRCsvHandler &&
+          typeof window.AMRCsvHandler.init === "function"
+        ) {
+          window.AMRCsvHandler.init();
+        } else {
+          console.error("AMRCsvHandler not available or init method missing.");
+        }
+
+        // Setup for "Calculate HR Zones" button - wrapped in setTimeout
+        setTimeout(function () {
+          const metabolicSection = document.getElementById(
+            "metabolic-data-section"
+          );
+
+          if (!metabolicSection) {
+            console.error(
+              "#metabolic-data-section not found. Cannot add HR recalc button."
+            );
+            return; // Exit if the main section isn't found
+          }
+
+          const recalcButton = document.createElement("button");
+          recalcButton.textContent = "Calculate HR Zones";
+          recalcButton.classList.add("action-button");
+          recalcButton.id = "calculate-zones";
+          recalcButton.addEventListener("click", function () {
+            calculateHRZones(); // Call the existing function
+            alert("Heart rate zones have been calculated!");
+          });
+
+          // Selects the first element with class 'data-group'
+          // that is a descendant of 'metabolic-data-section'.
+          const vo2MaxMeasurementsGroup = metabolicSection.querySelector(
+            ".data-group" // Simplified from querySelectorAll to just the first one
+          );
+
+          if (vo2MaxMeasurementsGroup) {
+            vo2MaxMeasurementsGroup.appendChild(recalcButton);
+            const explainText = document.createElement("p");
+            explainText.innerHTML =
+              "Enter Max HR value to automatically calculate training zones. <br>You can adjust the calculated values if needed.";
+            explainText.style.fontSize = "0.9em";
+            explainText.style.fontStyle = "italic";
+            explainText.style.color = "#666";
+            explainText.style.marginTop = "10px";
+            vo2MaxMeasurementsGroup.appendChild(explainText);
+          } else {
+            console.error(
+              "Could not find the target .data-group within #metabolic-data-section for the HR recalc button."
+            );
+          }
+        }, 0); // End of setTimeout
+
+        // Improved event listeners for max-hr input
+        const maxHRInput = document.getElementById("max-hr");
+        if (maxHRInput) {
+          maxHRInput.addEventListener("input", calculateHRZones);
+          maxHRInput.addEventListener("change", calculateHRZones);
+          // Call calculateHRZones once on page load if max HR is already set
+          if (maxHRInput.value) {
+            calculateHRZones();
+          }
+        }
+
+        // Event listener for the "Show VO₂ Max Report" button
+        const showReportButton = document.getElementById("show-amr-vo2-report");
+        if (showReportButton) {
+          showReportButton.addEventListener("click", displayVo2MaxAmrReport);
+        }
+      });
     </script>
 
     <style>
