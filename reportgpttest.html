@@ -1,397 +1,772 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Discovery Exam PDF</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap" rel="stylesheet">
-  <link href="base.css" rel="stylesheet">
-  <link href="reportstyles.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-  <!-- Load VO2 data and chart logic BEFORE app.js -->
-  <script src="vo2data.js"></script>
-  <script src="vo2chart.js"></script>
-  <!-- Load main application logic -->
-  <script src="report.js"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Discovery Exam PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Glacial+Indifference&display=swap"
+      rel="stylesheet"
+    />
+    <link href="base.css" rel="stylesheet" />
+    <link href="reportstyles.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <!-- Load VO2 data and chart logic BEFORE app.js -->
+    <script src="vo2data.js"></script>
+    <script src="vo2chart.js"></script>
+    <!-- Load main application logic -->
+    <script src="report.js"></script>
+  </head>
+  <body>
+    <a href="index.html" class="return-link">Return to Inputs</a>
 
-</head>
-<body>
-  <a href="index.html" class="return-link">Return to Inputs</a>
-
-  <div id="pdfWrapper">
- <div class="page simple">
-  <div class="title-text">Discovery Exam Report</div>
-  <div class="subtitle-text" id="clientName" readonly></div>
-  <div class="subtitle-text" id="examDate" readonly></div>
-</div>
-
- <div class="page summary">
-  <div class="title-text">Summary Table</div>
-   <div class="table-wrapper">
-        <table>
-          <tr>
-            <th>Variable</th>
-            <th>Value</th>
-            <th>Note</th>
-          </tr>
-          <tr>
-            <td>Body Mass Index (BMI)</td>
-            <td><input class="value-field" id="summaryBmiValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryBmiNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Fat Mass Index (FMI)</td>
-            <td><input class="value-field" id="summaryFmiValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryFmiNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Fat‑Free Mass Index (FFMI)</td>
-            <td><input class="value-field" id="summaryFfmiValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryFfmiNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Grip Strength</td>
-            <td><input class="value-field" id="summaryGripValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryGripNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Heart Rate Recovery (1 min)</td>
-            <td><input class="value-field" id="summaryHrrValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryHrrNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Resting Heart Rate</td>
-            <td><input class="value-field" id="summaryRhrValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryRhrNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Resting Metabolic Rate</td>
-            <td><input class="value-field" id="summaryRmrValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryRmrNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Systolic BP</td>
-            <td><input class="value-field" id="summarySbpValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summarySbpNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Diastolic BP</td>
-            <td><input class="value-field" id="summaryDbpValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryDbpNote" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>VO₂ Max (Est.)</td> <td><input class="value-field" id="summaryVo2Value" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryVo2Note" readonly rows="1"></textarea></td>
-          </tr>
-          <tr>
-            <td>Functional Strength Score</td>
-            <td><input class="value-field" id="summaryFssValue" readonly></td>
-            <td><textarea class="value-field note-field" id="summaryFssNote" readonly rows="1"></textarea></td>
-          </tr>
-        </table>
+    <div id="pdfWrapper">
+      <div class="page simple">
+        <div class="title-text">Exam Report</div>
+        <div class="subtitle-text" id="clientName" readonly></div>
+        <div class="subtitle-text" id="examDate" readonly></div>
       </div>
-    </div>
 
-    <div class="page bmi-page"> <!-- Add class "bmi-page" here -->
-      <div class="title-text">Body Mass Index</div>
-      <div class="graph-container">
-        <div class="charts-grid" id="bmi-charts-grid"> <!-- Add ID -->
-          <div class="chart-card">
-            <h3>All‑cause Mortality</h3>
-            <div class="chart-container">
-              <canvas id="mortChartAll"></canvas>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3>Communicable Disease</h3>
-            <div class="chart-container">
-              <canvas id="mortChartComm"></canvas>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h3>Non‑communicable Disease</h3>
-            <div class="chart-container">
-              <canvas id="mortChartNcd"></canvas>
-            </div>
-          </div>
-        </div>
-        <input
-          type="number"
-          id="bmi-input"
-          class="value-field"
-          min="10"
-          max="50"
-          step="0.1"
-          readonly
-        >
-        <div id="error-message"
-             style="display:none;color:#9b2c2c;margin-top:8px;">
-          BMI must be between 10 and 50
-        </div>
-        <input type="hidden" id="graphBmi">
-        <span class="unit-label">kg/m²</span>
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="title-text">Fat & Fat-Free Mass Index</div>
-      <div class="graph-container">
-        <div style="display: flex; flex-direction: column; width: 100%;">
-          <div style="margin-bottom: 10px;">
-            <div style="height: 300px;">
-              <canvas id="fmiChart"></canvas>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-              <span style="font-weight: 600; margin-right: 10px;">FMI:</span>
-              <input class="value-field" id="graphFmi" readonly><span class="unit-label">kg/m²</span>
-            </div>
-          </div>
-
-          <div style="margin-top: 30px;">
-            <div style="height: 300px;">
-              <canvas id="ffmiChart"></canvas>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: center; margin-top: 10px;">
-              <span style="font-weight: 600; margin-right: 10px;">FFMI:</span>
-              <input class="value-field" id="graphFfmi" readonly><span class="unit-label">kg/m²</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="title-text">Blood Pressure</div>
-      <div class="graph-container">
-        <div style="display: flex; flex-direction: column; width: 100%;">
-          <div style="height: 300px; margin-bottom: 20px;">
-            <canvas id="sbpChart"></canvas>
-          </div>
-          <div style="height: 300px;">
-            <canvas id="dbpChart"></canvas>
-          </div>
-        </div>
-        <div style="margin-top: 15px;">
-          <span style="font-weight: 600; margin-right: 10px;">Systolic BP:</span>
-          <input class="value-field" id="graphSbp" readonly><span class="unit-label">mmHg</span>
-        </div>
-        <div style="margin-top: 10px;">
-          <span style="font-weight: 600; margin-right: 10px;">Diastolic BP:</span>
-          <input class="value-field" id="graphDbp" readonly><span class="unit-label">mmHg</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="title-text">Resting Heart Rate</div>
-      <div class="graph-container">
-        <div class="chart-container" style="position: relative; width: 100%; height: 400px;">
-          <canvas id="rhrChart"></canvas>
-        </div>
-        <div style="margin-top: 15px;">
-          <span style="font-weight: 600; margin-right: 10px;">Resting Heart Rate:</span>
-          <input class="value-field" id="graphRhr" readonly><span class="unit-label">bpm</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="title-text">Resting Metabolic Rate</div>
-      <div class="graph-container">
-        <!-- Replace static image with interactive RMR comparison visualization -->
-        <div class="rmr-comparison">
-          <div id="percentDiff" class="rmr-percent-diff"></div>
-          <div class="bar-container">
-            <div id="seg0" class="segment much-lower">
-              <span class="title">Much Lower</span>
-              <span class="subtitle">31% or lower than predicted</span>
-            </div>
-            <div id="seg1" class="segment lower">
-              <span class="title">Lower</span>
-              <span class="subtitle">16–30% lower than predicted</span>
-            </div>
-            <div id="seg2" class="segment exact">
-              <span class="title">±15%</span>
-              <span class="subtitle">Within 15% of predicted</span>
-            </div>
-            <div id="seg3" class="segment higher">
-              <span class="title">Higher</span>
-              <span class="subtitle">16–30% higher than predicted</span>
-            </div>
-            <div id="seg4" class="segment much-higher">
-              <span class="title">Much Higher</span>
-              <span class="subtitle">31% or higher than predicted</span>
-            </div>
-          </div>
-        </div>
-        
-        <input class="value-field" id="graphRmrMeasured" readonly><span class="unit-label">kcal/day</span>
+      <div class="page summary">
+        <div class="title-text">Summary Table</div>
         <div class="table-wrapper">
           <table>
-            <tr><th>Metric</th><th>Value</th></tr>
-            <tr><td>Predicted RMR</td><td><input class="value-field" id="tableRmrPredicted" readonly><span class="unit-label">kcal/day</span></td></tr>
-            <tr><td>Measured RMR</td><td><input class="value-field" id="tableRmrMeasured" readonly><span class="unit-label">kcal/day</span></td></tr>
-            <tr><td>% Calories from Fat</td><td><input class="value-field" id="tableRmrFatPercent" readonly><span class="unit-label"></span></td></tr>
-            <tr><td>% Calories from Carbohydrate</td><td><input class="value-field" id="tableRmrCarbPercent" readonly><span class="unit-label"></span></td></tr>
-            <tr><td>Conservative Weight Loss Target</td><td><input class="value-field" id="tableTargetLossCons" readonly><span class="unit-label">kcal/day</span></td></tr>
-            <tr><td>Aggressive Weight Loss Target</td><td><input class="value-field" id="tableTargetLossAggr" readonly><span class="unit-label">kcal/day</span></td></tr>
-            <tr><td>Conservative Weight Gain Target</td><td><input class="value-field" id="tableTargetGainCons" readonly><span class="unit-label">kcal/day</span></td></tr>
-            <tr><td>Aggressive Weight Gain Target</td><td><input class="value-field" id="tableTargetGainAggr" readonly><span class="unit-label">kcal/day</span></td></tr>
+            <tr>
+              <th>Variable</th>
+              <th>Value</th>
+              <th>Note</th>
+            </tr>
+            <tr>
+              <td>Body Mass Index (BMI)</td>
+              <td>
+                <input class="value-field" id="summaryBmiValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryBmiNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Fat Mass Index (FMI)</td>
+              <td>
+                <input class="value-field" id="summaryFmiValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryFmiNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Fat‑Free Mass Index (FFMI)</td>
+              <td>
+                <input class="value-field" id="summaryFfmiValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryFfmiNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Grip Strength</td>
+              <td>
+                <input class="value-field" id="summaryGripValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryGripNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Heart Rate Recovery (1 min)</td>
+              <td>
+                <input class="value-field" id="summaryHrrValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryHrrNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Resting Heart Rate</td>
+              <td>
+                <input class="value-field" id="summaryRhrValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryRhrNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Resting Metabolic Rate</td>
+              <td>
+                <input class="value-field" id="summaryRmrValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryRmrNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Systolic BP</td>
+              <td>
+                <input class="value-field" id="summarySbpValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summarySbpNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Diastolic BP</td>
+              <td>
+                <input class="value-field" id="summaryDbpValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryDbpNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>VO₂ Max (Est.)</td>
+              <td>
+                <input class="value-field" id="summaryVo2Value" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryVo2Note"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
+            <tr>
+              <td>Functional Strength Score</td>
+              <td>
+                <input class="value-field" id="summaryFssValue" readonly />
+              </td>
+              <td>
+                <textarea
+                  class="value-field note-field"
+                  id="summaryFssNote"
+                  readonly
+                  rows="1"
+                ></textarea>
+              </td>
+            </tr>
           </table>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="title-text">VO₂ Max</div>
-      <div class="graph-container">
-        <div class="chart-container" style="height: 300px; margin-bottom: 20px;">
-            <canvas id="vo2CategoryChart"></canvas> <!-- Ensure this canvas exists -->
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <tr><td>Estimated VO₂ Max (ml/kg/min)</td><td><input class="value-field" id="tableVo2Value" readonly><span class="unit-label"></span></td></tr>
-            <tr><td>Estimated VO₂ Max (METS)</td><td><input class="value-field" id="tableVo2Mets" readonly><span class="unit-label"></span></td></tr>
-            <tr><td>Percentile</td><td><input class="value-field" id="tableVo2Percentile" readonly><span class="unit-label"></span></td></tr>
-          </table>
+      <div class="page bmi-page">
+        <!-- Add class "bmi-page" here -->
+        <div class="title-text">Body Mass Index</div>
+        <div class="graph-container">
+          <div class="charts-grid" id="bmi-charts-grid">
+            <!-- Add ID -->
+            <div class="chart-card">
+              <h3>All‑cause Mortality</h3>
+              <div class="chart-container">
+                <canvas id="mortChartAll"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>Communicable Disease</h3>
+              <div class="chart-container">
+                <canvas id="mortChartComm"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <h3>Non‑communicable Disease</h3>
+              <div class="chart-container">
+                <canvas id="mortChartNcd"></canvas>
+              </div>
+            </div>
+          </div>
+          <input
+            type="number"
+            id="bmi-input"
+            class="value-field"
+            min="10"
+            max="50"
+            step="0.1"
+            readonly
+          />
+          <div
+            id="error-message"
+            style="display: none; color: #9b2c2c; margin-top: 8px"
+          >
+            BMI must be between 10 and 50
+          </div>
+          <input type="hidden" id="graphBmi" />
+          <span class="unit-label">kg/m²</span>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="title-text">Grip Strength</div>
-      <div class="graph-container">
-        <div class="chart-container" style="position: relative; width: 100%; height: 400px;">
-          <canvas id="gripChart"></canvas>
-        </div>
-        <div class="table-wrapper">
-          <table>
-            <tr><td>Right Hand Grip Strength</td><td><input class="value-field" id="graphGripRight" readonly><span class="unit-label">kg</span></td></tr>
-            <tr><td>Left Hand Grip Strength</td><td><input class="value-field" id="graphGripLeft" readonly><span class="unit-label">kg</span></td></tr>
-            <tr><td>Average Grip Strength</td><td><input class="value-field" id="graphGripAvg" readonly><span class="unit-label">kg</span></td></tr>
-          </table>
+      <div class="page">
+        <div class="title-text">Fat & Fat-Free Mass Index</div>
+        <div class="graph-container">
+          <div style="display: flex; flex-direction: column; width: 100%">
+            <div style="margin-bottom: 10px">
+              <div style="height: 300px">
+                <canvas id="fmiChart"></canvas>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-top: 10px;
+                "
+              >
+                <span style="font-weight: 600; margin-right: 10px">FMI:</span>
+                <input class="value-field" id="graphFmi" readonly /><span
+                  class="unit-label"
+                  >kg/m²</span
+                >
+              </div>
+            </div>
+
+            <div style="margin-top: 30px">
+              <div style="height: 300px">
+                <canvas id="ffmiChart"></canvas>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin-top: 10px;
+                "
+              >
+                <span style="font-weight: 600; margin-right: 10px">FFMI:</span>
+                <input class="value-field" id="graphFfmi" readonly /><span
+                  class="unit-label"
+                  >kg/m²</span
+                >
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="title-text">Functional Strength Scores</div>
-      <div class="graph-container functional-strength-container">
-        <div class="strength-score-row">Upper Body Score: <input class="value-field" id="graphUpperScore" readonly><span class="unit-label"></span></div>
-        <div class="strength-score-row">Lower Body Score: <input class="value-field" id="graphLowerScore" readonly><span class="unit-label"></span></div>
-        <div class="strength-score-row">Core Score: <input class="value-field" id="graphCoreScore" readonly><span class="unit-label"></span></div>
-        <div class="strength-score-row">Total Score: <input class="value-field" id="graphTotalScore" readonly><span class="unit-label"></span></div>
-        <!-- Replace the image with a canvas container -->
-        <div class="chart-container" style="height: 300px; margin-top: 20px;">
+      <div class="page">
+        <div class="title-text">Blood Pressure</div>
+        <div class="graph-container">
+          <div style="display: flex; flex-direction: column; width: 100%">
+            <div style="height: 300px; margin-bottom: 20px">
+              <canvas id="sbpChart"></canvas>
+            </div>
+            <div style="height: 300px">
+              <canvas id="dbpChart"></canvas>
+            </div>
+          </div>
+          <div style="margin-top: 15px">
+            <span style="font-weight: 600; margin-right: 10px"
+              >Systolic BP:</span
+            >
+            <input class="value-field" id="graphSbp" readonly /><span
+              class="unit-label"
+              >mmHg</span
+            >
+          </div>
+          <div style="margin-top: 10px">
+            <span style="font-weight: 600; margin-right: 10px"
+              >Diastolic BP:</span
+            >
+            <input class="value-field" id="graphDbp" readonly /><span
+              class="unit-label"
+              >mmHg</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="title-text">Resting Heart Rate</div>
+        <div class="graph-container">
+          <div
+            class="chart-container"
+            style="position: relative; width: 100%; height: 400px"
+          >
+            <canvas id="rhrChart"></canvas>
+          </div>
+          <div style="margin-top: 15px">
+            <span style="font-weight: 600; margin-right: 10px"
+              >Resting Heart Rate:</span
+            >
+            <input class="value-field" id="graphRhr" readonly /><span
+              class="unit-label"
+              >bpm</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="title-text">Resting Metabolic Rate</div>
+        <div class="graph-container">
+          <!-- Replace static image with interactive RMR comparison visualization -->
+          <div class="rmr-comparison">
+            <div id="percentDiff" class="rmr-percent-diff"></div>
+            <div class="bar-container">
+              <div id="seg0" class="segment much-lower">
+                <span class="title">Much Lower</span>
+                <span class="subtitle">31% or lower than predicted</span>
+              </div>
+              <div id="seg1" class="segment lower">
+                <span class="title">Lower</span>
+                <span class="subtitle">16–30% lower than predicted</span>
+              </div>
+              <div id="seg2" class="segment exact">
+                <span class="title">±15%</span>
+                <span class="subtitle">Within 15% of predicted</span>
+              </div>
+              <div id="seg3" class="segment higher">
+                <span class="title">Higher</span>
+                <span class="subtitle">16–30% higher than predicted</span>
+              </div>
+              <div id="seg4" class="segment much-higher">
+                <span class="title">Much Higher</span>
+                <span class="subtitle">31% or higher than predicted</span>
+              </div>
+            </div>
+          </div>
+
+          <input class="value-field" id="graphRmrMeasured" readonly /><span
+            class="unit-label"
+            >kcal/day</span
+          >
+          <div class="table-wrapper">
+            <table>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+              </tr>
+              <tr>
+                <td>Predicted RMR</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableRmrPredicted"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Measured RMR</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableRmrMeasured"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+              <tr>
+                <td>% Calories from Fat</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableRmrFatPercent"
+                    readonly
+                  /><span class="unit-label"></span>
+                </td>
+              </tr>
+              <tr>
+                <td>% Calories from Carbohydrate</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableRmrCarbPercent"
+                    readonly
+                  /><span class="unit-label"></span>
+                </td>
+              </tr>
+              <tr>
+                <td>Conservative Weight Loss Target</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableTargetLossCons"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Aggressive Weight Loss Target</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableTargetLossAggr"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Conservative Weight Gain Target</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableTargetGainCons"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Aggressive Weight Gain Target</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableTargetGainAggr"
+                    readonly
+                  /><span class="unit-label">kcal/day</span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="title-text">VO₂ Max</div>
+        <div class="graph-container">
+          <div
+            class="chart-container"
+            style="height: 300px; margin-bottom: 20px"
+          >
+            <canvas id="vo2CategoryChart"></canvas>
+            <!-- Ensure this canvas exists -->
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <tr>
+                <td>Estimated VO₂ Max (ml/kg/min)</td>
+                <td>
+                  <input class="value-field" id="tableVo2Value" readonly /><span
+                    class="unit-label"
+                  ></span>
+                </td>
+              </tr>
+              <tr>
+                <td>Estimated VO₂ Max (METS)</td>
+                <td>
+                  <input class="value-field" id="tableVo2Mets" readonly /><span
+                    class="unit-label"
+                  ></span>
+                </td>
+              </tr>
+              <tr>
+                <td>Percentile</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="tableVo2Percentile"
+                    readonly
+                  /><span class="unit-label"></span>
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="title-text">Grip Strength</div>
+        <div class="graph-container">
+          <div
+            class="chart-container"
+            style="position: relative; width: 100%; height: 400px"
+          >
+            <canvas id="gripChart"></canvas>
+          </div>
+          <div class="table-wrapper">
+            <table>
+              <tr>
+                <td>Right Hand Grip Strength</td>
+                <td>
+                  <input
+                    class="value-field"
+                    id="graphGripRight"
+                    readonly
+                  /><span class="unit-label">kg</span>
+                </td>
+              </tr>
+              <tr>
+                <td>Left Hand Grip Strength</td>
+                <td>
+                  <input class="value-field" id="graphGripLeft" readonly /><span
+                    class="unit-label"
+                    >kg</span
+                  >
+                </td>
+              </tr>
+              <tr>
+                <td>Average Grip Strength</td>
+                <td>
+                  <input class="value-field" id="graphGripAvg" readonly /><span
+                    class="unit-label"
+                    >kg</span
+                  >
+                </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="page">
+        <div class="title-text">Functional Strength Scores</div>
+        <div class="graph-container functional-strength-container">
+          <div class="strength-score-row">
+            Upper Body Score:
+            <input class="value-field" id="graphUpperScore" readonly /><span
+              class="unit-label"
+            ></span>
+          </div>
+          <div class="strength-score-row">
+            Lower Body Score:
+            <input class="value-field" id="graphLowerScore" readonly /><span
+              class="unit-label"
+            ></span>
+          </div>
+          <div class="strength-score-row">
+            Core Score:
+            <input class="value-field" id="graphCoreScore" readonly /><span
+              class="unit-label"
+            ></span>
+          </div>
+          <div class="strength-score-row">
+            Total Score:
+            <input class="value-field" id="graphTotalScore" readonly /><span
+              class="unit-label"
+            ></span>
+          </div>
+          <!-- Replace the image with a canvas container -->
+          <div class="chart-container" style="height: 300px; margin-top: 20px">
             <canvas id="strengthChart"></canvas>
+          </div>
         </div>
       </div>
-    </div>
 
-    <div class="page">
-      <div class="title-text">Predicted Rep Maxes</div>
-      <div class="table-wrapper">
-        <table style="margin-top: 20px;">
-          <tr>
-            <th>Predicted Rep Max</th>
-            <th>Bench Press (lbs)</th>
-            <th>Pulldown (lbs)</th>
-            <th>Deadlift (lbs)</th>
-          </tr>
-          <tr><td>1</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>2</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>3</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>4</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>5</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>6</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>7</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>8</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>9</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr>
+      <div class="page">
+        <div class="title-text">Predicted Rep Maxes</div>
+        <div class="table-wrapper">
+          <table style="margin-top: 20px">
+            <tr>
+              <th>Predicted Rep Max</th>
+              <th>Bench Press (lbs)</th>
+              <th>Pulldown (lbs)</th>
+              <th>Deadlift (lbs)</th>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>7</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>8</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>9</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
               <td>10</td>
-              <td><input class="value-field" id="repmax10Bench" readonly></td>
-              <td><input class="value-field" id="repmax10Pulldown" readonly></td>
-              <td><input class="value-field" id="repmax10Deadlift" readonly></td>
-          </tr>
-          <tr><td>11</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>12</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>13</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>14</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-          <tr><td>15</td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td><td><input class="value-field" readonly></td></tr>
-        </table>
-      </div>
-    </div>
-
-    <div class="page">
-      <div class="title-text">Initial Nutrition Targets</div>
-
-      <div class="selected-macros">
-        <h3 class="section-subtitle">Dietary Assumptions</h3>
-
-        <div class="macro-items-container">
-          <div class="macro-item">
-            <span class="macro-label">Protein Assumption:</span>
-            <input class="value-field" id="nutritionProteinTarget" readonly>
-            <span class="unit-label">g/kg FFM</span>
-          </div>
-          <div class="macro-item">
-            <span class="macro-label">Fat Content:</span>
-            <input class="value-field" id="nutritionFatTarget" readonly>
-            <span class="unit-label">% of calories</span>
-          </div>
+              <td><input class="value-field" id="repmax10Bench" readonly /></td>
+              <td>
+                <input class="value-field" id="repmax10Pulldown" readonly />
+              </td>
+              <td>
+                <input class="value-field" id="repmax10Deadlift" readonly />
+              </td>
+            </tr>
+            <tr>
+              <td>11</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>12</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>13</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>14</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+            <tr>
+              <td>15</td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+              <td><input class="value-field" readonly /></td>
+            </tr>
+          </table>
         </div>
       </div>
 
-      <div class="table-wrapper">
-        <table>
-          <tr><th>Target</th><th>Value</th></tr>
-          <tr>
-            <td>Energy Target</td>
-            <td>
-              <input class="value-field" id="nutritionEnergy" readonly>
-              <span class="unit-label">kcal/day</span>
-            </td>
-          </tr>
-          <tr>
-            <td>Protein Target</td>
-            <td>
-              <input class="value-field" id="nutritionProtein" readonly>
-              <span class="unit-label">g/day</span>
-            </td>
-          </tr>
-          <tr>
-            <td>Carbohydrate Target</td>
-            <td>
-              <input class="value-field" id="nutritionCarbs" readonly>
-              <span class="unit-label">g/day</span>
-            </td>
-          </tr>
-          <tr>
-            <td>Fat Target</td>
-            <td>
-              <input class="value-field" id="nutritionFat" readonly>
-              <span class="unit-label">g/day</span>
-            </td>
-          </tr>
-          <tr>
-            <td>Fiber Target</td>
-            <td>
-              <input class="value-field" id="nutritionFiber" readonly>
-              <span class="unit-label">g/day</span>
-            </td>
-          </tr>
-          <tr>
-            <td>Fluid Target</td>
-            <td>
-              <input class="value-field" id="nutritionFluid" readonly>
-              <span class="unit-label">ml/day</span>
-            </td>
-          </tr>
-        </table>
+      <div class="page">
+        <div class="title-text">Initial Nutrition Targets</div>
+
+        <div class="selected-macros">
+          <h3 class="section-subtitle">Dietary Assumptions</h3>
+
+          <div class="macro-items-container">
+            <div class="macro-item">
+              <span class="macro-label">Protein Assumption:</span>
+              <input class="value-field" id="nutritionProteinTarget" readonly />
+              <span class="unit-label">g/kg FFM</span>
+            </div>
+            <div class="macro-item">
+              <span class="macro-label">Fat Content:</span>
+              <input class="value-field" id="nutritionFatTarget" readonly />
+              <span class="unit-label">% of calories</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <tr>
+              <th>Target</th>
+              <th>Value</th>
+            </tr>
+            <tr>
+              <td>Energy Target</td>
+              <td>
+                <input class="value-field" id="nutritionEnergy" readonly />
+                <span class="unit-label">kcal/day</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Protein Target</td>
+              <td>
+                <input class="value-field" id="nutritionProtein" readonly />
+                <span class="unit-label">g/day</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Carbohydrate Target</td>
+              <td>
+                <input class="value-field" id="nutritionCarbs" readonly />
+                <span class="unit-label">g/day</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Fat Target</td>
+              <td>
+                <input class="value-field" id="nutritionFat" readonly />
+                <span class="unit-label">g/day</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Fiber Target</td>
+              <td>
+                <input class="value-field" id="nutritionFiber" readonly />
+                <span class="unit-label">g/day</span>
+              </td>
+            </tr>
+            <tr>
+              <td>Fluid Target</td>
+              <td>
+                <input class="value-field" id="nutritionFluid" readonly />
+                <span class="unit-label">ml/day</span>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     </div>
-  </div><button onclick="generatePDF()">Download PDF Preview</button>
-</body>
+    <button onclick="generatePDF()">Download PDF Preview</button>
+  </body>
 </html>
