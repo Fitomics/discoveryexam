@@ -32,7 +32,7 @@
   }
   
       .page.summary {
-    padding-top: 100px;
+    padding-top: 70px;
   }
   
       .page-title {
@@ -75,12 +75,7 @@
     margin-top: 35px; /* Default top margin */
     background: none; /* ← Remove background */
   }
-  
-  /* Reduce top margin specifically for the title on the summary page */
-  .page.summary .title-text {
-    margin-top: 10px;
-  }
-  
+  /* --- Client Name and Exam Date --- */  
   #clientName, #examDate {
     font-size: 28px; /* Closer to main title size */
     font-weight: 600;
@@ -245,8 +240,18 @@
   .page.summary .table-wrapper td:nth-child(3) {
     vertical-align: top; /* Align textarea to the top of the cell */
   }
-  
-      /* --- Graph & Chart Containers --- */
+
+  .table-wrapper td.note-cell-blank {
+    background-color: #fdf6ec !important;
+  }
+
+  .table-wrapper td.note-cell-blank textarea.note-field {
+    background-color: #fdf6ec !important; /* Match the cell background */
+    border: none !important; /* Remove border for a seamless infill */
+    box-shadow: none !important; /* Remove shadow for a seamless infill */
+}
+
+  /* --- Graph & Chart Containers --- */
   .graph-container {
     position: relative;
     width: 90%;
@@ -388,7 +393,7 @@
   /* Less intense de-emphasis for other segments */
   .segment:not(.highlight) {
     opacity: 0.9; /* Slightly reduced opacity */
-    filter: saturate(0.95); /* Minimal desaturation */
+    filter: saturate(0.95); /* Minimal de-saturation */
     transform: scale(1); /* No scaling */
   }
   

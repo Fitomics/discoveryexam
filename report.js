@@ -937,17 +937,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const lastName = localStorage.getItem("last_name") || "";
   const clientNameElement = document.getElementById("clientName");
   if (clientNameElement) {
-    // Fix: Change .value to .textContent for div element
     clientNameElement.textContent = `${firstName} ${lastName}`.trim() || "N/A";
   }
   populateField("examDate", "exam_date", { formatter: formatDate });
 
   // --- Get Common Values Needed Early ---
-  const gender = localStorage.getItem("gender"); // <-- MOVE HERE
-  const ageStr = localStorage.getItem("age"); // <-- MOVE HERE
-  const ageNum = parseInt(ageStr); // <-- MOVE HERE & INITIALIZE
+  const gender = localStorage.getItem("gender");
+  const ageStr = localStorage.getItem("age");
+  const ageNum = parseInt(ageStr);
 
   // Page 2: Summary Table (Value Fields)
+  populateField("summaryAgeValue", "age", { defaultValue: "N/A" });
+  populateField("summaryHeightValue", "height", { defaultValue: "N/A", formatter: val => val !== "N/A" && !isNaN(parseFloat(val)) ? `${parseFloat(val)} in` : "N/A" });
+  populateField("summaryWeightValue", "weight", { defaultValue: "N/A", formatter: val => val !== "N/A" && !isNaN(parseFloat(val)) ? `${parseFloat(val)} lbs` : "N/A" });
+  populateField("summaryBfpValue", "bodyfat", { defaultValue: "N/A", formatter: val => val !== "N/A" && !isNaN(parseFloat(val)) ? `${parseFloat(val)}%` : "N/A" });
+
+  const blankNoteIds = [
+    "summaryAgeNote",
+    "summaryHeightNote",
+    "summaryWeightNote",
+    "summaryBfpNote",
+  ];
+
+  blankNoteIds.forEach(id => {
+    const noteElement = document.getElementById(id);
+    if (noteElement) {
+      noteElement.value = ""; // Ensure textarea is blank
+      if (noteElement.parentElement && noteElement.parentElement.tagName === 'TD') {
+        noteElement.parentElement.classList.add("note-cell-blank");
+      }
+    } else {
+      console.warn(`Element with ID '${id}' not found for blank note styling.`);
+    }
+  });
+
   const bmiValue = localStorage.getItem("bmi"); // Get BMI value
   populateField("summaryBmiValue", "bmi");
 
