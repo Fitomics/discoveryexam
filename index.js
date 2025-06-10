@@ -1509,7 +1509,23 @@ function clearAllData() {
   if (
     confirm("Are you sure you want to clear all data? This cannot be undone.")
   ) {
-    // Clear data code here...
+    // Remove all saved data from localStorage
+    localStorage.clear();
+
+    // Reset the in-memory database if initialized
+    if (db) {
+      try {
+        db.run("DROP TABLE IF EXISTS nutrition");
+        db.run(
+          `CREATE TABLE IF NOT EXISTS nutrition (key TEXT PRIMARY KEY, value TEXT)`
+        );
+      } catch (e) {
+        console.error("Failed to reset database:", e);
+      }
+    }
+
+    // Reload fields so the form resets to default values
+    loadAllFields();
 
     showFeedback("clear-feedback", "All data has been cleared.", "info", 3000);
   }
