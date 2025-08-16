@@ -805,11 +805,15 @@ function calculateOtherValues() {
     // Protein calculations
     const proteinFactor = parseFloat(document.getElementById("protein").value);
     const weightkg = weight / 2.20462;
+    // Get fat-free mass in kg (already calculated and available as a field)
+    const fatFreeMassKg =
+      weightkg *
+      (1 - parseFloat(document.getElementById("bodyfat").value) / 100);
     updateTableField(
       "protein_value",
-      proteinFactor.toFixed(2) + " g/kg Body Weight"
-    ); // Corrected unit label
-    const proteinGrams = weightkg * proteinFactor;
+      proteinFactor.toFixed(2) + " g/kg Fat-Free Mass"
+    ); // Updated unit label
+    const proteinGrams = fatFreeMassKg * proteinFactor;
     updateTableField("protein_grams", proteinGrams.toFixed(0) + " g");
     const proteinCalories = proteinGrams * 4;
     updateTableField("protein_calories", proteinCalories.toFixed(0) + " kcal");
@@ -969,6 +973,25 @@ function calculateOtherValues() {
     "fluid_total",
   ];
   tableValueIds.forEach(saveTableValueToStorage);
+
+  // Heart Rate Recovery calculation and storage
+  const peakHr = parseFloat(document.getElementById("hr_bpm").value);
+  const hr1minRec = parseFloat(
+    document.getElementById("post_heart_rate").value
+  );
+  if (!isNaN(peakHr) && !isNaN(hr1minRec)) {
+    const hrrValue = peakHr - hr1minRec;
+    // Save to localStorage for report.js
+    localStorage.setItem("peak_hr", peakHr);
+    localStorage.setItem("hr_1min_recovery", hr1minRec);
+    localStorage.setItem("hrr", hrrValue);
+    // Optionally, update a field in the UI if you add one
+    // updateCalculatedField("hrr", hrrValue);
+  } else {
+    localStorage.removeItem("peak_hr");
+    localStorage.removeItem("hr_1min_recovery");
+    localStorage.removeItem("hrr");
+  }
 }
 
 /**
